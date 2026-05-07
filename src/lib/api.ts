@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken } from '@/lib/tokenStorage';
 
 // IMPORTANT: In production (Vercel), NEXT_PUBLIC_API_URL must be set in Vercel Dashboard.
 // If not set, fallback to the localhost backend URL.
@@ -16,7 +17,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

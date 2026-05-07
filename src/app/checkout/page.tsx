@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCartItems, getCartTotal, clearCart, CartItem } from '@/lib/cart';
 import api from '@/lib/api';
+import { getUser } from '@/lib/tokenStorage';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, CreditCard, CheckCircle, Truck, Package, Navigation, Loader2, Ticket, X } from 'lucide-react';
 import Image from 'next/image';
@@ -46,11 +47,12 @@ export default function CheckoutPage() {
     const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [geoLoading, setGeoLoading] = useState(false);
 
+
     const [errors, setErrors] = useState<any>({});
 
     useEffect(() => {
         // Check authentication
-        const storedUser = localStorage.getItem('user');
+        const storedUser = getUser();
         if (!storedUser) {
             router.push('/login?redirect=/checkout');
             return;

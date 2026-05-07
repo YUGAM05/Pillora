@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
+import { setToken, setUser } from "@/lib/tokenStorage";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Loader2, ArrowRight, FileText } from "lucide-react";
 
@@ -27,8 +28,8 @@ export default function RegisterPage() {
                 role: "customer"
             });
 
-            localStorage.setItem("token", res.data.token);
-            localStorage.setItem("user", JSON.stringify(res.data));
+            setToken(res.data.token);
+            setUser(JSON.stringify(res.data));
             router.push("/"); // Redirect to dashboard
         } catch (err: any) {
             setError(err.response?.data?.message || "Registration failed. Please try again.");

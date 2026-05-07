@@ -1,6 +1,7 @@
 'use client';
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { setToken, setUser } from '@/lib/tokenStorage';
 
 function AuthCallbackContent() {
     const router = useRouter();
@@ -20,8 +21,8 @@ function AuthCallbackContent() {
         if (token && userStr) {
             try {
                 // Store token and user data
-                localStorage.setItem('token', token);
-                localStorage.setItem('user', decodeURIComponent(userStr));
+                setToken(token);
+                setUser(decodeURIComponent(userStr));
 
                 // Parse user data to check role
                 const userData = JSON.parse(decodeURIComponent(userStr));

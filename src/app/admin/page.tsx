@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
+import { getToken } from "@/lib/tokenStorage";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Users, Heart, Package, Activity, Lock, Droplets } from "lucide-react";
@@ -15,7 +16,7 @@ export default function AdminDashboard() {
     const [showBloodBank, setShowBloodBank] = useState(false);
 
     const fetchPendingUsers = useCallback(async () => {
-        const token = localStorage.getItem("token");
+        const token = getToken();
         try {
             const res = await api.get("/admin/users?status=pending", {
                 headers: { Authorization: `Bearer ${token}` }
@@ -28,7 +29,7 @@ export default function AdminDashboard() {
 
     const fetchStats = useCallback(async () => {
         try {
-            const token = localStorage.getItem("token");
+            const token = getToken();
             if (!token) {
                 router.push("/login");
                 return;
@@ -62,7 +63,7 @@ export default function AdminDashboard() {
     }, [fetchStats, fetchPendingUsers]);
 
     const handleStatusUpdate = async (userId: string, status: 'approved' | 'rejected') => {
-        const token = localStorage.getItem("token");
+        const token = getToken();
         if (!confirm(`Are you sure you want to ${status} this user?`)) return;
 
         try {

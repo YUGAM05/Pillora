@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { User, Phone, LogOut, LayoutDashboard, ShoppingBag, Heart } from "lucide-react";
+import { getUser, clearAuth } from "@/lib/tokenStorage";
 
 export default function DashboardPage() {
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
+        const storedUser = getUser();
         if (!storedUser) {
             router.push("/login");
         } else {
@@ -19,8 +20,7 @@ export default function DashboardPage() {
     }, [router]);
 
     const handleLogout = () => {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        clearAuth();
         router.push("/login");
     };
 

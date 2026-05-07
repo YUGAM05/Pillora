@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart, Activity, MapPin, Droplet, User, Phone, CheckCircle, AlertOctagon, Clock, ShieldCheck, Siren, Info, Upload, FileIcon, Trash2, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/api';
+import { getUser } from '@/lib/tokenStorage';
 import { socket } from '@/lib/socket';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -26,7 +27,7 @@ export default function BloodBankPage() {
 
         const fetchUserRequests = async () => {
             try {
-                const user = localStorage.getItem('user');
+                const user = getUser();
                 if (user) {
                     const response = await api.get('/blood-bank/my-requests');
                     setUserRequests(response.data);
@@ -37,7 +38,7 @@ export default function BloodBankPage() {
         };
 
         const setupSocket = () => {
-            const userStr = localStorage.getItem('user');
+            const userStr = getUser();
             if (userStr) {
                 const user = JSON.parse(userStr);
                 socket.connect();
@@ -635,7 +636,7 @@ function DonateForm() {
             return;
         }
 
-        const user = localStorage.getItem('user');
+        const user = getUser();
         if (!user) {
             alert('Please login to register as a donor');
             router.push('/login?redirect=/blood-bank');
@@ -926,7 +927,7 @@ function RequestForm() {
             return;
         }
 
-        const user = localStorage.getItem('user');
+        const user = getUser();
         if (!user) {
             alert('Please login to request blood services');
             router.push('/login?redirect=/blood-bank');

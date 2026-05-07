@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getToken } from '@/lib/tokenStorage';
 import {
     ShieldCheck,
     AlertCircle,
@@ -225,7 +226,7 @@ function SupportModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const response = await fetch('http://localhost:5000/api/support', {
                 method: 'POST',
                 headers: {

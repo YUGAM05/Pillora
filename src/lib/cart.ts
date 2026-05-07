@@ -1,7 +1,9 @@
 /**
  * Shopping Cart Management
- * Handles cart operations using localStorage
+ * Handles cart operations using cross-platform storage
+ * (cookies → localStorage → in-memory fallback)
  */
+import { storageGet, storageSet, storageRemove } from '@/lib/tokenStorage';
 
 export interface CartItem {
     productId: string;
@@ -15,12 +17,12 @@ export interface CartItem {
 }
 
 /**
- * Get all cart items from localStorage
+ * Get all cart items from storage
  */
 export const getCartItems = (): CartItem[] => {
     if (typeof window === 'undefined') return [];
     try {
-        const cart = localStorage.getItem('cart');
+        const cart = storageGet('cart');
         return cart ? JSON.parse(cart) : [];
     } catch (error) {
         console.error('Error reading cart:', error);
@@ -43,7 +45,7 @@ export const addToCart = (item: Omit<CartItem, 'quantity'>): CartItem[] => {
         cart.push({ ...item, quantity: 1 });
     }
 
-    localStorage.setItem('cart', JSON.stringify(cart));
+    storageSet('cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('cart:updated'));
     return cart;
 };
@@ -58,7 +60,7 @@ export const updateCartQuantity = (productId: string, quantity: number): void =>
     if (item) {
         // Ensure quantity is between 1 and stock
         item.quantity = Math.max(1, Math.min(quantity, item.stock));
-        localStorage.setItem('cart', JSON.stringify(cart));
+        storageSet('cart', JSON.stringify(cart));
         window.dispatchEvent(new Event('cart:updated'));
     }
 };
@@ -68,7 +70,7 @@ export const updateCartQuantity = (productId: string, quantity: number): void =>
  */
 export const removeFromCart = (productId: string): void => {
     const cart = getCartItems().filter(i => i.productId !== productId);
-    localStorage.setItem('cart', JSON.stringify(cart));
+    storageSet('cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('cart:updated'));
 };
 
@@ -90,7 +92,8 @@ export const getCartTotal = (): number => {
  * Clear entire cart
  */
 export const clearCart = (): void => {
-    localStorage.removeItem('cart');
-    localStorage.removeItem('cartCount'); // Clean up old system
+    storageRemove('cart');
+    storageRemove('cartCount'); // Clean up old system
     window.dispatchEvent(new Event('cart:updated'));
 };
+

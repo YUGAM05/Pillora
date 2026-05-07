@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
+import { getToken } from '@/lib/tokenStorage';
 import io from 'socket.io-client';
 import {
     CheckCircle2,
@@ -25,7 +26,7 @@ export default function TrackOrderPage() {
 
     const fetchOrder = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const res = await axios.get(`http://localhost:5000/api/orders/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });

@@ -7,6 +7,7 @@ import { ShoppingCart, LogOut, Menu, X, Phone, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { getCartCount } from "@/lib/cart";
+import { getUser, clearAuth } from "@/lib/tokenStorage";
 
 export default function Navbar() {
     const router = useRouter();
@@ -21,7 +22,7 @@ export default function Navbar() {
     useEffect(() => {
         setMounted(true);
         const checkAuth = () => {
-            const storedUser = localStorage.getItem("user");
+            const storedUser = getUser();
             if (storedUser) setUser(JSON.parse(storedUser));
             else setUser(null);
         };
@@ -43,8 +44,7 @@ export default function Navbar() {
     }, [pathname]);
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        clearAuth();
         setUser(null);
         router.push("/login");
         setIsOpen(false);

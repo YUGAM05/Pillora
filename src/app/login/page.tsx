@@ -7,6 +7,7 @@ import {
   signInWithPopup
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
+import { setToken, setUser as setStoredUser } from "@/lib/tokenStorage";
 import { motion } from "framer-motion";
 import { Loader2, ArrowRight } from "lucide-react";
 import axios from "axios";
@@ -41,8 +42,8 @@ export default function LoginPage() {
                     picture: response.data.picture || user.photoURL || "",
                     role: "user"
                 };
-                localStorage.setItem("user", JSON.stringify(userData));
-                localStorage.setItem("token", idToken);
+                setStoredUser(JSON.stringify(userData));
+                setToken(idToken);
                 window.dispatchEvent(new Event('storage'));
                 router.push("/dashboard");
             } else {

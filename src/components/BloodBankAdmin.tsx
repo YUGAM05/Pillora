@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
+import { getToken } from '@/lib/tokenStorage';
 import { Download, FileSpreadsheet, FileText, Users, Droplet, Calendar, Phone, MapPin, AlertCircle } from 'lucide-react';
 // Removed top-level imports that break SSR
 import { saveAs } from 'file-saver';
@@ -18,7 +19,7 @@ export default function BloodBankAdmin() {
 
     const fetchData = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const [donorsRes, requestsRes] = await Promise.all([
                 api.get('/blood-bank/admin/donors', { headers: { Authorization: `Bearer ${token}` } }),
                 api.get('/blood-bank/admin/requests', { headers: { Authorization: `Bearer ${token}` } })
@@ -43,7 +44,7 @@ export default function BloodBankAdmin() {
 
     const downloadExcel = async (type: 'donors' | 'requests') => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const endpoint = type === 'donors'
                 ? '/blood-bank/admin/export/donors/excel'
                 : '/blood-bank/admin/export/requests/excel';
@@ -64,7 +65,7 @@ export default function BloodBankAdmin() {
 
     const downloadPDF = async (type: 'donors' | 'requests') => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             const endpoint = type === 'donors'
                 ? '/blood-bank/admin/export/donors/pdf'
                 : '/blood-bank/admin/export/requests/pdf';
