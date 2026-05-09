@@ -32,7 +32,7 @@ export default function Footer() {
                             We&apos;re a healthcare coordination platform focused on emergency blood services and hospital data.
                         </p>
                         <div className="flex gap-4 pt-2">
-                            <SocialIcon icon={<Facebook className="w-4 h-4" />} />
+                            <SocialIcon icon={<Facebook className="w-4 h-4" />} href="https://www.facebook.com/share/1LPeKutMEw/" />
                             <SocialIcon icon={<Twitter className="w-4 h-4" />} />
                             <SocialIcon 
                                 icon={<Instagram className="w-4 h-4" />} 
