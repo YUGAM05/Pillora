@@ -4,8 +4,9 @@ import api from "@/lib/api";
 import { getToken } from "@/lib/tokenStorage";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Heart, Package, Activity, Lock, Droplets, Shield, ChevronRight, BarChart3, CheckCircle2, XCircle } from "lucide-react";
+import { Users, Heart, Package, Activity, Lock, Droplets, Shield, ChevronRight, BarChart3, CheckCircle2, XCircle, Building2, Plus } from "lucide-react";
 import BloodBankAdmin from "@/components/BloodBankAdmin";
+import AddHospitalForm from "@/components/AddHospitalForm";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -29,6 +30,7 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [showBloodBank, setShowBloodBank] = useState(false);
+    const [showAddHospital, setShowAddHospital] = useState(false);
 
     const fetchPendingUsers = useCallback(async () => {
         const token = getToken();
@@ -186,150 +188,183 @@ export default function AdminDashboard() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Pending Approvals */}
-                        <motion.section variants={itemVariants} className="lg:col-span-2 bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-blue-900/5 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full blur-[80px] -z-10 group-hover:bg-amber-100 transition-colors duration-700" />
-                            
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <h3 className="text-2xl font-black flex items-center gap-3 text-gray-900">
-                                        <Lock className="w-6 h-6 text-amber-500" /> Pending Approvals
-                                    </h3>
-                                    <p className="text-gray-500 mt-1 text-sm font-medium">Users waiting for administrative review</p>
-                                </div>
-                                <div className="px-4 py-1.5 bg-amber-50 text-amber-600 rounded-full text-sm font-bold border border-amber-200">
-                                    {pendingUsers.length} Pending
-                                </div>
-                            </div>
-
-                            {pendingUsers.length === 0 ? (
-                                <div className="text-center py-16 bg-gray-50 rounded-3xl border border-gray-200 border-dashed">
-                                    <CheckCircle2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                    <p className="text-gray-500 font-bold">All caught up! No pending applications.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <AnimatePresence>
-                                        {pendingUsers.map((user: any) => (
-                                            <motion.div 
-                                                key={user._id}
-                                                initial={{ opacity: 0, x: -20 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: 20, scale: 0.95 }}
-                                                className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-gray-50 hover:bg-blue-50/50 rounded-2xl border border-gray-100 hover:border-blue-100 transition-all duration-300 gap-4"
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-primary/20 shrink-0">
-                                                        {user.name.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-bold text-gray-900 text-lg">{user.name}</p>
-                                                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                            <span className="px-2 py-0.5 bg-gray-200 text-gray-600 rounded text-xs uppercase tracking-wider font-bold">{user.role}</span>
-                                                            <span className="text-gray-500 text-sm font-medium">{user.email}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleStatusUpdate(user._id, 'approved')}
-                                                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-4 py-2 bg-white text-emerald-600 hover:text-emerald-700 border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50 rounded-xl text-sm font-bold transition-all shadow-sm"
-                                                    >
-                                                        <CheckCircle2 className="w-4 h-4" /> Approve
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleStatusUpdate(user._id, 'rejected')}
-                                                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-4 py-2 bg-white text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 rounded-xl text-sm font-bold transition-all shadow-sm"
-                                                    >
-                                                        <XCircle className="w-4 h-4" /> Reject
-                                                    </button>
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </AnimatePresence>
-                                </div>
-                            )}
-                        </motion.section>
-
-                        {/* Recent Activity Mini */}
-                        <motion.section variants={itemVariants} className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-blue-900/5 relative overflow-hidden group">
-                            <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-50 rounded-full blur-[80px] -z-10 group-hover:bg-purple-100 transition-colors duration-700" />
-                            
-                            <h3 className="text-xl font-black mb-6 flex items-center gap-3 text-gray-900">
-                                <Activity className="w-5 h-5 text-purple-500" /> Recent Signups
-                            </h3>
-                            <div className="space-y-4">
-                                {stats?.recentUsers?.map((user: any) => (
-                                    <div key={user._id} className="flex items-center gap-4 p-4 bg-gray-50 hover:bg-white hover:shadow-md rounded-2xl transition-all border border-transparent hover:border-gray-100">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-white font-bold shadow-md shrink-0">
-                                            {user.name.charAt(0)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-gray-900 truncate">{user.name}</p>
-                                            <p className="text-xs text-gray-500 font-medium truncate">{user.email}</p>
-                                        </div>
-                                        <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.section>
-                    </div>
-
-                    {/* Blood Connect Management Section */}
+                    {/* Pending Approvals */}
                     <motion.section variants={itemVariants} className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-blue-900/5 relative overflow-hidden group">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-rose-50 blur-[100px] pointer-events-none -z-10 group-hover:bg-rose-100/50 transition-colors duration-700" />
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full blur-[80px] -z-10 group-hover:bg-amber-100 transition-colors duration-700" />
                         
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                        <div className="flex items-center justify-between mb-8">
                             <div>
                                 <h3 className="text-2xl font-black flex items-center gap-3 text-gray-900">
-                                    <Droplets className="w-7 h-7 text-rose-500" /> Blood Connect Console
+                                    <Lock className="w-6 h-6 text-amber-500" /> Pending Approvals
                                 </h3>
-                                <p className="text-gray-500 font-medium mt-1 text-sm">Manage blood bank requests and donor tracking</p>
+                                <p className="text-gray-500 mt-1 text-sm font-medium">Users waiting for administrative review</p>
                             </div>
-                            <button
-                                onClick={() => setShowBloodBank(!showBloodBank)}
-                                className={`px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 shadow-lg ${
-                                    showBloodBank 
-                                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 shadow-none' 
-                                    : 'bg-primary hover:bg-primary/90 text-white shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5'
-                                }`}
-                            >
-                                <BarChart3 className="w-4 h-4" />
-                                {showBloodBank ? 'Close Console' : 'Launch Console'}
-                            </button>
+                            <div className="px-4 py-1.5 bg-amber-50 text-amber-600 rounded-full text-sm font-bold border border-amber-200">
+                                {pendingUsers.length} Pending
+                            </div>
                         </div>
 
-                        <AnimatePresence mode="wait">
-                            {showBloodBank ? (
-                                <motion.div
-                                    key="content"
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.4 }}
-                                >
-                                    <div className="bg-gray-50 rounded-2xl border border-gray-100 p-2 sm:p-4">
-                                        <BloodBankAdmin />
-                                    </div>
-                                </motion.div>
-                            ) : (
-                                <motion.div 
-                                    key="placeholder"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="text-center py-16 bg-gray-50/50 rounded-3xl border border-gray-200 border-dashed"
-                                >
-                                    <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <Droplets className="w-10 h-10 text-rose-500" />
-                                    </div>
-                                    <h4 className="text-lg font-black text-gray-800 mb-2">Console Offline</h4>
-                                    <p className="text-gray-500 font-medium max-w-md mx-auto">Launch the Blood Connect Console to view detailed analytics, manage requests, and export data.</p>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        {pendingUsers.length === 0 ? (
+                            <div className="text-center py-16 bg-gray-50 rounded-3xl border border-gray-200 border-dashed">
+                                <CheckCircle2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                <p className="text-gray-500 font-bold">All caught up! No pending applications.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <AnimatePresence>
+                                    {pendingUsers.map((user: any) => (
+                                        <motion.div 
+                                            key={user._id}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                                            className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-gray-50 hover:bg-blue-50/50 rounded-2xl border border-gray-100 hover:border-blue-100 transition-all duration-300 gap-4"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-primary/20 shrink-0">
+                                                    {user.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900 text-lg">{user.name}</p>
+                                                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                        <span className="px-2 py-0.5 bg-gray-200 text-gray-600 rounded text-xs uppercase tracking-wider font-bold">{user.role}</span>
+                                                        <span className="text-gray-500 text-sm font-medium">{user.email}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleStatusUpdate(user._id, 'approved')}
+                                                    className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-4 py-2 bg-white text-emerald-600 hover:text-emerald-700 border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50 rounded-xl text-sm font-bold transition-all shadow-sm"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" /> Approve
+                                                </button>
+                                                <button
+                                                    onClick={() => handleStatusUpdate(user._id, 'rejected')}
+                                                    className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-4 py-2 bg-white text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 hover:bg-rose-50 rounded-xl text-sm font-bold transition-all shadow-sm"
+                                                >
+                                                    <XCircle className="w-4 h-4" /> Reject
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </div>
+                        )}
                     </motion.section>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Blood Connect Management Section */}
+                        <motion.section variants={itemVariants} className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-blue-900/5 relative overflow-hidden group">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-rose-50 blur-[100px] pointer-events-none -z-10 group-hover:bg-rose-100/50 transition-colors duration-700" />
+                            
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                                <div>
+                                    <h3 className="text-2xl font-black flex items-center gap-3 text-gray-900">
+                                        <Droplets className="w-7 h-7 text-rose-500" /> Blood Connect
+                                    </h3>
+                                    <p className="text-gray-500 font-medium mt-1 text-sm">Manage blood bank requests</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowBloodBank(!showBloodBank)}
+                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 shadow-lg shrink-0 ${
+                                        showBloodBank 
+                                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 shadow-none' 
+                                        : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/30 hover:shadow-rose-500/40 hover:-translate-y-0.5'
+                                    }`}
+                                >
+                                    <BarChart3 className="w-4 h-4" />
+                                    {showBloodBank ? 'Close' : 'Launch'}
+                                </button>
+                            </div>
+
+                            <AnimatePresence mode="wait">
+                                {showBloodBank ? (
+                                    <motion.div
+                                        key="content"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                    >
+                                        <div className="bg-gray-50 rounded-2xl border border-gray-100 p-2 sm:p-4">
+                                            <BloodBankAdmin />
+                                        </div>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div 
+                                        key="placeholder"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="text-center py-12 bg-gray-50/50 rounded-3xl border border-gray-200 border-dashed"
+                                    >
+                                        <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Droplets className="w-8 h-8 text-rose-500" />
+                                        </div>
+                                        <h4 className="text-lg font-black text-gray-800 mb-2">Console Offline</h4>
+                                        <p className="text-gray-500 font-medium text-sm">Launch to view detailed analytics.</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.section>
+
+                        {/* Hospital Directory Management Section */}
+                        <motion.section variants={itemVariants} className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-blue-900/5 relative overflow-hidden group">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-50 blur-[100px] pointer-events-none -z-10 group-hover:bg-blue-100/50 transition-colors duration-700" />
+                            
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                                <div>
+                                    <h3 className="text-2xl font-black flex items-center gap-3 text-gray-900">
+                                        <Building2 className="w-7 h-7 text-primary" /> Hospital Directory
+                                    </h3>
+                                    <p className="text-gray-500 font-medium mt-1 text-sm">Add and manage network hospitals</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowAddHospital(!showAddHospital)}
+                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 shadow-lg shrink-0 ${
+                                        showAddHospital 
+                                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 shadow-none' 
+                                        : 'bg-primary hover:bg-primary/90 text-white shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5'
+                                    }`}
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    {showAddHospital ? 'Close Form' : 'Add Hospital'}
+                                </button>
+                            </div>
+
+                            <AnimatePresence mode="wait">
+                                {showAddHospital ? (
+                                    <motion.div
+                                        key="hospital-form"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="pt-2">
+                                            <AddHospitalForm onClose={() => setShowAddHospital(false)} />
+                                        </div>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div 
+                                        key="placeholder"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="text-center py-12 bg-gray-50/50 rounded-3xl border border-gray-200 border-dashed"
+                                    >
+                                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Building2 className="w-8 h-8 text-primary" />
+                                        </div>
+                                        <h4 className="text-lg font-black text-gray-800 mb-2">Expand Directory</h4>
+                                        <p className="text-gray-500 font-medium text-sm">Click Add Hospital to register a new facility.</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.section>
+                    </div>
                 </motion.main>
             </div>
         </div>
