@@ -3,7 +3,10 @@
 import { useState } from "react";
 import api from "@/lib/api";
 import { getToken } from "@/lib/tokenStorage";
-import { Building2, MapPin, Phone, DollarSign, Clock, FileText, Loader2, CheckCircle2 } from "lucide-react";
+import { Building2, MapPin, Phone, DollarSign, Clock, FileText, Loader2, CheckCircle2, CreditCard, User, GraduationCap, Calendar, Plus, Trash2, Image as ImageIcon, XCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
     const [loading, setLoading] = useState(false);
@@ -18,6 +21,11 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
         ambulanceContact: "",
         description: "",
         isOpen24Hours: false,
+        isOnlinePaymentAvailable: false,
+        image: "", // Main image
+        images: [] as string[],
+        phoneNumbers: [] as string[],
+        doctors: [] as { name: string; specialization: string; timing: string; daysAvailable: string[] }[],
     });
 
     const handleChange = (e: any) => {
@@ -26,6 +34,55 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+    };
+
+    // Handlers for dynamic lists
+    const handleAddListItem = (field: 'images' | 'phoneNumbers') => {
+        setFormData(prev => ({ ...prev, [field]: [...prev[field], ""] }));
+    };
+
+    const handleRemoveListItem = (field: 'images' | 'phoneNumbers', index: number) => {
+        setFormData(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
+    };
+
+    const handleListItemChange = (field: 'images' | 'phoneNumbers', index: number, value: string) => {
+        setFormData(prev => {
+            const newList = [...prev[field]];
+            newList[index] = value;
+            return { ...prev, [field]: newList };
+        });
+    };
+
+    const handleAddDoctor = () => {
+        setFormData(prev => ({
+            ...prev,
+            doctors: [...prev.doctors, { name: "", specialization: "", timing: "", daysAvailable: [] }]
+        }));
+    };
+
+    const handleRemoveDoctor = (index: number) => {
+        setFormData(prev => ({ ...prev, doctors: prev.doctors.filter((_, i) => i !== index) }));
+    };
+
+    const handleDoctorChange = (index: number, field: string, value: any) => {
+        setFormData(prev => {
+            const newDoctors = [...prev.doctors];
+            newDoctors[index] = { ...newDoctors[index], [field]: value };
+            return { ...prev, doctors: newDoctors };
+        });
+    };
+
+    const handleDayToggle = (docIndex: number, day: string) => {
+        setFormData(prev => {
+            const newDoctors = [...prev.doctors];
+            const currentDays = newDoctors[docIndex].daysAvailable;
+            if (currentDays.includes(day)) {
+                newDoctors[docIndex].daysAvailable = currentDays.filter(d => d !== day);
+            } else {
+                newDoctors[docIndex].daysAvailable = [...currentDays, day];
+            }
+            return { ...prev, doctors: newDoctors };
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +95,9 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
             const payload = {
                 ...formData,
                 slug: formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-                consultationFee: Number(formData.consultationFee)
+                consultationFee: Number(formData.consultationFee),
+                images: formData.images.filter(img => img.trim() !== ""),
+                phoneNumbers: formData.phoneNumbers.filter(ph => ph.trim() !== ""),
             };
 
             await api.post("/hospitals", payload, {
@@ -69,137 +128,325 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 md:p-8 space-y-6">
-            {error && (
-                <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-sm font-medium">
-                    {error}
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 md:p-8 space-y-8 max-h-[80vh] overflow-y-auto custom-scrollbar shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div>
+                    <h2 className="text-2xl font-black text-gray-900">Hospital Details</h2>
+                    <p className="text-sm text-gray-500 font-medium">Provide comprehensive facility information</p>
                 </div>
+            </div>
+
+            {error && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-sm font-bold flex items-center gap-2">
+                    <XCircle className="w-5 h-5" /> {error}
+                </motion.div>
             )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700">Hospital Name</label>
-                    <div className="relative group">
-                        <Building2 className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
-                        <input
-                            required
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            placeholder="e.g. City General Hospital"
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                        />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Basic Info Section */}
+                <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-primary" /> Basic Information
+                    </h3>
+                    
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Hospital Name</label>
+                            <input
+                                required
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                placeholder="e.g. Apollo Hospital"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-gray-900"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-wider">City</label>
+                                <input
+                                    required
+                                    name="city"
+                                    value={formData.city}
+                                    onChange={handleChange}
+                                    placeholder="Mumbai"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-gray-900"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Consultation Fee</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-3.5 text-gray-400 font-bold">₹</span>
+                                    <input
+                                        required
+                                        type="number"
+                                        name="consultationFee"
+                                        value={formData.consultationFee}
+                                        onChange={handleChange}
+                                        placeholder="500"
+                                        className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-gray-900"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Full Address</label>
+                            <textarea
+                                required
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                rows={2}
+                                placeholder="Street name, landmark..."
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium resize-none text-gray-900"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                             <div className="flex items-center gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors">
+                                <input
+                                    type="checkbox"
+                                    id="isOpen24Hours"
+                                    name="isOpen24Hours"
+                                    checked={formData.isOpen24Hours}
+                                    onChange={handleChange}
+                                    className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <label htmlFor="isOpen24Hours" className="text-sm font-bold text-gray-700 cursor-pointer flex items-center gap-2">
+                                    <Clock className="w-4 h-4" /> Open 24/7
+                                </label>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-emerald-50/50 border border-emerald-100 rounded-xl cursor-pointer hover:bg-emerald-50 transition-colors">
+                                <input
+                                    type="checkbox"
+                                    id="isOnlinePaymentAvailable"
+                                    name="isOnlinePaymentAvailable"
+                                    checked={formData.isOnlinePaymentAvailable}
+                                    onChange={handleChange}
+                                    className="w-5 h-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                />
+                                <label htmlFor="isOnlinePaymentAvailable" className="text-sm font-bold text-gray-700 cursor-pointer flex items-center gap-2">
+                                    <CreditCard className="w-4 h-4" /> Online Pay
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700">City</label>
-                    <div className="relative group">
-                        <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
-                        <input
-                            required
-                            name="city"
-                            value={formData.city}
-                            onChange={handleChange}
-                            placeholder="e.g. Mumbai"
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                        />
-                    </div>
-                </div>
+                {/* Media & Contacts Section */}
+                <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <ImageIcon className="w-5 h-5 text-purple-500" /> Media & Contacts
+                    </h3>
+                    
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Main Cover Image URL</label>
+                            <input
+                                name="image"
+                                value={formData.image}
+                                onChange={handleChange}
+                                placeholder="https://..."
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-gray-900"
+                            />
+                        </div>
 
-                <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-bold text-gray-700">Full Address</label>
-                    <div className="relative group">
-                        <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
-                        <input
-                            required
-                            name="address"
-                            value={formData.address}
-                            onChange={handleChange}
-                            placeholder="Full street address..."
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                        />
-                    </div>
-                </div>
+                        {/* Gallery Images */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Gallery Images</label>
+                                <button type="button" onClick={() => handleAddListItem('images')} className="text-primary hover:text-primary/80 transition-colors">
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                                {formData.images.map((img, idx) => (
+                                    <div key={idx} className="flex gap-2">
+                                        <input
+                                            value={img}
+                                            onChange={(e) => handleListItemChange('images', idx, e.target.value)}
+                                            placeholder="Gallery URL..."
+                                            className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium outline-none focus:border-primary text-gray-900"
+                                        />
+                                        <button type="button" onClick={() => handleRemoveListItem('images', idx)} className="text-red-400 hover:text-red-600">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700">Consultation Fee (₹)</label>
-                    <div className="relative group">
-                        <DollarSign className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
-                        <input
-                            required
-                            type="number"
-                            name="consultationFee"
-                            value={formData.consultationFee}
-                            onChange={handleChange}
-                            placeholder="500"
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700">Ambulance Contact</label>
-                    <div className="relative group">
-                        <Phone className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
-                        <input
-                            required
-                            name="ambulanceContact"
-                            value={formData.ambulanceContact}
-                            onChange={handleChange}
-                            placeholder="+91..."
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-bold text-gray-700">Description</label>
-                    <div className="relative group">
-                        <FileText className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
-                        <textarea
-                            required
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            placeholder="Brief description about facilities and specialties..."
-                            rows={3}
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none"
-                        />
+                        {/* Multiple Phone Numbers */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Contact Numbers</label>
+                                <button type="button" onClick={() => handleAddListItem('phoneNumbers')} className="text-primary hover:text-primary/80 transition-colors">
+                                    <Plus className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="flex gap-2">
+                                    <input
+                                        required
+                                        name="ambulanceContact"
+                                        value={formData.ambulanceContact}
+                                        onChange={handleChange}
+                                        placeholder="Emergency Number"
+                                        className="flex-1 px-3 py-2 bg-rose-50 border border-rose-100 rounded-lg text-sm font-bold text-rose-700 outline-none"
+                                    />
+                                    <div className="px-3 py-2 bg-rose-100 text-rose-600 rounded-lg text-[10px] font-black uppercase flex items-center">SOS</div>
+                                </div>
+                                {formData.phoneNumbers.map((ph, idx) => (
+                                    <div key={idx} className="flex gap-2">
+                                        <input
+                                            value={ph}
+                                            onChange={(e) => handleListItemChange('phoneNumbers', idx, e.target.value)}
+                                            placeholder="Alternate Number"
+                                            className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium outline-none focus:border-primary text-gray-900"
+                                        />
+                                        <button type="button" onClick={() => handleRemoveListItem('phoneNumbers', idx)} className="text-red-400 hover:text-red-600">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <input
-                    type="checkbox"
-                    id="isOpen24Hours"
-                    name="isOpen24Hours"
-                    checked={formData.isOpen24Hours}
+            {/* About Hospital */}
+            <div className="space-y-2">
+                <label className="text-xs font-black text-gray-400 uppercase tracking-wider">About Hospital (Description)</label>
+                <textarea
+                    required
+                    name="description"
+                    value={formData.description}
                     onChange={handleChange}
-                    className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+                    placeholder="Write detailed information about the hospital, its history, specialties, and equipment..."
+                    rows={4}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium resize-none text-gray-900"
                 />
-                <label htmlFor="isOpen24Hours" className="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
-                    <Clock className="w-5 h-5 text-primary" /> Open 24 Hours
-                </label>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            {/* Available Doctors Section */}
+            <div className="space-y-6 pt-4">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <User className="w-5 h-5 text-blue-500" /> Available Doctors
+                    </h3>
+                    <button
+                        type="button"
+                        onClick={handleAddDoctor}
+                        className="flex items-center gap-1 text-sm font-bold text-primary bg-primary/5 px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-all"
+                    >
+                        <Plus className="w-4 h-4" /> Add Doctor
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    <AnimatePresence>
+                        {formData.doctors.map((doc, docIdx) => (
+                            <motion.div
+                                key={docIdx}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="p-5 bg-gray-50 border border-gray-200 rounded-[1.5rem] space-y-4 relative group"
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveDoctor(docIdx)}
+                                    className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+
+                                <div className="space-y-3">
+                                    <div className="flex gap-3">
+                                        <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                                            <User className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <input
+                                                required
+                                                value={doc.name}
+                                                onChange={(e) => handleDoctorChange(docIdx, 'name', e.target.value)}
+                                                placeholder="Doctor's Name"
+                                                className="w-full bg-transparent border-b border-gray-200 focus:border-primary outline-none font-bold text-gray-800"
+                                            />
+                                            <div className="flex items-center gap-1 text-xs text-primary font-bold">
+                                                <GraduationCap className="w-3 h-3" />
+                                                <input
+                                                    required
+                                                    value={doc.specialization}
+                                                    onChange={(e) => handleDoctorChange(docIdx, 'specialization', e.target.value)}
+                                                    placeholder="Degree / Specialization"
+                                                    className="bg-transparent outline-none w-full"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest">
+                                            <Clock className="w-3 h-3" /> Timing
+                                        </div>
+                                        <input
+                                            required
+                                            value={doc.timing}
+                                            onChange={(e) => handleDoctorChange(docIdx, 'timing', e.target.value)}
+                                            placeholder="e.g. 10:00 AM - 04:00 PM"
+                                            className="w-full px-3 py-2 bg-white border border-gray-100 rounded-lg text-sm font-medium outline-none focus:border-primary text-gray-900"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-xs font-black text-gray-400 uppercase tracking-widest">
+                                            <Calendar className="w-3 h-3" /> Available Days
+                                        </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {DAYS.map(day => (
+                                                <button
+                                                    type="button"
+                                                    key={day}
+                                                    onClick={() => handleDayToggle(docIdx, day)}
+                                                    className={`px-2 py-1 text-[10px] font-black rounded-md border transition-all ${
+                                                        doc.daysAvailable.includes(day)
+                                                            ? 'bg-primary border-primary text-white shadow-sm'
+                                                            : 'bg-white border-gray-200 text-gray-400 hover:border-primary/30'
+                                                    }`}
+                                                >
+                                                    {day.slice(0, 3)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
                 {onClose && (
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-6 py-3 font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                        className="px-8 py-3 font-bold text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all active:scale-95"
                     >
-                        Cancel
+                        Discard
                     </button>
                 )}
                 <button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center gap-2 px-8 py-3 font-bold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
+                    className="flex items-center gap-2 px-10 py-3 font-bold text-white bg-primary hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
                 >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Hospital"}
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Publish Hospital"}
                 </button>
             </div>
         </form>
