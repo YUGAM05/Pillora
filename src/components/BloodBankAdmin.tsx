@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { getToken } from '@/lib/tokenStorage';
-import { Download, FileSpreadsheet, FileText, Users, Droplet, Calendar, Phone, MapPin, AlertCircle } from 'lucide-react';
-// Removed top-level imports that break SSR
+import { Download, FileSpreadsheet, FileText, Users, Droplet, Calendar, Phone, MapPin, AlertCircle, Search, ChevronRight } from 'lucide-react';
 import { saveAs } from 'file-saver';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function BloodBankAdmin() {
     const [activeTab, setActiveTab] = useState<'donors' | 'requests'>('donors');
@@ -28,7 +28,6 @@ export default function BloodBankAdmin() {
             setDonors(donorsRes.data);
             setRequests(requestsRes.data);
 
-            // Calculate stats
             setStats({
                 totalDonors: donorsRes.data.length,
                 totalRequests: requestsRes.data.length,
@@ -73,24 +72,18 @@ export default function BloodBankAdmin() {
             const response = await api.get(endpoint, { headers: { Authorization: `Bearer ${token}` } });
             const data = type === 'donors' ? response.data.donors : response.data.requests;
 
-            // Dynamically import libraries to avoid SSR errors
             const jspdfModule = await import('jspdf');
             const jsPDF = jspdfModule.jsPDF || jspdfModule.default;
             const autoTable = (await import('jspdf-autotable')).default;
 
-            // Create PDF
             const doc = new jsPDF('landscape');
-
-            // Add title
             doc.setFontSize(18);
             doc.setTextColor(220, 20, 60);
             doc.text(`Blood ${type === 'donors' ? 'Donors' : 'Requests'} Report`, 14, 15);
-
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
 
-            // Prepare table data
             let headers: string[];
             let rows: any[][];
 
@@ -98,32 +91,26 @@ export default function BloodBankAdmin() {
                 headers = ['Name', 'Email', 'Blood Group', 'Age', 'Gender', 'Phone', 'City', 'Area', 'Available', 'Last Donation'];
                 rows = data.map((d: any) => [
                     d.name, d.email, d.bloodGroup, d.age, d.gender,
-                    d.phone, d.city, d.area, d.isAvailable, d.lastDonationDate
+                    d.phone, d.city, d.area, d.isAvailable ? 'Yes' : 'No', d.lastDonationDate || 'N/A'
                 ]);
             } else {
                 headers = ['Patient', 'Requested By', 'Blood Group', 'Units', 'Hospital', 'City', 'Contact', 'Status', 'Urgent'];
                 rows = data.map((r: any) => [
                     r.patientName, r.requestedBy, r.bloodGroup, r.units,
-                    r.hospitalAddress, r.city, r.contactNumber, r.status, r.isUrgent
+                    r.hospitalAddress, r.city, r.contactNumber, r.status, r.isUrgent ? 'Yes' : 'No'
                 ]);
             }
 
-            // Add table
             autoTable(doc, {
                 head: [headers],
                 body: rows,
                 startY: 28,
                 theme: 'grid',
-                headStyles: {
-                    fillColor: [220, 20, 60],
-                    textColor: 255,
-                    fontStyle: 'bold'
-                },
-                alternateRowStyles: { fillColor: [245, 245, 245] },
+                headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [249, 250, 251] },
                 margin: { top: 28 }
             });
 
-            // Save PDF
             doc.save(`blood-${type}-${Date.now()}.pdf`);
         } catch (error) {
             console.error('PDF export failed:', error);
@@ -133,100 +120,88 @@ export default function BloodBankAdmin() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-teal-500 text-xl">Loading Blood Connect Data...</div>
+            <div className="py-20 flex flex-col items-center justify-center">
+                <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+                <p className="text-gray-500 font-bold animate-pulse uppercase tracking-widest text-xs">Synchronizing Database...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white p-8">
-            <header className="mb-12 max-w-7xl mx-auto">
-                <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-2">
-                    Blood Connect Management
-                </h1>
-                <p className="text-slate-400">Manage donors and blood requests</p>
-            </header>
-
-            {/* Stats Cards */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <StatCard icon={<Users className="w-6 h-6" />} label="Total Donors" value={stats.totalDonors} color="blue" />
-                <StatCard icon={<Droplet className="w-6 h-6" />} label="Available Donors" value={stats.availableDonors} color="green" />
-                <StatCard icon={<FileText className="w-6 h-6" />} label="Total Requests" value={stats.totalRequests} color="purple" />
-                <StatCard icon={<AlertCircle className="w-6 h-6" />} label="Urgent Requests" value={stats.urgentRequests} color="red" />
+        <div className="bg-white rounded-3xl p-6 md:p-8 space-y-8">
+            {/* Stats Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider mb-1">Total Donors</p>
+                    <p className="text-2xl font-black text-blue-900">{stats.totalDonors}</p>
+                </div>
+                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-wider mb-1">Available</p>
+                    <p className="text-2xl font-black text-emerald-900">{stats.availableDonors}</p>
+                </div>
+                <div className="p-4 bg-purple-50 border border-purple-100 rounded-2xl">
+                    <p className="text-[10px] font-black text-purple-400 uppercase tracking-wider mb-1">Requests</p>
+                    <p className="text-2xl font-black text-purple-900">{stats.totalRequests}</p>
+                </div>
+                <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl">
+                    <p className="text-[10px] font-black text-rose-400 uppercase tracking-wider mb-1">Urgent</p>
+                    <p className="text-2xl font-black text-rose-900">{stats.urgentRequests}</p>
+                </div>
             </div>
 
-            {/* Tabs */}
-            <div className="max-w-7xl mx-auto">
-                <div className="flex gap-4 mb-6">
+            {/* Controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
                     <button
                         onClick={() => setActiveTab('donors')}
-                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'donors'
-                            ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                            }`}
+                        className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'donors' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
-                        <Users className="w-5 h-5 inline mr-2" />
-                        Donors ({donors.length})
+                        Donors
                     </button>
                     <button
                         onClick={() => setActiveTab('requests')}
-                        className={`px-6 py-3 rounded-xl font-bold transition-all ${activeTab === 'requests'
-                            ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
-                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                            }`}
+                        className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'requests' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
-                        <Droplet className="w-5 h-5 inline mr-2" />
-                        Requests ({requests.length})
+                        Requests
                     </button>
                 </div>
 
-                {/* Export Buttons */}
-                <div className="flex gap-4 mb-6">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={() => downloadExcel(activeTab)}
-                        className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-green-600/30"
+                        className="p-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-colors"
+                        title="Export Excel"
                     >
                         <FileSpreadsheet className="w-5 h-5" />
-                        Export to Excel
                     </button>
                     <button
                         onClick={() => downloadPDF(activeTab)}
-                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/30"
+                        className="p-2.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl hover:bg-blue-100 transition-colors"
+                        title="Export PDF"
                     >
                         <Download className="w-5 h-5" />
-                        Export to PDF
                     </button>
                 </div>
-
-                {/* Data Table */}
-                <div className="bg-slate-900/50 backdrop-blur border border-white/5 rounded-3xl overflow-hidden">
-                    {activeTab === 'donors' ? (
-                        <DonorsTable donors={donors} />
-                    ) : (
-                        <RequestsTable requests={requests} />
-                    )}
-                </div>
             </div>
-        </div>
-    );
-}
 
-function StatCard({ icon, label, value, color }: any) {
-    const colorClasses = {
-        blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-        green: 'bg-green-500/10 border-green-500/20 text-green-400',
-        purple: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
-        red: 'bg-red-500/10 border-red-500/20 text-red-400'
-    };
-
-    return (
-        <div className={`p-6 rounded-2xl border ${colorClasses[color as keyof typeof colorClasses]} backdrop-blur-sm`}>
-            <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-white/5 rounded-xl">{icon}</div>
+            {/* Content Table */}
+            <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {activeTab === 'donors' ? (
+                            <DonorsTable donors={donors} />
+                        ) : (
+                            <RequestsTable requests={requests} />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
             </div>
-            <h3 className="text-4xl font-bold text-white mb-1">{value}</h3>
-            <p className="text-slate-400 text-sm font-medium">{label}</p>
         </div>
     );
 }
@@ -234,70 +209,60 @@ function StatCard({ icon, label, value, color }: any) {
 function DonorsTable({ donors }: { donors: any[] }) {
     return (
         <div className="overflow-x-auto">
-            <table className="w-full">
-                <thead className="bg-slate-800/50">
-                    <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Donor</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Blood Group</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Age/Gender</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Contact</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Location</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Registered</th>
+            <table className="w-full text-left">
+                <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <th className="px-6 py-4">Donor Profile</th>
+                        <th className="px-6 py-4">Group</th>
+                        <th className="px-6 py-4">Contact & Location</th>
+                        <th className="px-6 py-4">Status</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-gray-50">
                     {donors.map((donor) => (
-                        <tr key={donor._id} className="hover:bg-slate-800/30 transition-colors">
+                        <tr key={donor._id} className="hover:bg-blue-50/30 transition-colors">
                             <td className="px-6 py-4">
-                                <div>
-                                    <p className="font-bold text-white">{donor.name}</p>
-                                    <p className="text-sm text-slate-400">{donor.user?.email}</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-black">
+                                        {donor.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-900">{donor.name}</p>
+                                        <p className="text-xs text-gray-500">{donor.age}y • {donor.gender}</p>
+                                    </div>
                                 </div>
                             </td>
                             <td className="px-6 py-4">
-                                <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-bold">
+                                <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-xs font-black ring-1 ring-rose-100">
                                     {donor.bloodGroup}
                                 </span>
                             </td>
-                            <td className="px-6 py-4 text-slate-300">
-                                {donor.age} / {donor.gender}
-                            </td>
                             <td className="px-6 py-4">
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <Phone className="w-4 h-4" />
-                                    {donor.phone}
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                                        <Phone className="w-3 h-3 text-gray-400" /> {donor.phone}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                        <MapPin className="w-3 h-3 text-gray-400" /> {donor.area}, {donor.city}
+                                    </div>
                                 </div>
                             </td>
                             <td className="px-6 py-4">
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <MapPin className="w-4 h-4" />
-                                    {donor.area}, {donor.city}
-                                </div>
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${donor.isAvailable
-                                    ? 'bg-green-500/20 text-green-400'
-                                    : 'bg-gray-500/20 text-gray-400'
-                                    }`}>
-                                    {donor.isAvailable ? 'Available' : 'Unavailable'}
+                                <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                                    donor.isAvailable ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                                }`}>
+                                    {donor.isAvailable ? 'Available' : 'Busy'}
                                 </span>
-                            </td>
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-2 text-slate-400 text-sm">
-                                    <Calendar className="w-4 h-4" />
-                                    {new Date(donor.createdAt).toLocaleDateString()}
-                                </div>
                             </td>
                         </tr>
                     ))}
+                    {donors.length === 0 && (
+                        <tr>
+                            <td colSpan={4} className="px-6 py-12 text-center text-gray-400 font-medium">No registered donors found.</td>
+                        </tr>
+                    )}
                 </tbody>
             </table>
-            {donors.length === 0 && (
-                <div className="text-center py-12 text-slate-500">
-                    No donors registered yet.
-                </div>
-            )}
         </div>
     );
 }
@@ -305,85 +270,77 @@ function DonorsTable({ donors }: { donors: any[] }) {
 function RequestsTable({ requests }: { requests: any[] }) {
     return (
         <div className="overflow-x-auto">
-            <table className="w-full">
-                <thead className="bg-slate-800/50">
-                    <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Patient</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Blood Group</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Units</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Hospital</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Contact</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">KYC Verification</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Date</th>
+            <table className="w-full text-left">
+                <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        <th className="px-6 py-4">Patient Info</th>
+                        <th className="px-6 py-4">Blood Needed</th>
+                        <th className="px-6 py-4">Facility & Contact</th>
+                        <th className="px-6 py-4">Verification</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-gray-50">
                     {requests.map((request) => (
-                        <tr key={request._id} className={`hover:bg-slate-800/30 transition-colors ${request.isUrgent ? 'bg-red-900/10' : ''}`}>
+                        <tr key={request._id} className={`hover:bg-blue-50/30 transition-colors ${request.isUrgent ? 'bg-rose-50/30' : ''}`}>
                             <td className="px-6 py-4">
-                                <div>
-                                    <p className="font-bold text-white flex items-center gap-2">
-                                        {request.patientName}
-                                        {request.isUrgent && <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">URGENT</span>}
-                                    </p>
-                                    <p className="text-sm text-slate-400">Age: {request.age}</p>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-bold">
-                                    {request.bloodGroup}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 text-white font-bold">
-                                {request.units} units
-                            </td>
-                            <td className="px-6 py-4">
-                                <div className="text-slate-300 text-sm">
-                                    <p className="font-medium">{request.hospitalAddress}</p>
-                                    <p className="text-slate-400">{request.area}, {request.city}</p>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-2 text-slate-300">
-                                    <Phone className="w-4 h-4" />
-                                    {request.contactNumber}
-                                </div>
-                            </td>
-                            <td className="px-6 py-4">
-                                <div className="space-y-1">
-                                    <p className="text-white font-mono text-sm">{request.kycDocumentId || 'No ID Extracted'}</p>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${request.aiVerificationStatus === 'Verified' ? 'bg-green-500' : request.aiVerificationStatus === 'Rejected' ? 'bg-red-500' : 'bg-amber-500'}`} />
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">{request.aiVerificationStatus}</span>
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${request.isUrgent ? 'bg-rose-100 text-rose-600 shadow-sm shadow-rose-200' : 'bg-purple-100 text-purple-600'}`}>
+                                        {request.bloodGroup}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-900 flex items-center gap-2">
+                                            {request.patientName}
+                                            {request.isUrgent && <span className="animate-pulse w-2 h-2 rounded-full bg-rose-500" />}
+                                        </p>
+                                        <p className="text-xs text-gray-500">Requested by {request.requestedBy}</p>
                                     </div>
                                 </div>
                             </td>
                             <td className="px-6 py-4">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${request.status === 'Open'
-                                    ? 'bg-blue-500/20 text-blue-400'
-                                    : request.status === 'Urgent'
-                                        ? 'bg-red-500/20 text-red-400'
-                                        : 'bg-gray-500/20 text-gray-400'
-                                    }`}>
-                                    {request.status}
-                                </span>
+                                <p className="font-black text-gray-900 text-lg">{request.units} <span className="text-[10px] uppercase text-gray-400">Units</span></p>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                    request.status === 'Open' ? 'text-blue-500 bg-blue-50' : 'text-gray-400 bg-gray-50'
+                                }`}>{request.status}</span>
                             </td>
                             <td className="px-6 py-4">
-                                <div className="flex items-center gap-2 text-slate-400 text-sm">
-                                    <Calendar className="w-4 h-4" />
-                                    {new Date(request.createdAt).toLocaleDateString()}
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                                        <Phone className="w-3 h-3 text-gray-400" /> {request.contactNumber}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                        <Building2 className="w-3 h-3 text-gray-400" /> {request.hospitalAddress}, {request.city}
+                                    </div>
                                 </div>
+                            </td>
+                            <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${
+                                        request.aiVerificationStatus === 'Verified' ? 'bg-emerald-500' : 
+                                        request.aiVerificationStatus === 'Rejected' ? 'bg-rose-500' : 'bg-amber-500'
+                                    }`} />
+                                    <span className="text-[10px] font-black uppercase text-gray-600 tracking-tighter">
+                                        {request.aiVerificationStatus}
+                                    </span>
+                                </div>
+                                <p className="text-[9px] text-gray-400 font-mono mt-1">{request.kycDocumentId || 'NO_ID'}</p>
                             </td>
                         </tr>
                     ))}
+                    {requests.length === 0 && (
+                        <tr>
+                            <td colSpan={4} className="px-6 py-12 text-center text-gray-400 font-medium">No pending requests.</td>
+                        </tr>
+                    )}
                 </tbody>
             </table>
-            {requests.length === 0 && (
-                <div className="text-center py-12 text-slate-500">
-                    No blood requests yet.
-                </div>
-            )}
         </div>
     );
 }
+
+const Loader2 = ({ className }: { className?: string }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+);
+
+const Building2 = ({ className }: { className?: string }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+);

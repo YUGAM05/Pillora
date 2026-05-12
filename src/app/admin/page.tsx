@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Users, Heart, Package, Activity, Lock, Droplets, Shield, ChevronRight, BarChart3, CheckCircle2, XCircle, Building2, Plus } from "lucide-react";
 import BloodBankAdmin from "@/components/BloodBankAdmin";
 import AddHospitalForm from "@/components/AddHospitalForm";
+import HospitalListAdmin from "@/components/HospitalListAdmin";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -31,6 +32,7 @@ export default function AdminDashboard() {
     const [error, setError] = useState("");
     const [showBloodBank, setShowBloodBank] = useState(false);
     const [showAddHospital, setShowAddHospital] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const fetchPendingUsers = useCallback(async () => {
         const token = getToken();
@@ -328,8 +330,8 @@ export default function AdminDashboard() {
                                         : 'bg-primary hover:bg-primary/90 text-white shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5'
                                     }`}
                                 >
-                                    <Plus className="w-4 h-4" />
-                                    {showAddHospital ? 'Close Form' : 'Add Hospital'}
+                                    {showAddHospital ? <XCircle className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                    {showAddHospital ? 'Cancel' : 'Add Hospital'}
                                 </button>
                             </div>
 
@@ -344,22 +346,21 @@ export default function AdminDashboard() {
                                         className="overflow-hidden"
                                     >
                                         <div className="pt-2">
-                                            <AddHospitalForm onClose={() => setShowAddHospital(false)} />
+                                            <AddHospitalForm onClose={() => {
+                                                setShowAddHospital(false);
+                                                setRefreshTrigger(prev => prev + 1);
+                                            }} />
                                         </div>
                                     </motion.div>
                                 ) : (
                                     <motion.div 
-                                        key="placeholder"
+                                        key="hospital-list"
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="text-center py-12 bg-gray-50/50 rounded-3xl border border-gray-200 border-dashed"
+                                        className="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar"
                                     >
-                                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <Building2 className="w-8 h-8 text-primary" />
-                                        </div>
-                                        <h4 className="text-lg font-black text-gray-800 mb-2">Expand Directory</h4>
-                                        <p className="text-gray-500 font-medium text-sm">Click Add Hospital to register a new facility.</p>
+                                        <HospitalListAdmin key={refreshTrigger} />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -370,6 +371,7 @@ export default function AdminDashboard() {
         </div>
     );
 }
+
 
 function StatCard({ icon, label, value, trend, iconBg }: any) {
     return (
