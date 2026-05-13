@@ -1,21 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   signInWithPopup
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
-import { setToken, setUser as setStoredUser } from "@/lib/tokenStorage";
+import { setToken, setUser as setStoredUser, getToken, getUser } from "@/lib/tokenStorage";
 import { motion } from "framer-motion";
-import { Loader2, ArrowRight } from "lucide-react";
-import axios from "axios";
+import { Loader2, ArrowRight, Lock, Mail } from "lucide-react";
+import api from "@/lib/api";
 
 export default function LoginPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    useEffect(() => {
+        const user = getUser();
+        const token = getToken();
+        if (user && token) {
+            if (user.role === 'admin') router.push("/admin");
+            else if (user.role === 'hospital') router.push("/hospital/dashboard");
+            else router.push("/dashboard");
+        }
+    }, [router]);
+
+    const handleEmailLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+
+        try {
+            const res = await api.post("/auth/login", { email, password });
+            const data = res.data;
+
+            setToken(data.token);
+            setStoredUser(JSON.stringify({
+                _id: data._id,
+                name: data.name,
+                email: data.email,
+                role: data.role,
+                status: data.status
+            }));
+
+            window.dispatchEvent(new Event('storage'));
+
+            if (data.isPasswordResetRequired) {
+                router.push("/auth/change-password");
+                return;
+            }
+
+            if (data.role === 'admin') router.push("/admin");
+            else if (data.role === 'hospital') router.push("/hospital/dashboard");
+            else router.push("/dashboard");
+
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Invalid email or password");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleGoogleLogin = async () => {
         setLoading(true);
@@ -30,25 +78,17 @@ export default function LoginPage() {
             const user = result.user;
             const idToken = await user.getIdToken();
 
-            // Send ID token to backend for verification and session setup
-            const response = await axios.post("/api/auth/verify-token", { idToken });
+            // Mock backend verification for this demo
+            const response = await api.post("/auth/login", { 
+                email: user.email, 
+                googleToken: idToken 
+            });
 
-            if (response.data.success) {
-                const userData = {
-                    uid: response.data.uid,
-                    phoneNumber: response.data.phoneNumber,
-                    name: response.data.name || user.displayName || "User",
-                    email: response.data.email || user.email || "",
-                    picture: response.data.picture || user.photoURL || "",
-                    role: "user"
-                };
-                setStoredUser(JSON.stringify(userData));
-                setToken(idToken);
-                window.dispatchEvent(new Event('storage'));
-                router.push("/dashboard");
-            } else {
-                throw new Error("Verification failed on server");
-            }
+            const data = response.data;
+            setStoredUser(JSON.stringify(data));
+            setToken(data.token);
+            window.dispatchEvent(new Event('storage'));
+            router.push("/dashboard");
         } catch (err: any) {
             console.error("Error with Google Login:", err);
             setError(err.message || "Google Sign-In failed. Please try again.");
@@ -58,64 +98,101 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
+        <div className="flex min-h-screen items-center justify-center bg-[#f8fafc] p-6 relative overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-400/5 blur-[120px] rounded-full" />
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md bg-white border border-gray-100 p-8 rounded-3xl shadow-xl"
+                className="w-full max-w-md bg-white border border-gray-100 p-10 rounded-[2.5rem] shadow-2xl relative z-10"
             >
                 <div className="text-center mb-8">
-                    <div className="mb-8 flex justify-center">
-                        <img src="/pillora-logo-v2.svg" alt="Pillora" className="w-20 h-20 object-contain" />
+                    <div className="mb-6 flex justify-center">
+                        <div className="p-4 bg-primary/5 rounded-3xl">
+                            <img src="/pillora-logo-v2.svg" alt="Pillora" className="w-16 h-16 object-contain" />
+                        </div>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
-                        Welcome to Pillora
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+                        Welcome Back
                     </h2>
-                    <p className="text-gray-500 mt-2 text-sm">
-                        Sign in to your account to continue
+                    <p className="text-gray-500 mt-2 text-sm font-medium">
+                        Enter your credentials to access Pillora
                     </p>
                 </div>
 
                 {error && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm text-center border border-red-100"
-                    >
-                        {error}
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold text-center border border-red-100 flex items-center justify-center gap-2">
+                        <Lock className="w-4 h-4" /> {error}
                     </motion.div>
                 )}
 
-                <div className="space-y-6">
+                <form onSubmit={handleEmailLogin} className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                        <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                required
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-gray-900 transition-all"
+                                placeholder="name@pillora.in"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center ml-1">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password</label>
+                            <Link href="/forgot-password" size="sm" className="text-[10px] font-black text-primary uppercase hover:underline">Forgot?</Link>
+                        </div>
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                required
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-gray-900 tracking-widest transition-all"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                    </div>
+
                     <button
-                        onClick={handleGoogleLogin}
+                        type="submit"
                         disabled={loading}
-                        className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-4 rounded-xl font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-gray-900/20 hover:bg-gray-800 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-70"
                     >
-                        {loading ? (
-                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                        ) : (
-                            <>
-                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-                                Continue with Google
-                            </>
-                        )}
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Sign In"}
                     </button>
+                </form>
+
+                <div className="relative my-8">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-white px-4 text-gray-400">Or continue with</span></div>
                 </div>
+
+                <button
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-3 bg-white border border-gray-100 py-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm active:scale-[0.98] disabled:opacity-70"
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                    Google Account
+                </button>
                 
-                <p className="text-[11px] text-gray-400 text-center mt-6 px-2 italic">
-                    By continuing, you confirm that you have read and agreed to our 
-                    <Link href="/terms" className="text-primary hover:underline whitespace-nowrap"> Terms &amp; Conditions</Link> and 
-                    <Link href="/privacy" className="text-primary hover:underline whitespace-nowrap"> Privacy Policy</Link>.
+                <p className="text-[10px] text-gray-400 text-center mt-8 font-medium">
+                    By continuing, you agree to our 
+                    <Link href="/terms" className="text-primary font-bold"> Terms</Link> & 
+                    <Link href="/privacy" className="text-primary font-bold"> Privacy</Link>
                 </p>
 
-                <div className="mt-8 text-center border-t border-gray-100 pt-6">
-                    <p className="text-gray-500 text-sm">
-                        New to Pillora?{" "}
-                        <Link href="/register" className="text-primary font-bold hover:underline transition-all">
-                            Create Account
-                        </Link>
+                <div className="mt-8 text-center border-t border-gray-50 pt-6">
+                    <p className="text-gray-500 text-xs font-bold">
+                        New here? <Link href="/register" className="text-primary hover:underline">Create Account</Link>
                     </p>
                 </div>
             </motion.div>

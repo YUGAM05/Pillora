@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle, ShieldCheck, Upload, FileHeart, MapPin, Activity, UserCheck, CreditCard, Landmark, Stethoscope, Briefcase, User, Heart, Bell } from "lucide-react";
 import HealthHubSection from "@/components/HealthHubSection";
+import { getUser, getToken } from "@/lib/tokenStorage";
+import { useRouter } from "next/navigation";
 
 interface FeatureItemProps {
     icon: React.ReactNode;
@@ -11,6 +13,18 @@ interface FeatureItemProps {
 }
 
 export default function Home() {
+    const router = useRouter();
+
+    useEffect(() => {
+        const user = getUser();
+        const token = getToken();
+        if (user && token) {
+            if (user.role === 'admin') router.push("/admin");
+            else if (user.role === 'hospital') router.push("/hospital/dashboard");
+            else router.push("/dashboard");
+        }
+    }, [router]);
+
     return (
         <main className="bg-gradient-to-b from-blue-50/30 to-white min-h-screen pb-20">
             {/* 1. Rotating Banner Component (Hero) */}

@@ -9,6 +9,7 @@ import {
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import BookingModal from '@/components/BookingModal';
 
 interface Doctor {
     name: string;
@@ -129,6 +130,7 @@ export default function HospitalDetailPage() {
     const router = useRouter();
     const [hospital, setHospital] = useState<Hospital | null>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
 
     const fallbackImage = '/premium-hospital.png';
 
@@ -364,7 +366,7 @@ export default function HospitalDetailPage() {
                                                 <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
                                                     <User className="w-4 h-4 text-indigo-600" />
                                                 </div>
-                                                <div>
+                                                <div className="flex-1">
                                                     <p className="font-bold text-gray-900 text-sm sm:text-base">{doc.name}</p>
                                                     {doc.specialization && (
                                                         <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full inline-block mt-0.5">
@@ -372,6 +374,12 @@ export default function HospitalDetailPage() {
                                                         </span>
                                                     )}
                                                 </div>
+                                                <button 
+                                                    onClick={() => setSelectedDoctor(doc)}
+                                                    className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                                                >
+                                                    Book Now
+                                                </button>
                                             </div>
                                             <div className="flex flex-wrap gap-3 text-xs text-gray-600">
                                                 {doc.timing && (
@@ -479,6 +487,22 @@ export default function HospitalDetailPage() {
                     </div>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {selectedDoctor && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md">
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white w-full max-w-xl rounded-[3rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10" />
+                            <BookingModal doctor={selectedDoctor} hospital={hospital} onClose={() => setSelectedDoctor(null)} />
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

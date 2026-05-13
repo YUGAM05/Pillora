@@ -15,6 +15,7 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
 
     const [formData, setFormData] = useState({
         name: "",
+        email: "",
         city: "",
         address: "",
         consultationFee: "",
@@ -22,11 +23,14 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
         description: "",
         isOpen24Hours: false,
         isOnlinePaymentAvailable: false,
+        management_type: "SELF" as "SELF" | "PILLORA",
         image: "", // Main image
         images: [] as string[],
         phoneNumbers: [] as string[],
         doctors: [] as { name: string; specialization: string; timing: string; daysAvailable: string[] }[],
     });
+
+    const [credentials, setCredentials] = useState<{username: string, temporaryPassword: string} | null>(null);
 
     const handleChange = (e: any) => {
         const { name, value, type, checked } = e.target;
@@ -100,15 +104,22 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
                 phoneNumbers: formData.phoneNumbers.filter(ph => ph.trim() !== ""),
             };
 
-            await api.post("/hospitals", payload, {
+            const res = await api.post("/admin/hospitals/register", payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             
+            if (res.data.credentials) {
+                setCredentials(res.data.credentials);
+            }
+            
             setSuccess(true);
-            setTimeout(() => {
-                setSuccess(false);
-                if (onClose) onClose();
-            }, 2000);
+            // Don't auto-close if we have credentials to show
+            if (!res.data.credentials) {
+                setTimeout(() => {
+                    setSuccess(false);
+                    if (onClose) onClose();
+                }, 2000);
+            }
             
         } catch (err: any) {
             setError(err.response?.data?.message || "Failed to add hospital");
@@ -119,10 +130,38 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
 
     if (success) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 text-center bg-emerald-50 rounded-2xl border border-emerald-100">
+            <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center bg-emerald-50 rounded-2xl border border-emerald-100">
                 <CheckCircle2 className="w-16 h-16 text-emerald-500 mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Hospital Added!</h3>
-                <p className="text-gray-600">The hospital directory has been successfully updated.</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Hospital Registered!</h3>
+                <p className="text-gray-600 mb-8">The hospital directory has been successfully updated and a welcome kit was triggered.</p>
+                
+                {credentials && (
+                    <div className="w-full max-w-md bg-white p-6 rounded-2xl border border-emerald-200 shadow-xl shadow-emerald-900/5 mb-8">
+                        <div className="flex items-center gap-2 text-emerald-600 font-bold mb-4 uppercase tracking-wider text-xs">
+                            <Lock className="w-4 h-4" /> Credentials Generated
+                        </div>
+                        <div className="space-y-4 text-left">
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase">Username / Email</label>
+                                <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg font-mono text-sm break-all">{credentials.username}</div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase">Temporary Password</label>
+                                <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg font-mono text-sm tracking-wider select-all">{credentials.temporaryPassword}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                <button 
+                    onClick={() => {
+                        setSuccess(false);
+                        if (onClose) onClose();
+                    }}
+                    className="px-10 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-900/20"
+                >
+                    Return to Dashboard
+                </button>
             </div>
         );
     }
@@ -158,6 +197,19 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
                                 value={formData.name}
                                 onChange={handleChange}
                                 placeholder="e.g. Apollo Hospital"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-gray-900"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Official Email (for credentials)</label>
+                            <input
+                                required
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                placeholder="admin@hospital.com"
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-gray-900"
                             />
                         </div>
@@ -231,6 +283,20 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
                                     <CreditCard className="w-4 h-4" /> Online Pay
                                 </label>
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Management Mode</label>
+                            <select
+                                name="management_type"
+                                value={formData.management_type}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 bg-gray-900 text-white border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all outline-none font-bold"
+                            >
+                                <option value="SELF">Self Managed (Hospital Controls Data)</option>
+                                <option value="PILLORA">Pillora Managed (View-Only for Hospital)</option>
+                            </select>
+                            <p className="text-[10px] text-gray-400 font-medium">Self-Managed gives hospitals CRUD access to doctors/slots.</p>
                         </div>
                     </div>
                 </div>
