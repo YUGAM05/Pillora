@@ -64,7 +64,7 @@ export default function BloodBankPage() {
         const setupSocket = () => {
             const userStr = getUser();
             if (userStr) {
-                const user = JSON.parse(userStr);
+                const user = userStr;
                 socket.connect();
                 socket.emit('join', user._id || user.id);
                 console.log("[Socket] Joined room:", user._id || user.id);

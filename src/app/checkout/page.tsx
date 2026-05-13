@@ -57,7 +57,7 @@ export default function CheckoutPage() {
             router.push('/login?redirect=/checkout');
             return;
         }
-        const userData = JSON.parse(storedUser);
+        const userData = storedUser;
         setUser(userData);
 
         // Pre-fill user data

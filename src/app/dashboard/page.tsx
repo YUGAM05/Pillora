@@ -15,7 +15,7 @@ export default function DashboardPage() {
         if (!storedUser) {
             router.push("/login");
         } else {
-            setUser(JSON.parse(storedUser));
+            setUser(storedUser);
         }
     }, [router]);
 

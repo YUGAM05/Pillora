@@ -23,7 +23,7 @@ export default function Navbar() {
         setMounted(true);
         const checkAuth = () => {
             const storedUser = getUser();
-            if (storedUser) setUser(JSON.parse(storedUser));
+            if (storedUser) setUser(storedUser);
             else setUser(null);
         };
 
