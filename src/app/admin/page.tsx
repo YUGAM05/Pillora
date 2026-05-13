@@ -4,6 +4,7 @@ import api from "@/lib/api";
 import { getToken } from "@/lib/tokenStorage";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { 
     Users, 
     Heart, 
@@ -25,27 +26,39 @@ import {
     X,
     Search,
     Bell,
-    Settings,
-    ArrowUpRight
+    ArrowUpRight,
+    TrendingUp
 } from "lucide-react";
 import BloodBankAdmin from "@/components/BloodBankAdmin";
 import AddHospitalForm from "@/components/AddHospitalForm";
 import HospitalListAdmin from "@/components/HospitalListAdmin";
 import PartnerInquiriesAdmin from "@/components/PartnerInquiriesAdmin";
 
+// Premium Font Configuration
+const jakarta = Plus_Jakarta_Sans({ 
+    subsets: ["latin"],
+    weight: ['400', '500', '600', '700', '800'],
+    variable: '--font-jakarta',
+});
+
+const inter = Inter({ 
+    subsets: ["latin"],
+    variable: '--font-inter',
+});
+
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.08
+            staggerChildren: 0.05
         }
     }
 };
 
 const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } }
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 1, 0.5, 1] } }
 };
 
 type TabId = 'overview' | 'approvals' | 'bloodbank' | 'hospitals' | 'partners';
@@ -125,30 +138,14 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white flex flex-col items-center justify-center relative overflow-hidden">
-                <div className="absolute w-[600px] h-[600px] bg-blue-100 rounded-full blur-[140px] animate-pulse" />
+            <div className={`min-h-screen bg-white flex flex-col items-center justify-center relative overflow-hidden ${jakarta.variable} font-sans`}>
+                <div className="absolute w-[600px] h-[600px] bg-blue-50/50 rounded-full blur-[120px] animate-pulse" />
                 <motion.div 
                     animate={{ rotate: 360 }} 
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full relative z-10 shadow-xl"
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-12 h-12 border-[3px] border-blue-50 border-t-blue-600 rounded-full relative z-10"
                 />
-                <p className="mt-8 font-black text-blue-900 tracking-[0.4em] uppercase text-[10px] relative z-10 italic">Initializing Command Center</p>
-            </div>
-        )
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-                <div className="absolute w-[600px] h-[600px] bg-red-100 rounded-full blur-[140px]" />
-                <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative z-10 text-center bg-white border border-red-100 p-16 rounded-[4rem] shadow-2xl shadow-red-900/10">
-                    <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                        <Lock className="w-12 h-12 text-red-500" />
-                    </div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">Access Restricted</h1>
-                    <p className="text-slate-500 mt-4 max-w-sm mx-auto leading-relaxed font-medium italic">{error}</p>
-                    <button onClick={() => router.push('/')} className="mt-12 px-10 py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-red-600 hover:-translate-y-1 transition-all shadow-xl shadow-slate-900/20 active:scale-95 uppercase tracking-widest text-xs">Return to Surface</button>
-                </motion.div>
+                <p className="mt-8 font-semibold text-slate-400 tracking-[0.3em] uppercase text-[9px] relative z-10">Secure Boot</p>
             </div>
         )
     }
@@ -157,54 +154,50 @@ export default function AdminDashboard() {
         { id: 'overview', label: 'Overview', icon: BarChart3, color: 'text-blue-600' },
         { id: 'approvals', label: 'User Approvals', icon: Lock, color: 'text-amber-500', badge: pendingUsers.length },
         { id: 'bloodbank', label: 'Blood Connect', icon: Droplets, color: 'text-rose-500' },
-        { id: 'hospitals', label: 'Hospitals', icon: IndigoIcon, color: 'text-indigo-600' },
+        { id: 'hospitals', label: 'Hospitals', icon: Building2, color: 'text-indigo-600' },
         { id: 'partners', label: 'Partnerships', icon: Handshake, color: 'text-emerald-600' },
     ];
 
-    function IndigoIcon(props: any) {
-        return <Building2 {...props} />;
-    }
-
     return (
-        <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans selection:bg-blue-600/20 flex overflow-hidden">
+        <div className={`min-h-screen bg-[#FDFDFF] text-slate-900 ${jakarta.variable} ${inter.variable} font-sans selection:bg-blue-600/10 flex overflow-hidden`}>
             {/* Sidebar */}
             <motion.aside 
                 initial={false}
-                animate={{ width: isSidebarOpen ? '300px' : '90px' }}
-                className="bg-white border-r border-slate-200 flex flex-col relative z-50 shadow-2xl shadow-blue-900/5"
+                animate={{ width: isSidebarOpen ? '320px' : '96px' }}
+                className="bg-white border-r border-slate-100 flex flex-col relative z-50 transition-all duration-500"
             >
                 {/* Logo Section */}
-                <div className="h-24 flex items-center px-7 gap-4 border-b border-slate-50">
-                    <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-blue-600/30">
-                        <Shield className="w-6 h-6 text-white" />
+                <div className="h-28 flex items-center px-8 gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shrink-0 shadow-2xl shadow-blue-600/40">
+                        <Shield className="w-7 h-7 text-white" />
                     </div>
                     {isSidebarOpen && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-black text-2xl tracking-tighter text-slate-900">
-                            PILLORA <span className="text-blue-600 font-black">PRO</span>
+                        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="font-bold text-2xl tracking-tight text-slate-900 font-jakarta">
+                            Pillora <span className="text-blue-600 font-extrabold">Hub</span>
                         </motion.div>
                     )}
                 </div>
 
                 {/* Nav Items */}
-                <nav className="flex-1 py-10 px-5 space-y-2 overflow-y-auto custom-scrollbar">
+                <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
                     {navigation.map((item) => (
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id as TabId)}
-                            className={`w-full flex items-center gap-4 px-5 py-4 rounded-[1.5rem] transition-all duration-500 relative group ${
+                            className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 relative group ${
                                 activeTab === item.id 
-                                ? 'bg-blue-600 text-white shadow-2xl shadow-blue-600/30' 
-                                : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600'
+                                ? 'bg-blue-600 text-white shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)]' 
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                             }`}
                         >
-                            <item.icon className={`w-6 h-6 shrink-0 transition-transform group-hover:scale-110 ${activeTab === item.id ? 'text-white' : item.color}`} />
+                            <item.icon className={`w-5 h-5 shrink-0 transition-transform duration-300 ${activeTab === item.id ? 'text-white' : item.color} group-hover:scale-110`} />
                             {isSidebarOpen && (
-                                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-black text-sm tracking-tight">
+                                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-semibold text-[15px] tracking-tight">
                                     {item.label}
                                 </motion.span>
                             )}
                             {item.badge && item.badge > 0 && (
-                                <span className={`absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shadow-md ${
+                                <span className={`absolute right-4 top-1/2 -translate-y-1/2 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                                     activeTab === item.id ? 'bg-white text-blue-600' : 'bg-red-500 text-white'
                                 }`}>
                                     {item.badge}
@@ -214,164 +207,178 @@ export default function AdminDashboard() {
                     ))}
                 </nav>
 
-                {/* Bottom Profile */}
+                {/* User Profile Area */}
                 <div className="p-6 border-t border-slate-50">
+                    <div className={`flex items-center gap-4 p-4 rounded-2xl bg-slate-50 mb-4 transition-all ${!isSidebarOpen && 'justify-center p-2'}`}>
+                        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm shrink-0">SA</div>
+                        {isSidebarOpen && (
+                            <div className="overflow-hidden">
+                                <p className="font-bold text-sm text-slate-900 truncate">Super Admin</p>
+                                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest truncate">Root Access</p>
+                            </div>
+                        )}
+                    </div>
                     <button 
                         onClick={() => {
-                            if(confirm("Logout from Command Center?")) {
+                            if(confirm("Terminate administrative session?")) {
                                 router.push('/');
                             }
                         }}
-                        className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-slate-400 hover:bg-red-50 hover:text-red-600 transition-all group font-black text-sm uppercase tracking-widest"
+                        className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600 transition-all group font-bold text-xs uppercase tracking-[0.2em]"
                     >
-                        <LogOut className="w-5 h-5 shrink-0 group-hover:rotate-12 transition-transform" />
-                        {isSidebarOpen && <span>Sign Out</span>}
+                        <LogOut className="w-4 h-4 shrink-0 group-hover:rotate-12 transition-transform" />
+                        {isSidebarOpen && <span>Logout</span>}
                     </button>
                 </div>
 
-                {/* Collapse Toggle */}
+                {/* Toggle Button */}
                 <button 
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="absolute -right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 shadow-xl hover:scale-110 transition-all hover:text-blue-600"
+                    className="absolute -right-4 top-32 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-400 shadow-xl hover:text-blue-600 hover:border-blue-200 transition-all z-[60]"
                 >
-                    {isSidebarOpen ? <ChevronRight className="w-5 h-5 rotate-180" /> : <ChevronRight className="w-5 h-5" />}
+                    {isSidebarOpen ? <X className="w-3.5 h-3.5" /> : <Menu className="w-3.5 h-3.5" />}
                 </button>
             </motion.aside>
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col relative overflow-hidden bg-white">
-                {/* Background Blobs */}
-                <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-50/50 blur-[140px] pointer-events-none" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-50/50 blur-[120px] pointer-events-none" />
-
-                {/* Top Header */}
-                <header className="h-24 px-12 flex items-center justify-between border-b border-slate-100 relative z-10 bg-white/70 backdrop-blur-xl">
-                    <div className="flex items-center gap-8">
-                        <div>
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">
-                                {navigation.find(n => n.id === activeTab)?.label}
-                            </h2>
-                            <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest mt-2">
-                                <LayoutDashboard className="w-3 h-3" />
-                                <span>Root Console</span>
-                                <ChevronRight className="w-3 h-3" />
-                                <span className="text-blue-600">{navigation.find(n => n.id === activeTab)?.label}</span>
-                            </div>
+                {/* Background Decoration */}
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-50/30 rounded-full blur-[140px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
+                
+                {/* Header */}
+                <header className="h-28 px-12 flex items-center justify-between relative z-10">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">
+                            <LayoutDashboard className="w-3 h-3" /> System
+                            <ChevronRight className="w-3 h-3" /> {activeTab}
                         </div>
+                        <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight font-jakarta">
+                            {navigation.find(n => n.id === activeTab)?.label}
+                        </h2>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="hidden lg:flex items-center gap-3 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-8">
+                        <div className="hidden xl:flex items-center gap-3 px-6 py-3 bg-slate-50/80 rounded-2xl border border-slate-100 focus-within:bg-white focus-within:border-blue-200 focus-within:shadow-xl focus-within:shadow-blue-900/5 transition-all">
                             <Search className="w-4 h-4 text-slate-400" />
-                            <input type="text" placeholder="Quick system search..." className="bg-transparent border-none outline-none text-sm font-bold text-slate-900 placeholder:text-slate-400 w-64" />
+                            <input type="text" placeholder="Search system resources..." className="bg-transparent border-none outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400 w-72" />
                         </div>
-                        <button className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-blue-50 hover:text-blue-600 transition-all relative">
-                            <Bell className="w-6 h-6" />
-                            <span className="absolute top-4 right-4 w-2.5 h-2.5 bg-blue-600 rounded-full border-2 border-white" />
-                        </button>
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-white font-black text-sm shadow-2xl ring-4 ring-blue-50">
-                            SA
+                        <div className="flex items-center gap-3">
+                            <button className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-blue-900/5 transition-all relative">
+                                <Bell className="w-5 h-5 text-slate-500" />
+                                <span className="absolute top-4 right-4 w-2 h-2 bg-blue-600 rounded-full ring-4 ring-white" />
+                            </button>
+                            <button className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-xl hover:shadow-blue-900/5 transition-all">
+                                <Settings className="w-5 h-5 text-slate-500" />
+                            </button>
                         </div>
                     </div>
                 </header>
 
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-12 relative z-10 custom-scrollbar">
+                {/* Content Container */}
+                <div className="flex-1 overflow-y-auto px-12 pb-12 relative z-10 custom-scrollbar">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeTab}
-                            initial={{ opacity: 0, scale: 0.99, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.99, y: -10 }}
-                            transition={{ duration: 0.4 }}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.35, ease: "circOut" }}
+                            className="font-inter"
                         >
                             {activeTab === 'overview' && (
                                 <div className="space-y-12">
                                     {/* Stats Grid */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                         <StatCard
-                                            icon={<Users className="w-8 h-8" />}
-                                            label="Network Residents"
+                                            icon={<Users className="w-7 h-7" />}
+                                            label="Total Network Users"
                                             value={stats?.counts?.users || 0}
-                                            trend="+12%"
+                                            trend="+12.4%"
                                             color="blue"
                                         />
                                         <StatCard
-                                            icon={<Heart className="w-8 h-8" />}
-                                            label="Live Donors"
+                                            icon={<Heart className="w-7 h-7" />}
+                                            label="Verified Donors"
                                             value={stats?.counts?.donors || 0}
-                                            trend="+5%"
+                                            trend="+3.2%"
                                             color="rose"
                                         />
                                         <StatCard
-                                            icon={<Activity className="w-8 h-8" />}
-                                            label="Core Activity"
+                                            icon={<TrendingUp className="w-7 h-7" />}
+                                            label="System Activity"
                                             value={stats?.counts?.activity || 0}
-                                            trend="+28%"
+                                            trend="+28.1%"
                                             color="emerald"
                                         />
                                     </div>
 
-                                    {/* System Insights */}
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                        <div className="lg:col-span-2 bg-white border border-slate-100 p-10 rounded-[3rem] shadow-2xl shadow-blue-900/5 hover:border-blue-100 transition-colors">
+                                    {/* Detailed Insights */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                                        {/* Activity Log */}
+                                        <div className="lg:col-span-8 bg-white border border-slate-100 p-10 rounded-[2.5rem] shadow-xl shadow-blue-900/5">
                                             <div className="flex items-center justify-between mb-10">
-                                                <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                                                    <Activity className="w-7 h-7 text-blue-600" /> Platform Pulse
+                                                <h3 className="text-xl font-bold text-slate-900 font-jakarta flex items-center gap-3">
+                                                    <Activity className="w-5 h-5 text-blue-600" /> Platform Insights
                                                 </h3>
-                                                <button className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all">
-                                                    Full Audit <ArrowUpRight className="w-4 h-4" />
+                                                <button className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition-all flex items-center gap-2">
+                                                    View Detailed Log <ArrowUpRight className="w-4 h-4" />
                                                 </button>
                                             </div>
-                                            <div className="space-y-5">
+                                            <div className="space-y-4">
                                                 {[
-                                                    { title: "Hospital Module v4.2.0", time: "2 hours ago", status: "Active", type: "Deployment" },
-                                                    { title: "Database Indexing", time: "5 hours ago", status: "Success", type: "System" },
-                                                    { title: "Aadhaar API Integration", time: "Yesterday", status: "Active", type: "Security" }
-                                                ].map((item, i) => (
-                                                    <div key={i} className="flex items-center justify-between p-6 bg-slate-50/50 hover:bg-blue-50/50 rounded-3xl border border-slate-100 transition-all group">
+                                                    { title: "New Hospital Registered", desc: "Apollo Healthcare successfully added to the network.", time: "14 mins ago", tag: "Registry" },
+                                                    { title: "Database Sync Complete", desc: "Global blood donor indices optimized and synced.", time: "2 hours ago", tag: "System" },
+                                                    { title: "Security Patch v2.1", desc: "Aadhaar verification middleware updated for faster processing.", time: "5 hours ago", tag: "Security" }
+                                                ].map((log, i) => (
+                                                    <div key={i} className="flex items-center justify-between p-6 bg-[#FDFDFF] hover:bg-blue-50/30 rounded-3xl border border-slate-50 transition-all group">
                                                         <div className="flex items-center gap-6">
-                                                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm group-hover:scale-110 transition-transform">
-                                                                <Package className="w-6 h-6" />
+                                                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-slate-400 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:text-blue-600 transition-all">
+                                                                <Package className="w-5 h-5" />
                                                             </div>
                                                             <div>
-                                                                <p className="font-black text-slate-900 text-lg leading-tight">{item.title}</p>
-                                                                <div className="flex items-center gap-2 mt-1">
-                                                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{item.type}</span>
-                                                                    <span className="text-slate-300">•</span>
-                                                                    <span className="text-xs text-slate-400 font-bold italic">{item.time}</span>
-                                                                </div>
+                                                                <p className="font-bold text-slate-900 text-base mb-0.5">{log.title}</p>
+                                                                <p className="text-sm text-slate-500 font-medium">{log.desc}</p>
                                                             </div>
                                                         </div>
-                                                        <div className="px-5 py-2 bg-white text-emerald-600 text-[10px] font-black uppercase rounded-2xl border border-emerald-100 shadow-sm">
-                                                            {item.status}
+                                                        <div className="text-right hidden sm:block">
+                                                            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">{log.tag}</p>
+                                                            <p className="text-[11px] font-semibold text-slate-400">{log.time}</p>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
-                                        <div className="bg-slate-900 p-10 rounded-[3rem] shadow-2xl text-white relative overflow-hidden group">
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl -z-0" />
-                                            <h3 className="text-2xl font-black mb-8 flex items-center gap-3 relative z-10">
-                                                <Bell className="w-7 h-7 text-amber-500" /> Notifications
+                                        {/* Notifications / Alerts */}
+                                        <div className="lg:col-span-4 bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+                                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl" />
+                                            <h3 className="text-xl font-bold text-white font-jakarta mb-8 flex items-center gap-3 relative z-10">
+                                                <Bell className="w-5 h-5 text-amber-500" /> Active Alerts
                                             </h3>
                                             <div className="space-y-6 relative z-10">
-                                                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer">
-                                                    <p className="text-xs font-black text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                                                        <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" /> High Priority
-                                                    </p>
-                                                    <p className="text-sm font-bold text-white leading-relaxed">NGO Partner &quot;Red Cross&quot; has submitted a new enterprise proposal. Review pending.</p>
-                                                    <p className="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-tighter">Received 12m ago</p>
+                                                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer group/alert">
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-3">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Urgent Requirement
+                                                    </div>
+                                                    <p className="text-sm font-semibold text-slate-200 leading-relaxed">NGO &quot;LifeSource&quot; is requesting priority access for blood donor API.</p>
+                                                    <div className="flex items-center justify-between mt-4">
+                                                        <span className="text-[10px] text-slate-500 font-bold uppercase">Today • 11:24 AM</span>
+                                                        <ChevronRight className="w-4 h-4 text-slate-600 group-hover/alert:translate-x-1 transition-transform" />
+                                                    </div>
                                                 </div>
-                                                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer">
-                                                    <p className="text-xs font-black text-blue-400 uppercase tracking-widest mb-2">System Update</p>
-                                                    <p className="text-sm font-bold text-slate-300 leading-relaxed">Optimization complete for Indian Region blood matching indices.</p>
-                                                    <p className="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-tighter">Received 4h ago</p>
+                                                <div className="p-6 bg-white/5 rounded-3xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer group/alert">
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-3">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400" /> System Update
+                                                    </div>
+                                                    <p className="text-sm font-semibold text-slate-300 leading-relaxed">Automatic backup of PostgreSQL database completed successfully.</p>
+                                                    <div className="flex items-center justify-between mt-4">
+                                                        <span className="text-[10px] text-slate-500 font-bold uppercase">Today • 04:12 AM</span>
+                                                        <ChevronRight className="w-4 h-4 text-slate-600 group-hover/alert:translate-x-1 transition-transform" />
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <button className="w-full mt-8 py-4 bg-white text-slate-900 font-black rounded-2xl text-xs uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white transition-all shadow-xl">
-                                                Clear All Alerts
+                                            <button className="w-full mt-10 py-4 bg-white/10 text-white font-bold rounded-2xl text-[11px] uppercase tracking-[0.2em] hover:bg-white hover:text-slate-900 transition-all">
+                                                Clear Command Center
                                             </button>
                                         </div>
                                     </div>
@@ -379,25 +386,27 @@ export default function AdminDashboard() {
                             )}
 
                             {activeTab === 'approvals' && (
-                                <div className="space-y-10">
-                                    <div className="bg-white border border-slate-100 p-12 rounded-[4rem] shadow-2xl shadow-blue-900/5">
-                                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
+                                <div className="space-y-8">
+                                    <div className="bg-white border border-slate-100 p-12 rounded-[3rem] shadow-xl shadow-blue-900/5">
+                                        <div className="flex items-center justify-between mb-12">
                                             <div>
-                                                <h3 className="text-3xl font-black text-slate-900 flex items-center gap-4 tracking-tighter uppercase">
-                                                    <Lock className="w-9 h-9 text-blue-600" /> Pending Authorizations
+                                                <h3 className="text-2xl font-bold text-slate-900 font-jakarta flex items-center gap-3">
+                                                    <Lock className="w-6 h-6 text-amber-500" /> Identity Verification
                                                 </h3>
-                                                <p className="text-slate-500 font-medium mt-1 italic">Verify new medical practitioners and administrative staff</p>
+                                                <p className="text-slate-500 font-medium mt-1.5">Review credentials of new platform participants</p>
                                             </div>
-                                            <div className="px-6 py-3 bg-blue-50 text-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest border border-blue-100 shadow-sm">
-                                                {pendingUsers.length} Applications Waiting
+                                            <div className="px-5 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                                                {pendingUsers.length} Applications Pending
                                             </div>
                                         </div>
 
                                         {pendingUsers.length === 0 ? (
-                                            <div className="text-center py-32 bg-slate-50/50 rounded-[3rem] border-2 border-dashed border-slate-100">
-                                                <CheckCircle2 className="w-20 h-20 text-slate-200 mx-auto mb-6" />
-                                                <h4 className="text-2xl font-black text-slate-400 uppercase tracking-[0.2em]">All Systems Clear</h4>
-                                                <p className="text-slate-500 mt-3 font-medium italic">There are no pending user approvals at this moment.</p>
+                                            <div className="text-center py-24 bg-[#FDFDFF] rounded-[2.5rem] border-2 border-dashed border-slate-100">
+                                                <div className="w-20 h-20 bg-white rounded-full shadow-xl flex items-center justify-center mx-auto mb-6">
+                                                    <CheckCircle2 className="w-10 h-10 text-slate-200" />
+                                                </div>
+                                                <h4 className="text-xl font-bold text-slate-400 uppercase tracking-widest">Verification Clear</h4>
+                                                <p className="text-slate-400 mt-2 font-medium">No pending user applications to process.</p>
                                             </div>
                                         ) : (
                                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -405,33 +414,33 @@ export default function AdminDashboard() {
                                                     {pendingUsers.map((user: any) => (
                                                         <motion.div 
                                                             key={user._id}
-                                                            initial={{ opacity: 0, y: 15 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, scale: 0.98 }}
-                                                            className="group flex flex-col p-8 bg-white hover:bg-slate-50/50 rounded-[2.5rem] border border-slate-100 hover:border-blue-200 transition-all duration-500 shadow-lg shadow-blue-900/5"
+                                                            initial={{ opacity: 0, scale: 0.98 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            exit={{ opacity: 0, scale: 0.95 }}
+                                                            className="flex flex-col p-8 bg-[#FDFDFF] hover:bg-white rounded-[2rem] border border-slate-50 hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500"
                                                         >
-                                                            <div className="flex items-center gap-6 mb-8">
-                                                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-black text-2xl shadow-xl group-hover:scale-110 transition-transform duration-500">
+                                                            <div className="flex items-center gap-6 mb-10">
+                                                                <div className="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center text-white font-bold text-2xl shadow-xl">
                                                                     {user.name.charAt(0)}
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-black text-slate-900 text-xl tracking-tight leading-none">{user.name}</p>
-                                                                    <div className="flex flex-wrap items-center gap-3 mt-2">
-                                                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-black uppercase tracking-widest">{user.role}</span>
-                                                                        <span className="text-slate-400 text-sm font-bold">{user.email}</span>
+                                                                    <p className="font-bold text-slate-900 text-lg leading-none">{user.name}</p>
+                                                                    <div className="flex items-center gap-3 mt-2.5">
+                                                                        <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-widest">{user.role}</span>
+                                                                        <span className="text-slate-400 text-xs font-semibold">{user.email}</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                             <div className="flex gap-3">
                                                                 <button
                                                                     onClick={() => handleStatusUpdate(user._id, 'approved')}
-                                                                    className="flex-1 py-4 bg-blue-600 text-white hover:bg-blue-700 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/20 active:scale-95"
+                                                                    className="flex-1 py-4 bg-blue-600 text-white hover:bg-blue-700 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all shadow-lg shadow-blue-600/20 active:scale-95"
                                                                 >
                                                                     Approve
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleStatusUpdate(user._id, 'rejected')}
-                                                                    className="flex-1 py-4 bg-white text-rose-500 hover:bg-rose-500 hover:text-white border-2 border-rose-100 hover:border-rose-500 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm"
+                                                                    className="flex-1 py-4 bg-white text-rose-500 hover:bg-rose-50 border border-rose-100 rounded-2xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all active:scale-95"
                                                                 >
                                                                     Reject
                                                                 </button>
@@ -446,20 +455,22 @@ export default function AdminDashboard() {
                             )}
 
                             {activeTab === 'bloodbank' && (
-                                <div className="space-y-10">
-                                    <div className="bg-white border border-slate-100 p-12 rounded-[4rem] shadow-2xl shadow-blue-900/5">
+                                <div className="space-y-8">
+                                    <div className="bg-white border border-slate-100 p-12 rounded-[3rem] shadow-xl shadow-blue-900/5">
                                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
-                                            <div>
-                                                <h3 className="text-3xl font-black text-slate-900 flex items-center gap-4 uppercase tracking-tighter">
-                                                    <Droplets className="w-10 h-10 text-rose-600" /> Blood Connect Network
+                                            <div className="space-y-1">
+                                                <h3 className="text-2xl font-bold text-slate-900 font-jakarta flex items-center gap-3">
+                                                    <Droplets className="w-8 h-8 text-rose-500" /> Blood Network Live
                                                 </h3>
-                                                <p className="text-slate-500 font-medium mt-1 italic">Real-time matching console for life-critical operations</p>
+                                                <p className="text-slate-500 font-medium italic">Emergency resource tracking and donor coordination console</p>
                                             </div>
-                                            <div className="flex items-center gap-3 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 text-xs font-black shadow-sm uppercase tracking-widest italic">
-                                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-emerald-500/50" /> System Live
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-3 px-5 py-2.5 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 text-[10px] font-bold uppercase tracking-widest">
+                                                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> Network Synchronized
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="bg-slate-50/50 rounded-[3rem] border border-slate-100 p-8 shadow-inner">
+                                        <div className="bg-[#FDFDFF] rounded-[2.5rem] border border-slate-100 p-8">
                                             <BloodBankAdmin />
                                         </div>
                                     </div>
@@ -469,20 +480,20 @@ export default function AdminDashboard() {
                             {activeTab === 'hospitals' && (
                                 <div className="space-y-12">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8">
-                                        <div>
-                                            <h3 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">Medical Facilities</h3>
-                                            <p className="text-slate-500 font-medium mt-2 italic">Curate and expand India&apos;s most reliable hospital network</p>
+                                        <div className="space-y-1">
+                                            <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight font-jakarta">Medical Directory</h2>
+                                            <p className="text-slate-500 font-medium text-lg italic">Manage healthcare infrastructure and system registration</p>
                                         </div>
                                         <button
                                             onClick={() => setShowAddHospital(!showAddHospital)}
-                                            className={`px-10 py-5 rounded-[2rem] text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center gap-3 shadow-2xl ${
+                                            className={`px-10 py-5 rounded-2xl text-[11px] font-bold uppercase tracking-[0.25em] transition-all duration-500 flex items-center gap-3 shadow-2xl ${
                                                 showAddHospital 
                                                 ? 'bg-slate-900 text-white hover:bg-slate-800' 
-                                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30 hover:-translate-y-2 active:scale-95'
+                                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/40 hover:-translate-y-2 active:scale-95'
                                             }`}
                                         >
                                             {showAddHospital ? <XCircle className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
-                                            {showAddHospital ? 'Close Form' : 'Register Hospital'}
+                                            {showAddHospital ? 'Exit Form' : 'Register Hospital'}
                                         </button>
                                     </div>
 
@@ -493,7 +504,7 @@ export default function AdminDashboard() {
                                                 initial={{ opacity: 0, scale: 0.99, y: 20 }}
                                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                                 exit={{ opacity: 0, scale: 0.99, y: -20 }}
-                                                className="bg-white rounded-[4rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden"
+                                                className="bg-white rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden"
                                             >
                                                 <AddHospitalForm onClose={() => {
                                                     setShowAddHospital(false);
@@ -505,7 +516,7 @@ export default function AdminDashboard() {
                                                 key="hospital-list"
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
-                                                className="bg-white p-12 rounded-[4rem] shadow-2xl shadow-blue-900/5 border border-slate-50"
+                                                className="bg-white p-12 rounded-[3.5rem] shadow-xl shadow-blue-900/5 border border-slate-50"
                                             >
                                                 <HospitalListAdmin key={refreshTrigger} />
                                             </motion.div>
@@ -516,13 +527,13 @@ export default function AdminDashboard() {
 
                             {activeTab === 'partners' && (
                                 <div className="space-y-10">
-                                    <div className="bg-white border border-slate-100 p-12 rounded-[4rem] shadow-2xl shadow-blue-900/5">
+                                    <div className="bg-white border border-slate-100 p-12 rounded-[3rem] shadow-xl shadow-blue-900/5">
                                         <div className="flex items-center justify-between mb-12">
-                                            <div>
-                                                <h3 className="text-3xl font-black text-slate-900 flex items-center gap-4 tracking-tighter uppercase leading-none">
-                                                    <Handshake className="w-10 h-10 text-blue-600" /> Collaboration Hub
+                                            <div className="space-y-1">
+                                                <h3 className="text-3xl font-extrabold text-slate-900 font-jakarta flex items-center gap-4 tracking-tight">
+                                                    <Handshake className="w-10 h-10 text-blue-600" /> Strategic Hub
                                                 </h3>
-                                                <p className="text-slate-500 font-medium mt-2 italic">Strategic proposals from Hospitals & NGOs</p>
+                                                <p className="text-slate-500 font-medium text-lg italic">Collaboration proposals from Healthcare Entities & NGOs</p>
                                             </div>
                                         </div>
                                         <PartnerInquiriesAdmin />
@@ -542,51 +553,52 @@ function StatCard({ icon, label, value, trend, color }: any) {
         blue: {
             bg: 'bg-blue-50',
             icon: 'text-blue-600',
-            light: 'bg-blue-100/50',
-            shadow: 'shadow-blue-900/5'
+            border: 'border-blue-100/50',
+            indicator: 'bg-blue-500'
         },
         rose: {
             bg: 'bg-rose-50',
             icon: 'text-rose-600',
-            light: 'bg-rose-100/50',
-            shadow: 'shadow-rose-900/5'
+            border: 'border-rose-100/50',
+            indicator: 'bg-rose-500'
         },
         emerald: {
             bg: 'bg-emerald-50',
             icon: 'text-emerald-600',
-            light: 'bg-emerald-100/50',
-            shadow: 'shadow-emerald-900/5'
+            border: 'border-emerald-100/50',
+            indicator: 'bg-emerald-500'
         }
     };
 
     return (
         <motion.div
             variants={itemVariants}
-            className={`group p-10 rounded-[3.5rem] bg-white border border-slate-50 transition-all duration-700 hover:-translate-y-2 hover:shadow-2xl ${colors[color].shadow} hover:border-blue-100 relative overflow-hidden`}
+            className="group p-10 rounded-[3rem] bg-white border border-slate-100 transition-all duration-700 hover:shadow-2xl hover:shadow-blue-900/10 hover:border-blue-100 relative overflow-hidden"
         >
-            <div className={`absolute -right-12 -top-12 w-48 h-48 rounded-full ${colors[color].bg} blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700`} />
+            <div className={`absolute -right-12 -top-12 w-48 h-48 rounded-full ${colors[color].bg} blur-3xl opacity-30 group-hover:opacity-60 transition-opacity duration-700`} />
             
             <div className="flex items-start justify-between mb-10 relative z-10">
-                <div className={`p-5 ${colors[color].bg} rounded-3xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 border border-transparent group-hover:border-white`}>
+                <div className={`p-5 ${colors[color].bg} rounded-2xl group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 border border-transparent group-hover:border-white shadow-sm`}>
                     <div className={colors[color].icon}>{icon}</div>
                 </div>
-                <div className="px-4 py-1.5 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-full border border-slate-100">
-                    Live
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-100 rounded-full">
+                    <div className={`w-1.5 h-1.5 rounded-full ${colors[color].indicator} animate-pulse`} />
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Realtime</span>
                 </div>
             </div>
             
             <div className="relative z-10">
-                <h3 className="text-6xl font-black text-slate-900 mb-2 tracking-tighter">
+                <h3 className="text-6xl font-extrabold text-slate-900 mb-2 tracking-tighter font-jakarta">
                     {value}
                 </h3>
-                <p className="text-slate-400 font-black tracking-[0.2em] uppercase text-[10px] italic">{label}</p>
+                <p className="text-slate-400 font-bold tracking-[0.2em] uppercase text-[9px] italic">{label}</p>
             </div>
 
-            <div className="mt-8 flex items-center gap-3">
-                <div className={`flex items-center gap-1.5 px-3 py-1 ${colors[color].light} ${colors[color].icon} text-xs font-black rounded-xl`}>
-                    <Activity className="w-3.5 h-3.5" /> {trend}
+            <div className="mt-10 pt-8 border-t border-slate-50 flex items-center justify-between">
+                <div className={`flex items-center gap-1.5 ${colors[color].icon} text-sm font-bold`}>
+                    <TrendingUp className="w-4 h-4" /> {trend}
                 </div>
-                <span className="text-slate-300 text-[10px] font-black uppercase tracking-tighter">vs prev phase</span>
+                <span className="text-slate-300 text-[10px] font-bold uppercase tracking-widest">Growth Index</span>
             </div>
         </motion.div>
     )
