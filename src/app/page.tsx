@@ -5,6 +5,7 @@ import { CheckCircle, ShieldCheck, Upload, FileHeart, MapPin, Activity, UserChec
 import HealthHubSection from "@/components/HealthHubSection";
 import { getUser, getToken } from "@/lib/tokenStorage";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface FeatureItemProps {
     icon: React.ReactNode;
@@ -60,7 +61,12 @@ function HealthTipsSection() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row group transition-all hover:shadow-xl hover:-translate-y-1">
                     <div className="w-full md:w-2/5 h-48 md:h-auto relative overflow-hidden">
-                        <img src="/tip1.png" alt="Stay Hydrated" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <Image 
+                            src="/tip1.png" 
+                            alt="Stay Hydrated" 
+                            fill 
+                            className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                        />
                     </div>
                     <div className="p-6 md:p-8 flex flex-col justify-center flex-1">
                         <div className="bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Wellness</div>
@@ -71,7 +77,12 @@ function HealthTipsSection() {
 
                 <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row group transition-all hover:shadow-xl hover:-translate-y-1">
                     <div className="w-full md:w-2/5 h-48 md:h-auto relative overflow-hidden">
-                        <img src="/tip2.png" alt="Balanced Diet" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <Image 
+                            src="/tip2.png" 
+                            alt="Balanced Diet" 
+                            fill 
+                            className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                        />
                     </div>
                     <div className="p-6 md:p-8 flex flex-col justify-center flex-1">
                         <div className="bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Nutrition</div>

@@ -1,6 +1,30 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Heart, Activity, MapPin, Droplet, User, Phone, CheckCircle, AlertOctagon, Clock, ShieldCheck, Siren, Info, Upload, FileIcon, Trash2, Image as ImageIcon } from 'lucide-react';
+import { 
+    CheckCircle, 
+    ShieldCheck, 
+    Upload, 
+    FileHeart, 
+    MapPin, 
+    Activity, 
+    UserCheck, 
+    CreditCard, 
+    Landmark, 
+    Stethoscope, 
+    Briefcase, 
+    User, 
+    Heart, 
+    Bell, 
+    Droplet, 
+    Phone, 
+    Siren, 
+    AlertOctagon, 
+    Trash2, 
+    Clock,
+    FileIcon,
+    Image as ImageIcon
+} from "lucide-react";
+import Image from "next/image";
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/api';
 import { getUser } from '@/lib/tokenStorage';
@@ -522,8 +546,14 @@ function CertificateView({
 
                         {/* Gold medal */}
                         <div style={{ position: 'absolute', bottom: '35px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/gold-medal.png" alt="Award Medal" style={{ width: '95px', height: 'auto', display: 'block' }} crossOrigin="anonymous" />
+                            <Image 
+                                src="/gold-medal.png" 
+                                alt="Award Medal" 
+                                width={95} 
+                                height={95} 
+                                style={{ display: 'block' }} 
+                                unoptimized
+                            />
                         </div>
 
                         {/* Date text */}
@@ -1203,7 +1233,7 @@ function RequestForm() {
                             </div>
                         ) : (
                             <div className="relative group rounded-xl overflow-hidden h-32 border border-gray-200">
-                                <img src={formData.kycDocumentImage} alt="KYC Document" className="w-full h-full object-cover" />
+                                <Image src={formData.kycDocumentImage} alt="KYC Document" fill className="object-cover" unoptimized />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                     <button type="button" onClick={removeImage} className="p-2 bg-white text-red-600 rounded-full hover:bg-red-50 transition-colors shadow-lg" title="Remove Image">
                                         <Trash2 className="w-5 h-5" />

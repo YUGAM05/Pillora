@@ -5,13 +5,15 @@ import api from "@/lib/api";
 import { getToken } from "@/lib/tokenStorage";
 import { Building2, MapPin, Phone, DollarSign, Clock, Trash2, Edit3, Loader2, Star, CreditCard, User, MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { useCallback } from "react";
 
 export default function HospitalListAdmin() {
     const [hospitals, setHospitals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const fetchHospitals = async () => {
+    const fetchHospitals = useCallback(async () => {
         try {
             const res = await api.get("/hospitals");
             setHospitals(res.data);
@@ -20,11 +22,11 @@ export default function HospitalListAdmin() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchHospitals();
-    }, []);
+    }, [fetchHospitals]);
 
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`Are you sure you want to delete ${name}?`)) return;
@@ -74,7 +76,7 @@ export default function HospitalListAdmin() {
                                     <div className="flex gap-4">
                                         <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
                                             {hospital.image ? (
-                                                <img src={hospital.image} alt="" className="w-full h-full object-cover rounded-2xl" />
+                                                <Image src={hospital.image} alt={hospital.name} fill className="object-cover rounded-2xl" unoptimized />
                                             ) : (
                                                 <Building2 className="w-7 h-7 text-primary" />
                                             )}

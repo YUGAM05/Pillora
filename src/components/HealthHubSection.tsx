@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import { Calendar, ArrowRight, Activity } from 'lucide-react';
+import Image from 'next/image';
 
 interface HealthTip {
     _id: string;
@@ -85,10 +86,12 @@ export default function HealthHubSection() {
                             >
                                 <div className="relative h-48 w-full bg-blue-50 overflow-hidden">
                                     {tip.imageUrl ? (
-                                        <img
+                                        <Image
                                             src={tip.imageUrl}
                                             alt={tip.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            fill
+                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                            unoptimized
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-blue-200">

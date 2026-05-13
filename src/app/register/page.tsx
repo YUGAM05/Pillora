@@ -6,6 +6,7 @@ import api from "@/lib/api";
 import { setToken, setUser } from "@/lib/tokenStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Lock, Loader2, ArrowRight, FileText, KeyRound, ShieldCheck } from "lucide-react";
+import Image from "next/image";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -125,7 +126,7 @@ export default function RegisterPage() {
             >
                 <div className="text-center mb-8">
                     <div className="flex justify-center mb-6">
-                        <img src="/pillora-logo-v2.svg" alt="Pillora" className="w-20 h-20 object-contain" />
+                        <Image src="/pillora-logo-v2.svg" alt="Pillora" width={80} height={80} className="object-contain" />
                     </div>
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
                         {mfaStep ? "Admin Verification" : "Create Account"}
@@ -156,7 +157,7 @@ export default function RegisterPage() {
                             {mfaSetup && (
                                 <div className="space-y-4 mb-6 text-center">
                                     <p className="text-slate-500 text-sm">Scan QR code with Authenticator:</p>
-                                    {qrCode && <img src={qrCode} alt="MFA QR Code" className="w-40 h-40 mx-auto" />}
+                                    {qrCode && <Image src={qrCode} alt="MFA QR Code" width={160} height={160} className="mx-auto" unoptimized />}
                                 </div>
                             )}
                             <div>

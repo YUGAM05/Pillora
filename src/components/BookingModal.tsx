@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, CheckCircle, AlertCircle, Loader2, User } from "lucide-react";
@@ -20,7 +20,7 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
 
-    const fetchSlots = async (date: string) => {
+    const fetchSlots = useCallback(async (date: string) => {
         setLoading(true);
         setError("");
         try {
@@ -31,11 +31,11 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [doctor._id]);
 
     useEffect(() => {
         if (selectedDate) fetchSlots(selectedDate);
-    }, [selectedDate]);
+    }, [selectedDate, fetchSlots]);
 
     const handleBook = async () => {
         if (!selectedSlot) return;

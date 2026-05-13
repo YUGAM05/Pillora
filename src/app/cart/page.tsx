@@ -4,6 +4,7 @@ import { getCartItems, updateCartQuantity, removeFromCart, getCartTotal, CartIte
 import Link from 'next/link';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, ArrowRight, Share2 } from 'lucide-react';
 import ShareButton from '@/components/ShareButton';
+import Image from 'next/image';
 
 export default function CartPage() {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -123,10 +124,12 @@ function CartItemCard({ item, onUpdate }: { item: CartItem; onUpdate: () => void
                 <Link href={`/products/${item.productId}`} className="flex-shrink-0 self-start">
                     <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-50 rounded-xl overflow-hidden shadow-inner">
                         {item.image ? (
-                            <img
+                            <Image
                                 src={item.image}
                                 alt={item.name}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
+                                unoptimized
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-300 text-3xl sm:text-4xl">

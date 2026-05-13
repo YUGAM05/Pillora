@@ -5,6 +5,7 @@ import { ShoppingCart, Heart, Star, Check, ShieldCheck, Truck, AlertCircle, Chev
 import api from '@/lib/api';
 import { addToCart } from '@/lib/cart';
 import ShareButton from '@/components/ShareButton';
+import Image from 'next/image';
 
 export default function ProductPage() {
     const params = useParams();
@@ -51,7 +52,13 @@ export default function ProductPage() {
                     <div className="space-y-4">
                         <div className="aspect-square bg-gray-100 rounded-2xl border border-gray-200 overflow-hidden relative group">
                             {images.length > 0 ? (
-                                <img src={images[selectedImage]} alt={product.name} className="w-full h-full object-contain mix-blend-multiply" />
+                                <Image 
+                                    src={images[selectedImage]} 
+                                    alt={product.name} 
+                                    fill 
+                                    className="object-contain mix-blend-multiply" 
+                                    unoptimized
+                                />
                             ) : (
                                 <div className="flex items-center justify-center h-full text-gray-300">No Image</div>
                             )}
@@ -62,9 +69,9 @@ export default function ProductPage() {
                                     <button
                                         key={idx}
                                         onClick={() => setSelectedImage(idx)}
-                                        className={`w-20 h-20 rounded-lg border-2 flex-shrink-0 overflow-hidden ${selectedImage === idx ? 'border-primary' : 'border-transparent hover:border-gray-300'}`}
+                                        className={`w-20 h-20 rounded-lg border-2 flex-shrink-0 overflow-hidden relative ${selectedImage === idx ? 'border-primary' : 'border-transparent hover:border-gray-300'}`}
                                     >
-                                        <img src={img} className="w-full h-full object-cover" />
+                                        <Image src={img} alt={`${product.name} thumbnail ${idx + 1}`} fill className="object-cover" unoptimized />
                                     </button>
                                 ))}
                             </div>

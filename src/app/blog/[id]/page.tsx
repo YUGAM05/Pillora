@@ -14,11 +14,13 @@ import {
     Droplets,
     Pill,
     Cpu,
-    MapPin
+    MapPin,
+    Building2
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 interface Blog {
     _id: string;
@@ -40,21 +42,21 @@ export default function BlogPostDetail() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchBlogDetail = async () => {
+            try {
+                const response = await api.get(`/blogs/${params.id}`);
+                setBlog(response.data);
+            } catch (error) {
+                console.error('Error fetching blog detail:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         if (params.id) {
             fetchBlogDetail();
         }
     }, [params.id]);
-
-    const fetchBlogDetail = async () => {
-        try {
-            const response = await api.get(`/blogs/${params.id}`);
-            setBlog(response.data);
-        } catch (error) {
-            console.error('Error fetching blog detail:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const getCategoryIcon = (category: string) => {
         switch (category) {
@@ -162,7 +164,13 @@ export default function BlogPostDetail() {
                         transition={{ delay: 0.2 }}
                         className="relative aspect-[16/9] w-full rounded-[2.5rem] overflow-hidden mb-16 shadow-2xl border border-gray-100"
                     >
-                        <img src={blog.imageUrl} alt={blog.title} className="w-full h-full object-cover" />
+                        <Image 
+                            src={blog.imageUrl} 
+                            alt={blog.title} 
+                            fill 
+                            className="object-cover" 
+                            unoptimized
+                        />
                     </motion.div>
                 )}
 

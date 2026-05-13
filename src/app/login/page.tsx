@@ -11,6 +11,7 @@ import { setToken, setUser as setStoredUser, getToken, getUser } from "@/lib/tok
 import { motion } from "framer-motion";
 import { Loader2, ArrowRight, Lock, Mail } from "lucide-react";
 import api from "@/lib/api";
+import Image from "next/image";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -109,8 +110,8 @@ export default function LoginPage() {
             >
                 <div className="text-center mb-8">
                     <div className="mb-6 flex justify-center">
-                        <div className="p-4 bg-primary/5 rounded-3xl">
-                            <img src="/pillora-logo-v2.svg" alt="Pillora" className="w-16 h-16 object-contain" />
+                        <div className="p-4 bg-primary/5 rounded-3xl relative w-16 h-16">
+                            <Image src="/pillora-logo-v2.svg" alt="Pillora" fill className="object-contain" />
                         </div>
                     </div>
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">
@@ -180,7 +181,7 @@ export default function LoginPage() {
                     disabled={loading}
                     className="w-full flex items-center justify-center gap-3 bg-white border border-gray-100 py-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm active:scale-[0.98] disabled:opacity-70"
                 >
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                    <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width={20} height={20} />
                     Google Account
                 </button>
                 
