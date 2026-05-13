@@ -163,16 +163,23 @@ export function getToken(): string | null {
     return storageGet('token');
 }
 
-export function getUser(): string | null {
-    return storageGet('user');
+export function getUser(): any | null {
+    const user = storageGet('user');
+    if (!user) return null;
+    try {
+        return JSON.parse(user);
+    } catch {
+        return user; // Return raw string if not JSON (fallback)
+    }
 }
 
 export function setToken(token: string): void {
     storageSet('token', token);
 }
 
-export function setUser(user: string): void {
-    storageSet('user', user);
+export function setUser(user: any): void {
+    const value = typeof user === 'string' ? user : JSON.stringify(user);
+    storageSet('user', value);
 }
 
 export function clearAuth(): void {
