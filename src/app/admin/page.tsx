@@ -344,7 +344,7 @@ export default function AdminDashboard() {
                                                     <div className="mt-1 w-2 h-2 rounded-full bg-amber-500 animate-ping" />
                                                     <div>
                                                         <p className="text-sm font-bold text-amber-500">New High Priority Request</p>
-                                                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">NGO Partner "Red Cross" has submitted a new enterprise proposal. Administrative review is pending.</p>
+                                                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">NGO Partner &quot;Red Cross&quot; has submitted a new enterprise proposal. Administrative review is pending.</p>
                                                     </div>
                                                 </div>
                                                 <div className="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10 flex items-start gap-4">
