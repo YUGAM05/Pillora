@@ -7,7 +7,7 @@ import {
     Building2, 
     MapPin, 
     Phone, 
-    DollarSign, 
+    IndianRupee, 
     Clock, 
     Trash2, 
     Edit3, 
@@ -122,7 +122,7 @@ export default function HospitalListAdmin() {
                                                     <MapPin className="w-3.5 h-3.5 text-blue-500" /> {hospital.city}
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-tighter">
-                                                    <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> ₹{hospital.consultationFee} Fee
+                                                    <IndianRupee className="w-3.5 h-3.5 text-emerald-500" /> ₹{hospital.consultationFee} Fee
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-tighter">
                                                     <User className="w-3.5 h-3.5 text-indigo-500" /> {hospital.doctors?.length || 0} Doctors

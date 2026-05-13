@@ -3,7 +3,7 @@
 import { useState } from "react";
 import api from "@/lib/api";
 import { getToken } from "@/lib/tokenStorage";
-import { Building2, MapPin, Phone, DollarSign, Clock, FileText, Loader2, CheckCircle2, CreditCard, User, GraduationCap, Calendar, Plus, Trash2, Image as ImageIcon, XCircle, Lock } from "lucide-react";
+import { Building2, MapPin, Phone, IndianRupee, Clock, FileText, Loader2, CheckCircle2, CreditCard, User, GraduationCap, Calendar, Plus, Trash2, Image as ImageIcon, XCircle, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -229,7 +229,7 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
                             <div className="space-y-2">
                                 <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Consultation Fee</label>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-3.5 text-gray-400 font-bold">₹</span>
+                                    <span className="absolute left-4 top-3.5 text-gray-400 font-bold text-sm">₹</span>
                                     <input
                                         required
                                         type="number"
