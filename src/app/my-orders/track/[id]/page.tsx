@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import api from '@/lib/api';
 import dynamic from 'next/dynamic';
@@ -16,7 +16,7 @@ export default function TrackOrderPage() {
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchOrder = async () => {
+    const fetchOrder = useCallback(async () => {
         try {
             const res = await api.get(`/orders/${id}`);
             setOrder(res.data);
@@ -25,13 +25,13 @@ export default function TrackOrderPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchOrder();
         const interval = setInterval(fetchOrder, 15000); // Poll every 15s
         return () => clearInterval(interval);
-    }, [id]);
+    }, [fetchOrder]);
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" /></div>;
     if (!order) return <div className="p-10 text-center">Order not found.</div>;

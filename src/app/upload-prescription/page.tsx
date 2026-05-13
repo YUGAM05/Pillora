@@ -7,6 +7,7 @@ import {
     Info, ArrowRight, Clock, ShieldCheck, Bell
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function UploadPrescriptionPage() {
     const [file, setFile] = useState<File | null>(null);
@@ -154,7 +155,9 @@ export default function UploadPrescriptionPage() {
                             >
                                 {preview ? (
                                     <div className="text-center space-y-3">
-                                        <img src={preview} alt="Preview" className="max-h-52 rounded-xl shadow-md mx-auto" />
+                                        <div className="relative max-w-full overflow-hidden rounded-xl shadow-md mx-auto h-52 w-fit">
+                                            <Image src={preview} alt="Preview" width={400} height={400} className="max-h-52 object-contain" unoptimized />
+                                        </div>
                                         <p className="text-sm font-semibold text-blue-600">{file?.name}</p>
                                         <p className="text-xs text-gray-400">Click to change file</p>
                                     </div>

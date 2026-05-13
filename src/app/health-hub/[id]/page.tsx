@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Calendar, Loader2, ArrowLeft, Share2, Clock } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -66,10 +67,12 @@ export default function HealthTipDetailPage() {
                 <article className="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100">
                     {tip.imageUrl && (
                         <div className="relative h-[400px] w-full">
-                            <img
+                            <Image
                                 src={tip.imageUrl}
                                 alt={tip.title}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
+                                unoptimized
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-8 text-white w-full">

@@ -24,7 +24,7 @@ import {
     FileIcon,
     Image as ImageIcon
 } from "lucide-react";
-import Image from "next/image";
+import NextImage from "next/image";
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/api';
 import { getUser } from '@/lib/tokenStorage';
@@ -546,7 +546,7 @@ function CertificateView({
 
                         {/* Gold medal */}
                         <div style={{ position: 'absolute', bottom: '35px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
-                            <Image 
+                            <NextImage 
                                 src="/gold-medal.png" 
                                 alt="Award Medal" 
                                 width={95} 
@@ -1233,7 +1233,7 @@ function RequestForm() {
                             </div>
                         ) : (
                             <div className="relative group rounded-xl overflow-hidden h-32 border border-gray-200">
-                                <Image src={formData.kycDocumentImage} alt="KYC Document" fill className="object-cover" unoptimized />
+                                <NextImage src={formData.kycDocumentImage} alt="KYC Document" fill className="object-cover" unoptimized />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                     <button type="button" onClick={removeImage} className="p-2 bg-white text-red-600 rounded-full hover:bg-red-50 transition-colors shadow-lg" title="Remove Image">
                                         <Trash2 className="w-5 h-5" />

@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Calendar, Loader2 } from 'lucide-react';
@@ -53,7 +54,7 @@ export default function HealthHubPage() {
                     {/* Featured Static Health Tips */}
                     <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full cursor-pointer hover:border-blue-200">
                         <div className="relative h-48 w-full bg-gray-100">
-                            <img src="/tip1.png" alt="Hydration is Key" className="w-full h-full object-cover" />
+                            <Image src="/tip1.png" alt="Hydration is Key" fill className="object-cover" />
                         </div>
                         <div className="p-6 flex flex-col flex-1">
                             <div className="flex items-center gap-2 text-sm text-blue-600 font-medium mb-3">
@@ -71,7 +72,7 @@ export default function HealthHubPage() {
 
                     <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full cursor-pointer hover:border-blue-200">
                         <div className="relative h-48 w-full bg-gray-100">
-                            <img src="/tip2.png" alt="Eat the Rainbow" className="w-full h-full object-cover" />
+                            <Image src="/tip2.png" alt="Eat the Rainbow" fill className="object-cover" />
                         </div>
                         <div className="p-6 flex flex-col flex-1">
                             <div className="flex items-center gap-2 text-sm text-emerald-600 font-medium mb-3">
@@ -93,10 +94,12 @@ export default function HealthHubPage() {
                             <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full cursor-pointer hover:border-blue-200">
                                 {tip.imageUrl && (
                                     <div className="relative h-48 w-full bg-gray-100">
-                                        <img
+                                        <Image
                                             src={tip.imageUrl}
                                             alt={tip.title}
-                                            className="w-full h-full object-cover"
+                                            fill
+                                            className="object-cover"
+                                            unoptimized
                                         />
                                     </div>
                                 )}

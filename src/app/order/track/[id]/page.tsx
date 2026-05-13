@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import { getToken } from '@/lib/tokenStorage';
@@ -24,7 +24,7 @@ export default function TrackOrderPage() {
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchOrder = async () => {
+    const fetchOrder = useCallback(async () => {
         try {
             const token = getToken();
             const res = await axios.get(`http://localhost:5000/api/orders/${id}`, {
@@ -36,7 +36,7 @@ export default function TrackOrderPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchOrder();
@@ -55,7 +55,7 @@ export default function TrackOrderPage() {
         return () => {
             socket.disconnect();
         };
-    }, [id]);
+    }, [id, fetchOrder]);
 
     const statuses = [
         { key: 'prescription_verified', label: 'Prescription Verified', icon: <CheckCircle2 className="w-6 h-6" /> },

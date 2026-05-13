@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Link from 'next/link';
 import { CheckCircle, Package, Truck, Download, Home, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 
 // Removed top-level imports that break SSR
 
@@ -104,8 +105,8 @@ export default function OrderSuccessPage() {
                     <div className="flex justify-between items-start border-b border-gray-100 pb-8 mb-8">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <img src="/logo.png" alt="Pillora" className="w-12 h-12 object-contain" />
-                                <img src="/pillora-text.png" alt="Pillora" className="h-10 w-auto object-contain" />
+                                <Image src="/logo.png" alt="Pillora" width={48} height={48} className="object-contain" unoptimized />
+                                <Image src="/pillora-text.png" alt="Pillora" width={100} height={40} className="object-contain" unoptimized />
                             </div>
                             <p className="text-gray-500 text-sm">Shri Mahavir Jain Vidhvalay, Paldi Cross Road</p>
                             <p className="text-gray-500 text-sm">Paldi, Ahmedabad, Gujarat, India</p>

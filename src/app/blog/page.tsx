@@ -187,7 +187,7 @@ export default function BlogPage() {
                                             <div className="px-8 mb-4 overflow-hidden">
                                                 {post.imageUrl ? (
                                                     <div className="relative aspect-[16/9] rounded-2xl overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-500">
-                                                        <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                                        <Image src={post.imageUrl} alt={post.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
                                                     </div>
                                                 ) : (
                                                     <div className="w-full h-1 bg-gray-50 rounded-full" />
