@@ -101,7 +101,7 @@ export default function PartnersPage() {
                 data.interestedPlan = selectedPlan;
             }
 
-            const response = await api.post('partners/submit', data);
+            const response = await api.post('/partners/submit', data);
             
             if (response.data.success) {
                 setFormSubmitted(true);

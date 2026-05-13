@@ -8,6 +8,8 @@ import { Users, Heart, Package, Activity, Lock, Droplets, Shield, ChevronRight, 
 import BloodBankAdmin from "@/components/BloodBankAdmin";
 import AddHospitalForm from "@/components/AddHospitalForm";
 import HospitalListAdmin from "@/components/HospitalListAdmin";
+import PartnerInquiriesAdmin from "@/components/PartnerInquiriesAdmin";
+import { Handshake } from "lucide-react";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -32,6 +34,7 @@ export default function AdminDashboard() {
     const [error, setError] = useState("");
     const [showBloodBank, setShowBloodBank] = useState(false);
     const [showAddHospital, setShowAddHospital] = useState(false);
+    const [showPartners, setShowPartners] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const fetchPendingUsers = useCallback(async () => {
@@ -253,6 +256,45 @@ export default function AdminDashboard() {
                                 </AnimatePresence>
                             </div>
                         )}
+                    </motion.section>
+
+                    {/* Partnership Proposals */}
+                    <motion.section variants={itemVariants} className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-blue-900/5 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50 rounded-full blur-[80px] -z-10 group-hover:bg-indigo-100 transition-colors duration-700" />
+                        
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 className="text-2xl font-black flex items-center gap-3 text-gray-900">
+                                    <Handshake className="w-7 h-7 text-indigo-600" /> Partnership Proposals
+                                </h3>
+                                <p className="text-gray-500 mt-1 text-sm font-medium">Manage hospital and NGO partnership applications</p>
+                            </div>
+                            <button
+                                onClick={() => setShowPartners(!showPartners)}
+                                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 shadow-lg shrink-0 ${
+                                    showPartners 
+                                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 shadow-none' 
+                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/30 hover:shadow-indigo-500/40 hover:-translate-y-0.5'
+                                }`}
+                            >
+                                <Activity className="w-4 h-4" />
+                                {showPartners ? 'Hide Inquiries' : 'View Inquiries'}
+                            </button>
+                        </div>
+
+                        <AnimatePresence mode="wait">
+                            {showPartners && (
+                                <motion.div
+                                    key="partner-inquiries"
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.4 }}
+                                >
+                                    <PartnerInquiriesAdmin />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </motion.section>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
