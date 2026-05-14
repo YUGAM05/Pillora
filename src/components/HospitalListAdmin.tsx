@@ -54,9 +54,8 @@ export default function HospitalListAdmin() {
         
         try {
             const token = getToken();
-            await api.delete(`/hospitals/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/hospitals/${id}`);
+
             setHospitals(prev => prev.filter(h => h._id !== id));
         } catch (err) {
             alert("Failed to delete hospital");

@@ -134,8 +134,16 @@ export function storageGet(key: string): string | null {
     }
 
     // 3. In-memory
-    return memoryStore.get(key) ?? null;
+    const val = memoryStore.get(key) || null;
+
+    // 4. Return null if not found or is a literal "null"/"undefined" string
+    if (!val || val === 'null' || val === 'undefined') {
+        return null;
+    }
+
+    return val;
 }
+
 
 /**
  * Remove a value from every layer.

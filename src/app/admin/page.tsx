@@ -78,9 +78,8 @@ export default function AdminDashboard() {
     const fetchPendingUsers = useCallback(async () => {
         const token = getToken();
         try {
-            const res = await api.get("/admin/users?status=pending", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.get("/admin/users?status=pending");
+
             setPendingUsers(res.data);
         } catch (err: any) {
             console.error("Failed to fetch pending users", err);
@@ -95,9 +94,8 @@ export default function AdminDashboard() {
                 return;
             }
 
-            const res = await api.get("/admin/stats", {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.get("/admin/stats");
+
             setStats(res.data);
         } catch (err: any) {
             console.error(err);

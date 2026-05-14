@@ -154,9 +154,8 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
                 phoneNumbers: formData.phoneNumbers.filter(ph => ph.trim() !== ""),
             };
 
-            const res = await api.post("/admin/hospitals/register", payload, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.post("/admin/hospitals/register", payload);
+
             
             if (res.data.credentials) {
                 setCredentials(res.data.credentials);
