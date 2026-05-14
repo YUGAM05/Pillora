@@ -321,7 +321,7 @@ export default function PartnerInquiriesAdmin() {
                                                                 Keep Pending
                                                             </button>
                                                             <a 
-                                                                href={`https://mail.zoho.com/zm/#mail/compose/to=${inquiry.email}&subject=Pillora Partnership Proposal - ${inquiry.organizationName}&body=Dear ${inquiry.contactPersonName},%0D%0A%0D%0AThank you for your interest in partnering with Pillora. We have reviewed your proposal for ${inquiry.organizationName}...`}
+                                                                href={`https://mail.zoho.com/zm/#mail/compose?to=${inquiry.email}&subject=Pillora Partnership Proposal - ${inquiry.organizationName}&body=Dear ${inquiry.contactPersonName},%0D%0A%0D%0AThank you for your interest in partnering with Pillora. We have reviewed your proposal for ${inquiry.organizationName}...`}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="col-span-2 flex items-center justify-center gap-2 px-4 py-4 bg-[#0067ff] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#0052cc] transition-all shadow-xl shadow-blue-100 mt-2"
