@@ -3,7 +3,7 @@
 import { useState } from "react";
 import api from "@/lib/api";
 import { getToken } from "@/lib/tokenStorage";
-import { Building2, MapPin, Phone, IndianRupee, Clock, FileText, Loader2, CheckCircle2, CreditCard, User, GraduationCap, Calendar, Plus, Trash2, Image as ImageIcon, XCircle, Lock } from "lucide-react";
+import { Building2, MapPin, Phone, IndianRupee, Clock, FileText, Loader2, CheckCircle2, CreditCard, User, GraduationCap, Calendar, Plus, Trash2, Image as ImageIcon, XCircle, Lock, Upload, Camera } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -12,6 +12,8 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
+    const [uploadingPrimary, setUploadingPrimary] = useState(false);
+    const [uploadingSecondary, setUploadingSecondary] = useState(false);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -55,6 +57,54 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
             newList[index] = value;
             return { ...prev, [field]: newList };
         });
+    };
+
+    const handlePrimaryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingPrimary(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await api.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setFormData(prev => ({ ...prev, image: res.data.url }));
+        } catch (err) {
+            console.error("Upload failed", err);
+            setError("Failed to upload primary image");
+        } finally {
+            setUploadingPrimary(false);
+        }
+    };
+
+    const handleSecondaryImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        setUploadingSecondary(true);
+        try {
+            const uploadPromises = files.map(async (file) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                const res = await api.post('/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                return res.data.url;
+            });
+
+            const urls = await Promise.all(uploadPromises);
+            setFormData(prev => ({ 
+                ...prev, 
+                images: [...prev.images, ...urls] 
+            }));
+        } catch (err) {
+            console.error("Gallery upload failed", err);
+            setError("Failed to upload some gallery images");
+        } finally {
+            setUploadingSecondary(false);
+        }
     };
 
     const handleAddDoctor = () => {
@@ -308,39 +358,72 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
                     </h3>
                     
                     <div className="space-y-4">
+                        {/* Primary Image Upload */}
                         <div className="space-y-2">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Main Cover Image URL</label>
-                            <input
-                                name="image"
-                                value={formData.image}
-                                onChange={handleChange}
-                                placeholder="https://..."
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-medium text-gray-900"
-                            />
+                            <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Primary Cover Image</label>
+                            <div className="relative group">
+                                {formData.image ? (
+                                    <div className="relative h-48 w-full rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={formData.image} alt="Primary" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                            <label className="p-3 bg-white text-gray-900 rounded-full cursor-pointer hover:scale-110 transition-transform">
+                                                <Camera className="w-5 h-5" />
+                                                <input type="file" className="hidden" accept="image/*" onChange={handlePrimaryImageUpload} />
+                                            </label>
+                                            <button type="button" onClick={() => setFormData(prev => ({ ...prev, image: "" }))} className="p-3 bg-red-500 text-white rounded-full hover:scale-110 transition-transform">
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <label className="flex flex-col items-center justify-center h-48 w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:bg-blue-50/50 hover:border-primary/50 transition-all group">
+                                        <div className="p-4 bg-white rounded-2xl shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                                            {uploadingPrimary ? (
+                                                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                                            ) : (
+                                                <Upload className="w-6 h-6 text-gray-400 group-hover:text-primary" />
+                                            )}
+                                        </div>
+                                        <p className="text-xs font-bold text-gray-500 group-hover:text-primary">Upload Primary Image</p>
+                                        <p className="text-[10px] text-gray-400 mt-1 uppercase font-black">PNG, JPG up to 10MB</p>
+                                        <input type="file" className="hidden" accept="image/*" onChange={handlePrimaryImageUpload} />
+                                    </label>
+                                )}
+                            </div>
                         </div>
-
-                        {/* Gallery Images */}
+                        
+                        {/* Secondary Gallery Upload */}
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Gallery Images</label>
-                                <button type="button" onClick={() => handleAddListItem('images')} className="text-primary hover:text-primary/80 transition-colors">
-                                    <Plus className="w-4 h-4" />
-                                </button>
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-wider">Secondary Gallery Images</label>
+                                <span className="text-[10px] font-bold text-slate-400">{formData.images.length} uploaded</span>
                             </div>
-                            <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
-                                {formData.images.map((img, idx) => (
-                                    <div key={idx} className="flex gap-2">
-                                        <input
-                                            value={img}
-                                            onChange={(e) => handleListItemChange('images', idx, e.target.value)}
-                                            placeholder="Gallery URL..."
-                                            className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium outline-none focus:border-primary text-gray-900"
-                                        />
-                                        <button type="button" onClick={() => handleRemoveListItem('images', idx)} className="text-red-400 hover:text-red-600">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                            
+                            <div className="grid grid-cols-3 gap-3">
+                                {formData.images.map((url, idx) => (
+                                    <div key={idx} className="relative h-24 rounded-xl overflow-hidden group border border-gray-100">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <button type="button" onClick={() => handleRemoveListItem('images', idx)} className="p-1.5 bg-red-500 text-white rounded-lg hover:scale-110 transition-transform">
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
+                                
+                                <label className={`flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-gray-100 bg-gray-50/50 cursor-pointer hover:border-primary/30 hover:bg-blue-50/30 transition-all ${uploadingSecondary ? 'pointer-events-none' : ''}`}>
+                                    {uploadingSecondary ? (
+                                        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Plus className="w-5 h-5 text-gray-300" />
+                                            <span className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Add More</span>
+                                        </>
+                                    )}
+                                    <input type="file" className="hidden" accept="image/*" multiple onChange={handleSecondaryImagesUpload} />
+                                </label>
                             </div>
                         </div>
 
