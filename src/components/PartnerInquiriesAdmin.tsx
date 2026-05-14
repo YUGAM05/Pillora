@@ -320,6 +320,13 @@ export default function PartnerInquiriesAdmin() {
                                                             >
                                                                 Keep Pending
                                                             </button>
+                                                            <a 
+                                                                href={`mailto:${inquiry.email}?subject=Pillora Partnership Proposal - ${inquiry.organizationName}&body=Dear ${inquiry.contactPersonName},%0D%0A%0D%0AThank you for your interest in partnering with Pillora. We have reviewed your proposal for ${inquiry.organizationName}...`}
+                                                                className="col-span-2 flex items-center justify-center gap-2 px-4 py-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 mt-2"
+                                                            >
+                                                                <Mail className="w-4 h-4" />
+                                                                Send Official Email
+                                                            </a>
                                                         </div>
                                                     </div>
                                                 </div>
