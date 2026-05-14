@@ -21,7 +21,8 @@ import {
     ImageIcon,
     Stethoscope,
     Calendar,
-    ExternalLink
+    ExternalLink,
+    Mail
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -185,6 +186,18 @@ export default function HospitalListAdmin() {
                                                                 <p className="font-black text-slate-900 uppercase tracking-tighter text-lg">{hospital.management_type || "SELF"}</p>
                                                             </div>
                                                         </div>
+
+                                                        {/* Zoho Mail Button */}
+                                                        {hospital.user?.email && (
+                                                            <a 
+                                                                href={`https://mail.zoho.com/zm/#mail/compose?to=${hospital.user.email}&subject=Regarding Hospital: ${hospital.name}&body=Hello ${hospital.name} Team,%0D%0A%0D%0AWe are contacting you regarding your hospital's profile on Pillora...`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center justify-center gap-3 w-full py-4 bg-blue-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 mt-4 group"
+                                                            >
+                                                                <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" /> Contact via Zoho Mail
+                                                            </a>
+                                                        )}
                                                     </div>
 
                                                     <div className="space-y-8">
