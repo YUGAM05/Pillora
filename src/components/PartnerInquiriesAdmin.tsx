@@ -29,6 +29,7 @@ export default function PartnerInquiriesAdmin() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [filter, setFilter] = useState<string>("all");
 
     const fetchInquiries = useCallback(async () => {
         try {
@@ -93,9 +94,42 @@ export default function PartnerInquiriesAdmin() {
         );
     }
 
+    const filteredInquiries = inquiries.filter(inq => filter === "all" || inq.status === filter);
+
     return (
-        <div className="space-y-6">
-            {inquiries.length === 0 ? (
+        <div className="space-y-8">
+            {/* Status Tabs */}
+            <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                {[
+                    { id: 'all', label: 'All Proposals', icon: Database },
+                    { id: 'pending', label: 'Pending', icon: Clock },
+                    { id: 'reviewed', label: 'Reviewed', icon: Zap },
+                    { id: 'contacted', label: 'Contacted', icon: Activity },
+                    { id: 'rejected', label: 'Rejected', icon: XCircle },
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setFilter(tab.id)}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+                            filter === tab.id 
+                            ? 'bg-white text-blue-600 shadow-lg shadow-blue-900/5' 
+                            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                        }`}
+                    >
+                        <tab.icon className="w-3.5 h-3.5" />
+                        {tab.label}
+                        {inquiries.filter(i => tab.id === 'all' || i.status === tab.id).length > 0 && (
+                            <span className={`ml-1.5 px-1.5 py-0.5 rounded-md text-[9px] ${
+                                filter === tab.id ? 'bg-blue-50 text-blue-600' : 'bg-slate-200 text-slate-500'
+                            }`}>
+                                {inquiries.filter(i => tab.id === 'all' || i.status === tab.id).length}
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {filteredInquiries.length === 0 ? (
                 <div className="text-center py-16 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
                     <Handshake className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h4 className="text-xl font-bold text-gray-800">No proposals yet</h4>
@@ -103,8 +137,8 @@ export default function PartnerInquiriesAdmin() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
-                    <AnimatePresence>
-                        {inquiries.map((inquiry) => (
+                    <AnimatePresence mode="popLayout">
+                        {filteredInquiries.map((inquiry) => (
                             <motion.div
                                 key={inquiry._id}
                                 layout
