@@ -8,10 +8,11 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { setToken, setUser as setStoredUser, getToken, getUser } from "@/lib/tokenStorage";
-import { motion } from "framer-motion";
-import { Loader2, ArrowRight, Lock, Mail } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, ArrowRight, Lock, Mail, KeyRound } from "lucide-react";
 import api from "@/lib/api";
 import Image from "next/image";
+
 
 export default function LoginPage() {
     const router = useRouter();
@@ -19,6 +20,13 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
+    // MFA state for admin login
+    const [mfaStep, setMfaStep] = useState(false);
+    const [mfaSetup, setMfaSetup] = useState(false);
+    const [mfaCode, setMfaCode] = useState("");
+    const [mfaUserId, setMfaUserId] = useState("");
+    const [qrCode, setQrCode] = useState("");
 
     useEffect(() => {
         const user = getUser();
@@ -38,6 +46,28 @@ export default function LoginPage() {
         try {
             const res = await api.post("/auth/login", { email, password });
             const data = res.data;
+
+            // ✅ Handle MFA required (admin flow) — DO NOT save token here
+            if (data.mfaRequired) {
+                setMfaUserId(data.userId);
+                setMfaStep(true);
+                return;
+            }
+
+            // ✅ Handle MFA setup required (first-time admin)
+            if (data.mfaSetupRequired) {
+                setMfaUserId(data.userId);
+                setQrCode(data.qrCode);
+                setMfaSetup(true);
+                setMfaStep(true);
+                return;
+            }
+
+            // ✅ Non-admin: token is present, save it
+            if (!data.token) {
+                setError("Login failed: no token received. Please try again.");
+                return;
+            }
 
             setToken(data.token);
             setStoredUser(JSON.stringify({
@@ -65,6 +95,39 @@ export default function LoginPage() {
             setLoading(false);
         }
     };
+
+    const handleMfaVerify = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        try {
+            const res = await api.post('/auth/verify-mfa', {
+                userId: mfaUserId,
+                token: mfaCode,
+            });
+            const data = res.data;
+            if (!data.token) {
+                setError("MFA verification failed: no token received.");
+                return;
+            }
+            setToken(data.token);
+            setStoredUser(JSON.stringify({
+                _id: data._id,
+                name: data.name,
+                email: data.email,
+                role: data.role,
+                status: data.status
+            }));
+            window.dispatchEvent(new Event('storage'));
+            router.push("/admin");
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Invalid authenticator code");
+            setMfaCode("");
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const handleGoogleLogin = async () => {
         setLoading(true);
@@ -121,10 +184,10 @@ export default function LoginPage() {
                         </div>
                     </div>
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">
-                        Welcome Back
+                        {mfaStep ? 'Admin Verification' : 'Welcome Back'}
                     </h2>
                     <p className="text-gray-500 mt-2 text-sm font-medium">
-                        Enter your credentials to access Pillora
+                        {mfaStep ? 'Enter your 6-digit authenticator code' : 'Enter your credentials to access Pillora'}
                     </p>
                 </div>
 
@@ -134,7 +197,50 @@ export default function LoginPage() {
                     </motion.div>
                 )}
 
-                <form onSubmit={handleEmailLogin} className="space-y-4">
+                <AnimatePresence mode="wait">
+                {mfaStep ? (
+                    <motion.form key="mfa" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} onSubmit={handleMfaVerify} className="space-y-6">
+                        <div className="flex items-center justify-center mb-2">
+                            <div className="p-4 bg-blue-50 rounded-2xl">
+                                <KeyRound className="w-8 h-8 text-blue-600" />
+                            </div>
+                        </div>
+                        {mfaSetup && qrCode && (
+                            <div className="text-center space-y-3 mb-4">
+                                <p className="text-slate-500 text-sm">Scan this QR code with your Authenticator app:</p>
+                                <Image src={qrCode} alt="MFA QR Code" width={160} height={160} className="mx-auto rounded-xl border border-slate-100 p-2" unoptimized />
+                            </div>
+                        )}
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 text-center">6-Digit Code</label>
+                            <input
+                                className="block w-full px-4 py-4 rounded-2xl border border-slate-200 bg-gray-50 text-slate-900 text-center text-2xl tracking-[0.5em] font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                maxLength={6}
+                                value={mfaCode}
+                                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                required
+                                autoFocus
+                                placeholder="000000"
+                            />
+                        </div>
+                        <button
+                            className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-widest rounded-2xl shadow-xl shadow-blue-600/30 disabled:opacity-70 transition-all"
+                            type="submit"
+                            disabled={loading || mfaCode.length !== 6}
+                        >
+                            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Verify & Access Admin'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setMfaStep(false); setMfaSetup(false); setError(''); setMfaCode(''); }}
+                            className="w-full text-sm text-slate-400 hover:text-blue-600 transition-colors text-center font-medium"
+                        >
+                            ← Back to Login
+                        </button>
+                    </motion.form>
+                ) : (
+                    <motion.div key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                    <form onSubmit={handleEmailLogin} className="space-y-4">
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
                         <div className="relative">
@@ -202,7 +308,11 @@ export default function LoginPage() {
                         New here? <Link href="/register" className="text-primary hover:underline">Create Account</Link>
                     </p>
                 </div>
+                    </motion.div>
+                )}
+                </AnimatePresence>
             </motion.div>
         </div>
     );
 }
+

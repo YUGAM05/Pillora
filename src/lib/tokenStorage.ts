@@ -100,6 +100,12 @@ function removeCookie(name: string): void {
 export function storageSet(key: string, value: string): void {
     if (typeof window === 'undefined') return;
 
+    // Guard: Never store null, undefined, or literal 'undefined'/'null' strings
+    if (!value || value === 'null' || value === 'undefined' || value === '[object Object]') {
+        console.warn(`[tokenStorage] Blocked attempt to store invalid value for key "${key}":`, value);
+        return;
+    }
+
     // 1. Cookie (primary)
     if (cookiesOk()) {
         setCookie(key, value);
