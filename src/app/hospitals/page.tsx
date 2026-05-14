@@ -32,6 +32,8 @@ interface Hospital {
     description: string;
     rating: number;
     doctors?: Doctor[];
+    is_verified: boolean;
+    management_type: 'SELF' | 'PILLORA';
 }
 
 // ─── Image Slideshow ──────────────────────────────────────────────────────────
