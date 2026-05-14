@@ -82,7 +82,9 @@ export default function LoginPage() {
             // Mock backend verification for this demo
             const response = await api.post("/auth/login", { 
                 email: user.email, 
-                googleToken: idToken 
+                googleToken: idToken,
+                name: user.displayName,
+                profilePicture: user.photoURL
             });
 
             const data = response.data;
