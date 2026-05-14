@@ -91,7 +91,11 @@ export default function LoginPage() {
             setStoredUser(JSON.stringify(data));
             setToken(data.token);
             window.dispatchEvent(new Event('storage'));
-            router.push("/dashboard");
+
+            // Redirect based on role
+            if (data.role === 'admin') router.push("/admin");
+            else if (data.role === 'hospital') router.push("/hospital/dashboard");
+            else router.push("/dashboard");
         } catch (err: any) {
             console.error("Error with Google Login:", err);
             setError(err.message || "Google Sign-In failed. Please try again.");
