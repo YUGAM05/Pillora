@@ -62,22 +62,29 @@ function localStorageOk(): boolean {
 // ---------------------------------------------------------------------------
 function setCookie(name: string, value: string, days: number = 7): void {
     const maxAge = days * 24 * 60 * 60; // seconds
-    // Encode the value so special characters (JSON) are safe
     const encoded = encodeURIComponent(value);
-    document.cookie = `${name}=${encoded}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    const domain = window.location.hostname.includes('pillora.in') ? '; domain=.pillora.in' : '';
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `${name}=${encoded}; path=/; max-age=${maxAge}; SameSite=Lax${domain}${secure}`;
 }
+
 
 function getCookie(name: string): string | null {
     if (typeof document === 'undefined') return null;
-    const cookies = document.cookie.split('; ');
-    for (const cookie of cookies) {
-        const [key, ...rest] = cookie.split('=');
-        if (key === name) {
-            return decodeURIComponent(rest.join('='));
+    try {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
         }
+    } catch (err) {
+        console.error('[tokenStorage] Error reading cookie:', err);
     }
     return null;
 }
+
 
 function removeCookie(name: string): void {
     document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
@@ -117,32 +124,37 @@ export function storageSet(key: string, value: string): void {
 export function storageGet(key: string): string | null {
     if (typeof window === 'undefined') return null;
 
+    let val: string | null = null;
+
     // 1. Cookie first
     if (cookiesOk()) {
-        const cookieVal = getCookie(key);
-        if (cookieVal !== null) return cookieVal;
+        val = getCookie(key);
     }
 
     // 2. localStorage
-    if (localStorageOk()) {
+    if (!val && localStorageOk()) {
         try {
-            const lsVal = window.localStorage.getItem(key);
-            if (lsVal !== null) return lsVal;
+            val = window.localStorage.getItem(key);
         } catch {
             // ignore
         }
     }
 
     // 3. In-memory
-    const val = memoryStore.get(key) || null;
+    if (!val) {
+        val = memoryStore.get(key) || null;
+    }
 
-    // 4. Return null if not found or is a literal "null"/"undefined" string
-    if (!val || val === 'null' || val === 'undefined') {
+    // Sanitization: Return null if not found or is a literal "null"/"undefined" string
+    if (!val || val === 'null' || val === 'undefined' || val === '[object Object]') {
         return null;
     }
 
     return val;
 }
+
+
+
 
 
 /**
