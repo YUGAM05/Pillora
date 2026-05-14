@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, MapPin, Phone, Clock, CreditCard, Star, ChevronLeft, ChevronRight, User, ExternalLink, Building2, Share2 } from 'lucide-react';
+import { Search, MapPin, Phone, Clock, CreditCard, Star, ChevronLeft, ChevronRight, User, ExternalLink, Building2, Share2, ShieldCheck } from 'lucide-react';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -313,14 +313,37 @@ export default function HospitalsPage() {
                                             <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                                             <span className="font-bold text-gray-800 text-xs sm:text-sm">{hospital.rating}</span>
                                         </div>
-                                        {/* 24/7 badge */}
-                                        {hospital.isOpen24Hours && (
-                                            <div className="absolute top-3 left-3 bg-green-500 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1 z-10">
+                                        {/* Verified badge */}
+                                        {hospital.is_verified && (
+                                            <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                                                <div className="bg-blue-600 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
+                                                    <ShieldCheck className="w-3 h-3" /> Verified
+                                                </div>
+                                                {hospital.isOpen24Hours && (
+                                                    <div className="bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" /> 24/7
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        
+                                        {!hospital.is_verified && hospital.isOpen24Hours && (
+                                            <div className="absolute top-3 left-3 bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1 z-10">
                                                 <Clock className="w-3 h-3" /> 24/7
                                             </div>
                                         )}
+
+                                        {/* Management Badge */}
+                                        <div className={`absolute bottom-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider z-10 backdrop-blur-md shadow-sm border ${
+                                            hospital.management_type === 'SELF' 
+                                                ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200' 
+                                                : 'bg-blue-50/90 text-blue-700 border-blue-200'
+                                        }`}>
+                                            {hospital.management_type === 'SELF' ? '🏥 Self Managed' : '⚙️ Managed'}
+                                        </div>
+
                                         {/* Online pay badge */}
-                                        <div className={`absolute bottom-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold z-10 ${hospital.isOnlinePaymentAvailable ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-200'}`}>
+                                        <div className={`absolute bottom-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold z-10 ${hospital.isOnlinePaymentAvailable ? 'bg-white/90 text-gray-900' : 'bg-gray-700 text-gray-200'}`}>
                                             {hospital.isOnlinePaymentAvailable ? '💳 Online Pay' : 'Cash Only'}
                                         </div>
                                     </div>

@@ -224,14 +224,23 @@ export default function HospitalDashboard() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center justify-center gap-2">
-                                                        {app.status === 'pending' ? (
-                                                            <>
-                                                                <button onClick={() => handleStatusUpdate(app._id, 'confirmed')} className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100"><CheckCircle2 className="w-4 h-4" /></button>
-                                                                <button onClick={() => handleStatusUpdate(app._id, 'cancelled')} className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100"><XCircle className="w-4 h-4" /></button>
-                                                            </>
+                                                        {app.status === 'pending' || app.status === 'confirmed' ? (
+                                                            <div className="flex gap-1">
+                                                                <button title="Confirm" onClick={() => handleStatusUpdate(app._id, 'confirmed')} className={`p-1.5 rounded-lg ${app.status === 'confirmed' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}><CheckCircle2 className="w-4 h-4" /></button>
+                                                                <button title="Check-in" onClick={() => handleStatusUpdate(app._id, 'checked-in')} className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><User className="w-4 h-4" /></button>
+                                                                <button title="Cancel" onClick={() => handleStatusUpdate(app._id, 'cancelled')} className="p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100"><XCircle className="w-4 h-4" /></button>
+                                                            </div>
+                                                        ) : app.status === 'checked-in' ? (
+                                                            <button onClick={() => handleStatusUpdate(app._id, 'in-consultation')} className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 flex items-center gap-2">
+                                                                <RefreshCcw className="w-3 h-3 animate-spin" /> Start Consultation
+                                                            </button>
+                                                        ) : app.status === 'in-consultation' ? (
+                                                            <button onClick={() => handleStatusUpdate(app._id, 'completed')} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 flex items-center gap-2">
+                                                                <CheckCircle2 className="w-3 h-3" /> Complete
+                                                            </button>
                                                         ) : (
                                                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                                                app.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'
+                                                                app.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'
                                                             }`}>{app.status}</span>
                                                         )}
                                                     </div>
