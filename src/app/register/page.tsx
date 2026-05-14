@@ -1,15 +1,25 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
-import { setToken, setUser } from "@/lib/tokenStorage";
+import { setToken, setUser, getToken, getUser } from "@/lib/tokenStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Lock, Loader2, ArrowRight, FileText, KeyRound, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 
 export default function RegisterPage() {
     const router = useRouter();
+
+    useEffect(() => {
+        const user = getUser();
+        const token = getToken();
+        if (user && token) {
+            if (user.role === 'admin') router.push("/admin");
+            else if (user.role === 'hospital') router.push("/hospital/dashboard");
+            else router.push("/dashboard");
+        }
+    }, [router]);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");

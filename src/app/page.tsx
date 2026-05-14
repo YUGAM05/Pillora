@@ -16,15 +16,9 @@ interface FeatureItemProps {
 export default function Home() {
     const router = useRouter();
 
-    useEffect(() => {
-        const user = getUser();
-        const token = getToken();
-        if (user && token) {
-            if (user.role === 'admin') router.push("/admin");
-            else if (user.role === 'hospital') router.push("/hospital/dashboard");
-            else router.push("/dashboard");
-        }
-    }, [router]);
+    // Removed automatic redirect to dashboard for logged-in users
+    // This allows users to view the home page even when authenticated.
+
 
     return (
         <main className="bg-gradient-to-b from-blue-50/30 to-white min-h-screen pb-20">
