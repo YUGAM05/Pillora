@@ -1,12 +1,15 @@
 // Deployment Trigger: 2026-05-15 13:51
 import type { Metadata } from "next";
 import { Analytics } from '@vercel/analytics/react';
+import Script from "next/script";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
+
+import PilloraAnalytics from "@/components/PilloraAnalytics";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -92,6 +95,20 @@ export default function RootLayout({
                 </ThemeProvider>
                 <Analytics />
                 <SpeedInsights />
+                <PilloraAnalytics />
+                <Script
+                    src="https://www.googletagmanager.com/gtag/js?id=G-GV9EXYK4WE"
+                    strategy="afterInteractive"
+                />
+                <Script id="google-analytics" strategy="afterInteractive">
+                    {`
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag(){dataLayer.push(arguments);}
+                        gtag('js', new Date());
+
+                        gtag('config', 'G-GV9EXYK4WE');
+                    `}
+                </Script>
             </body>
         </html>
     );
