@@ -91,7 +91,10 @@ export default function HospitalDashboard() {
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <h1 className="text-2xl font-black text-gray-900 mb-2">Access Error</h1>
                     <p className="text-gray-500 font-medium">{error}</p>
-                    <button onClick={() => router.push('/')} className="mt-6 px-8 py-3 bg-gray-900 text-white font-bold rounded-xl">Back to Safety</button>
+                    <button onClick={() => {
+                        localStorage.clear();
+                        window.location.href = '/login';
+                    }} className="mt-6 px-8 py-3 bg-gray-900 text-white font-bold rounded-xl">Back to Login</button>
                 </div>
             </div>
         );
@@ -122,7 +125,7 @@ export default function HospitalDashboard() {
                         </div>
                         <button onClick={() => {
                             localStorage.clear();
-                            router.push("/login");
+                            window.location.href = '/login';
                         }} className="p-2.5 bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
                             <LogOut className="w-5 h-5" />
                         </button>

@@ -25,18 +25,25 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Track if we're already redirecting to prevent duplicate navigation
+let isRedirecting = false;
+
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && !isRedirecting) {
+            if (error.response?.status === 401) {
+                // Prevent any further API error handling from showing error screens
+                isRedirecting = true;
                 localStorage.clear();
                 window.location.href = '/login';
+                // Return a promise that never resolves — stops all downstream catch blocks
+                return new Promise(() => {});
             }
-        }
-        if (error.response?.status === 403 && error.response?.data?.code === 'PASSWORD_RESET_REQUIRED') {
-            if (typeof window !== 'undefined') {
+            if (error.response?.status === 403 && error.response?.data?.code === 'PASSWORD_RESET_REQUIRED') {
+                isRedirecting = true;
                 window.location.href = '/auth/change-password';
+                return new Promise(() => {});
             }
         }
         return Promise.reject(error);
