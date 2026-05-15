@@ -8,8 +8,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
-
-import PilloraAnalytics from "@/components/PilloraAnalytics";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -87,6 +86,7 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
+                    <AnalyticsTracker />
                     <Navbar />
                     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
                         {children}
@@ -95,7 +95,6 @@ export default function RootLayout({
                 </ThemeProvider>
                 <Analytics />
                 <SpeedInsights />
-                <PilloraAnalytics />
                 <Script
                     src="https://www.googletagmanager.com/gtag/js?id=G-GV9EXYK4WE"
                     strategy="afterInteractive"
@@ -113,4 +112,3 @@ export default function RootLayout({
         </html>
     );
 }
-
