@@ -22,17 +22,22 @@ import {
     Stethoscope,
     Calendar,
     ExternalLink,
-    Mail
+    Mail,
+    PlusCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useCallback } from "react";
+import SlotGenTool from "./SlotGenTool";
 
 export default function HospitalListAdmin() {
     const [hospitals, setHospitals] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [showSlotGen, setShowSlotGen] = useState<any>(null);
+    const [showAddDoctor, setShowAddDoctor] = useState<string | null>(null); // hospitalId
+    const [newDoctor, setNewDoctor] = useState({ name: "", specialization: "", fee: 200 });
 
     const fetchHospitals = useCallback(async () => {
         try {
@@ -64,6 +69,22 @@ export default function HospitalListAdmin() {
 
     const toggleExpand = (id: string) => {
         setExpandedId(expandedId === id ? null : id);
+    };
+
+    const handleAddDoctor = async (hospitalId: string) => {
+        try {
+            await api.post(`/admin/hospitals/${hospitalId}/doctors`, {
+                name: newDoctor.name,
+                specialty: newDoctor.specialization,
+                fee: newDoctor.fee
+            });
+            alert("Doctor added successfully!");
+            setShowAddDoctor(null);
+            setNewDoctor({ name: "", specialization: "", fee: 200 });
+            fetchHospitals();
+        } catch (err) {
+            alert("Failed to add doctor");
+        }
     };
 
     if (loading) {
@@ -238,7 +259,39 @@ export default function HospitalListAdmin() {
 
                                                 {/* Doctor Directory */}
                                                 <div>
-                                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Internal Medical Board</h5>
+                                                    <div className="flex items-center justify-between mb-6">
+                                                        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Internal Medical Board</h5>
+                                                        <button 
+                                                            onClick={() => setShowAddDoctor(hospital._id)}
+                                                            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+                                                        >
+                                                            <PlusCircle className="w-4 h-4" /> Recruit Doctor
+                                                        </button>
+                                                    </div>
+
+                                                    {showAddDoctor === hospital._id && (
+                                                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 p-8 bg-white rounded-[2rem] border-2 border-blue-100 shadow-xl shadow-blue-900/5">
+                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                                                <div className="space-y-2">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Doctor Name</label>
+                                                                    <input type="text" placeholder="Dr. Jane Smith" value={newDoctor.name} onChange={e => setNewDoctor({...newDoctor, name: e.target.value})} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold outline-none" />
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Specialization</label>
+                                                                    <input type="text" placeholder="Cardiologist" value={newDoctor.specialization} onChange={e => setNewDoctor({...newDoctor, specialization: e.target.value})} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold outline-none" />
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Consultation Fee</label>
+                                                                    <input type="number" value={newDoctor.fee} onChange={e => setNewDoctor({...newDoctor, fee: Number(e.target.value)})} className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold outline-none" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-3">
+                                                                <button onClick={() => handleAddDoctor(hospital._id)} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-100">Confirm Appointment</button>
+                                                                <button onClick={() => setShowAddDoctor(null)} className="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200">Cancel</button>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                         {hospital.doctors && hospital.doctors.length > 0 ? (
                                                             hospital.doctors.map((doc: any, i: number) => (
@@ -247,20 +300,19 @@ export default function HospitalListAdmin() {
                                                                         <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-blue-600 group-hover/doc:bg-blue-600 group-hover/doc:text-white transition-all duration-300">
                                                                             <Stethoscope className="w-6 h-6" />
                                                                         </div>
-                                                                        <div>
+                                                                        <div className="flex-1">
                                                                             <p className="font-black text-slate-900 leading-none">{doc.name}</p>
                                                                             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{doc.specialization}</p>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="space-y-2">
-                                                                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                                                                            <Clock className="w-3.5 h-3.5 text-slate-300" /> {doc.timing}
-                                                                        </div>
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            {doc.daysAvailable?.map((day: string) => (
-                                                                                <span key={day} className="px-1.5 py-0.5 bg-slate-50 text-slate-400 rounded text-[9px] font-black uppercase">{day.slice(0, 3)}</span>
-                                                                            ))}
-                                                                        </div>
+                                                                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-50">
+                                                                        <span className="text-xs font-black text-emerald-600">₹{doc.fee || hospital.consultationFee}</span>
+                                                                        <button 
+                                                                            onClick={() => setShowSlotGen({ ...doc, hospital: hospital._id })}
+                                                                            className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+                                                                        >
+                                                                            Manage Slots
+                                                                        </button>
                                                                     </div>
                                                                 </div>
                                                             ))
@@ -292,6 +344,21 @@ export default function HospitalListAdmin() {
                             </motion.div>
                         ))}
                     </AnimatePresence>
+                </div>
+            )}
+
+            {/* Slot Gen Modal for Admin */}
+            {showSlotGen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl relative">
+                        <button onClick={() => setShowSlotGen(null)} className="absolute top-8 right-8 text-slate-300 hover:text-slate-900"><XCircle className="w-6 h-6" /></button>
+                        <h3 className="text-2xl font-black mb-8">System Slot Generator</h3>
+                        <SlotGenTool 
+                            doctor={showSlotGen} 
+                            hospitalId={showSlotGen.hospital} 
+                            onClose={() => { setShowSlotGen(null); fetchHospitals(); }} 
+                        />
+                    </motion.div>
                 </div>
             )}
         </div>

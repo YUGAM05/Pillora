@@ -101,32 +101,72 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                 </div>
 
                 {selectedDate && (
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Available Slots</label>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Select Time Slot</label>
+                            <div className="flex gap-4">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase">Free</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase">Booked</span>
+                                </div>
+                            </div>
+                        </div>
+
                         {loading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                            <div className="flex items-center justify-center py-12">
+                                <motion.div 
+                                    animate={{ rotate: 360 }} 
+                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    className="w-8 h-8 border-3 border-blue-50 border-t-blue-600 rounded-full" 
+                                />
                             </div>
                         ) : slots.length === 0 ? (
-                            <p className="text-center py-8 text-gray-400 font-bold italic text-sm">No slots available for this date.</p>
+                            <motion.div 
+                                initial={{ opacity: 0 }} 
+                                animate={{ opacity: 1 }}
+                                className="text-center py-12 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-100"
+                            >
+                                <p className="text-slate-400 font-bold italic text-sm">No slots generated for this date yet.</p>
+                                <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest mt-1">Please check another date</p>
+                            </motion.div>
                         ) : (
-                            <div className="grid grid-cols-3 gap-3">
-                                {slots.map((slot) => (
-                                    <button
-                                        key={slot._id}
-                                        disabled={slot.status !== 'available'}
-                                        onClick={() => setSelectedSlot(slot)}
-                                        className={`py-3 rounded-xl text-xs font-bold transition-all border ${
-                                            selectedSlot?._id === slot._id 
-                                            ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-105' 
-                                            : slot.status === 'available' 
-                                                ? 'bg-white border-gray-100 text-gray-700 hover:border-primary/30' 
-                                                : 'bg-gray-50 border-transparent text-gray-300 cursor-not-allowed'
-                                        }`}
-                                    >
-                                        {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </button>
-                                ))}
+                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                {slots.map((slot) => {
+                                    const isSelected = selectedSlot?._id === slot._id;
+                                    const isBooked = slot.status !== 'available';
+                                    
+                                    return (
+                                        <button
+                                            key={slot._id}
+                                            disabled={isBooked}
+                                            onClick={() => setSelectedSlot(slot)}
+                                            className={`
+                                                relative py-3 rounded-xl text-[11px] font-black transition-all duration-300
+                                                flex items-center justify-center border-2
+                                                ${isSelected 
+                                                    ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-200 scale-110 z-10' 
+                                                    : !isBooked
+                                                        ? 'bg-emerald-50/50 border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-500 hover:text-white hover:-translate-y-1' 
+                                                        : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'
+                                                }
+                                            `}
+                                        >
+                                            <span className={isBooked ? 'line-through decoration-slate-300/50' : ''}>
+                                                {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                            </span>
+                                            {isSelected && (
+                                                <motion.div 
+                                                    layoutId="selection-ring"
+                                                    className="absolute inset-0 border-4 border-blue-200 rounded-xl -m-1.5 opacity-30"
+                                                />
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

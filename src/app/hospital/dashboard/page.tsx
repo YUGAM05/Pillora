@@ -10,6 +10,7 @@ import {
     LogOut, User, Stethoscope, ChevronRight, CheckCircle2, 
     XCircle, AlertCircle, Info, RefreshCcw, LayoutDashboard
 } from "lucide-react";
+import SlotGenTool from "@/components/SlotGenTool";
 
 export default function HospitalDashboard() {
     const router = useRouter();
@@ -282,63 +283,5 @@ function StatCard({ label, value, icon }: any) {
                 <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{label}</p>
             </div>
         </div>
-    );
-}
-
-function SlotGenTool({ doctor, onClose }: any) {
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        date: "",
-        startTime: "09:00",
-        endTime: "17:00",
-        duration: "15"
-    });
-
-    const handleSubmit = async (e: any) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            await api.post("/hospital/dashboard/slots/generate", {
-                doctorId: doctor._id,
-                ...formData
-            });
-            alert("Slots generated successfully!");
-            onClose();
-        } catch (err) {
-            alert("Failed to generate slots");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Date</label>
-                <input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full p-4 bg-gray-50 border-none rounded-2xl font-bold" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Start Time</label>
-                    <input required type="time" value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} className="w-full p-4 bg-gray-50 border-none rounded-2xl font-bold" />
-                </div>
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">End Time</label>
-                    <input required type="time" value={formData.endTime} onChange={e => setFormData({...formData, endTime: e.target.value})} className="w-full p-4 bg-gray-50 border-none rounded-2xl font-bold" />
-                </div>
-            </div>
-            <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Slot Duration (min)</label>
-                <select value={formData.duration} onChange={e => setFormData({...formData, duration: e.target.value})} className="w-full p-4 bg-gray-50 border-none rounded-2xl font-bold">
-                    <option value="15">15 Minutes</option>
-                    <option value="30">30 Minutes</option>
-                    <option value="45">45 Minutes</option>
-                    <option value="60">1 Hour</option>
-                </select>
-            </div>
-            <button disabled={loading} className="w-full py-4 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all disabled:opacity-50">
-                {loading ? "Generating..." : `Generate Slots for Dr. ${doctor.name.split(' ')[1] || doctor.name}`}
-            </button>
-        </form>
     );
 }
