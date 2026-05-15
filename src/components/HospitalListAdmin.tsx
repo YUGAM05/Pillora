@@ -308,12 +308,14 @@ export default function HospitalListAdmin() {
                                                                     </div>
                                                                     <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-50">
                                                                         <span className="text-xs font-black text-emerald-600">₹{doc.fee || hospital.consultationFee}</span>
-                                                                        <button 
-                                                                            onClick={() => setShowSlotGen({ ...doc, hospital: hospital._id })}
-                                                                            className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
-                                                                        >
-                                                                            Manage Slots
-                                                                        </button>
+                                                                        {hospital.management_type === 'PILLORA' && (
+                                                                            <button 
+                                                                                onClick={() => setShowSlotGen({ ...doc, hospital: hospital._id })}
+                                                                                className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+                                                                            >
+                                                                                Manage Slots
+                                                                            </button>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             ))
