@@ -1,3 +1,4 @@
+// Deployment Trigger: 2026-05-15 13:51
 import type { Metadata } from "next";
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/next";
