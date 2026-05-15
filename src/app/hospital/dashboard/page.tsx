@@ -42,6 +42,10 @@ export default function HospitalDashboard() {
             setAppointments(appointmentsRes.data);
         } catch (err: any) {
             console.error(err);
+            if (err.response?.status === 401) {
+                // Interceptor will handle the redirect, but we stop loading here
+                return;
+            }
             if (err.response?.status === 403) {
                 setError("Access Denied. Hospital account required.");
             } else {
