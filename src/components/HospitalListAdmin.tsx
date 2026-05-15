@@ -36,6 +36,8 @@ export default function HospitalListAdmin() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [expandedDoctors, setExpandedDoctors] = useState<any[]>([]);
+    const [docsLoading, setDocsLoading] = useState(false);
     const [showSlotGen, setShowSlotGen] = useState<any>(null);
     const [showAddDoctor, setShowAddDoctor] = useState<string | null>(null); // hospitalId
     const [newDoctor, setNewDoctor] = useState({ name: "", specialization: "", fee: 200 });
@@ -68,8 +70,23 @@ export default function HospitalListAdmin() {
         }
     };
 
-    const toggleExpand = (id: string) => {
-        setExpandedId(expandedId === id ? null : id);
+    const toggleExpand = async (id: string) => {
+        if (expandedId === id) {
+            setExpandedId(null);
+            setExpandedDoctors([]);
+            return;
+        }
+        
+        setExpandedId(id);
+        setDocsLoading(true);
+        try {
+            const res = await api.get(`/admin/hospitals/${id}/doctors`);
+            setExpandedDoctors(res.data);
+        } catch (err) {
+            console.error("Failed to fetch doctors", err);
+        } finally {
+            setDocsLoading(false);
+        }
     };
 
     const handleAddDoctor = async (hospitalId: string) => {
@@ -82,7 +99,9 @@ export default function HospitalListAdmin() {
             alert("Doctor added successfully!");
             setShowAddDoctor(null);
             setNewDoctor({ name: "", specialization: "", fee: 200 });
-            fetchHospitals();
+            // Refresh doctors for this hospital
+            const res = await api.get(`/admin/hospitals/${hospitalId}/doctors`);
+            setExpandedDoctors(res.data);
         } catch (err) {
             alert("Failed to add doctor");
         }
@@ -294,8 +313,13 @@ export default function HospitalListAdmin() {
                                                     )}
 
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                        {hospital.doctors && hospital.doctors.length > 0 ? (
-                                                            hospital.doctors.map((doc: any, i: number) => (
+                                                        {docsLoading ? (
+                                                            <div className="col-span-full py-12 flex flex-col items-center justify-center">
+                                                                <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Retrieving Board Members...</p>
+                                                            </div>
+                                                        ) : expandedDoctors && expandedDoctors.length > 0 ? (
+                                                            expandedDoctors.map((doc: any, i: number) => (
                                                                 <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm group/doc hover:border-blue-200 transition-all">
                                                                     <div className="flex items-center gap-4 mb-4">
                                                                         <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-blue-600 group-hover/doc:bg-blue-600 group-hover/doc:text-white transition-all duration-300">
@@ -303,19 +327,22 @@ export default function HospitalListAdmin() {
                                                                         </div>
                                                                         <div className="flex-1">
                                                                             <p className="font-black text-slate-900 leading-none">{doc.name}</p>
-                                                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{doc.specialization}</p>
+                                                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{doc.specialty || doc.specialization}</p>
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-50">
-                                                                        <span className="text-xs font-black text-emerald-600">₹{doc.fee || hospital.consultationFee}</span>
-                                                                        {hospital.management_type === 'PILLORA' && (
-                                                                            <button 
-                                                                                onClick={() => setShowSlotGen({ ...doc, hospital: hospital._id })}
-                                                                                className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
-                                                                            >
-                                                                                Manage Slots
-                                                                            </button>
-                                                                        )}
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-xs font-black text-emerald-600">₹{doc.fee || hospital.consultationFee}</span>
+                                                                            {hospital.management_type === 'PILLORA' && (
+                                                                                <span className="text-[8px] font-black text-blue-500 uppercase tracking-tighter">Pillora Managed</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <button 
+                                                                            onClick={() => setShowSlotGen({ ...doc, hospital: hospital._id })}
+                                                                            className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+                                                                        >
+                                                                            Manage Slots
+                                                                        </button>
                                                                     </div>
                                                                 </div>
                                                             ))
