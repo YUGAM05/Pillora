@@ -37,6 +37,37 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
         if (selectedDate) fetchSlots(selectedDate);
     }, [selectedDate, fetchSlots]);
 
+    // Real-time updates via Socket.io
+    useEffect(() => {
+        const { socket } = require("@/lib/socket");
+        socket.connect();
+
+        socket.on("slotBooked", (data: any) => {
+            // If the booked slot is for the current doctor and date, update local state
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId ? { ...s, status: 'booked' } : s
+                ));
+                // Deselect if current user had it selected
+                if (selectedSlot?._id === data.slotId) {
+                    setSelectedSlot(null);
+                }
+            }
+        });
+
+        socket.on("slotsUpdated", (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                fetchSlots(selectedDate);
+            }
+        });
+
+        return () => {
+            socket.off("slotBooked");
+            socket.off("slotsUpdated");
+            socket.disconnect();
+        };
+    }, [doctor._id, selectedDate, selectedSlot, fetchSlots]);
+
     const handleBook = async () => {
         if (!selectedSlot) return;
         setBookingLoading(true);
@@ -148,10 +179,10 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                                                 relative py-3 rounded-xl text-[11px] font-black transition-all duration-300
                                                 flex items-center justify-center border-2
                                                 ${isSelected 
-                                                    ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-200 scale-110 z-10' 
+                                                    ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-400/30 scale-110 z-10' 
                                                     : !isBooked
-                                                        ? 'bg-emerald-50/50 border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-500 hover:text-white hover:-translate-y-1' 
-                                                        : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'
+                                                        ? 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-900/5' 
+                                                        : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
                                                 }
                                             `}
                                         >
@@ -161,7 +192,9 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                                             {isSelected && (
                                                 <motion.div 
                                                     layoutId="selection-ring"
-                                                    className="absolute inset-0 border-4 border-blue-200 rounded-xl -m-1.5 opacity-30"
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    className="absolute -inset-1.5 border-2 border-blue-600/30 rounded-2xl pointer-events-none"
                                                 />
                                             )}
                                         </button>
