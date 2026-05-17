@@ -4,12 +4,11 @@ import { useParams, useRouter } from 'next/navigation';
 import {
     MapPin, Phone, Clock, CreditCard, Ambulance, ShieldCheck,
     Star, ChevronLeft, ChevronRight, User, CheckCircle, XCircle,
-    Building, ArrowLeft, ExternalLink, Share2
+    Building, ArrowLeft, ExternalLink, Share2, AlertCircle, Calendar
 } from 'lucide-react';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import BookingModal from '@/components/BookingModal';
 
 interface Doctor {
     name: string;
@@ -124,13 +123,224 @@ function StatCard({ icon, label, value, valueClass = 'font-semibold text-gray-90
     );
 }
 
+interface Slot {
+    _id: string;
+    startTime: string;
+    endTime: string;
+    status: 'available' | 'booked' | 'blocked';
+}
+
+function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any }) {
+    const today = new Date().toISOString().split('T')[0];
+    const [selectedDate, setSelectedDate] = useState(today);
+    const [slots, setSlots] = useState<Slot[]>([]);
+    const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [bookingLoading, setBookingLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
+
+    const fetchSlots = useCallback(async (date: string) => {
+        setLoading(true);
+        setError("");
+        try {
+            const res = await api.get(`/hospital/dashboard/doctors/${doctor._id}/slots?date=${date}`);
+            setSlots(res.data);
+        } catch (err) {
+            setError("Failed to load slots for this date");
+        } finally {
+            setLoading(false);
+        }
+    }, [doctor._id]);
+
+    useEffect(() => {
+        if (selectedDate) fetchSlots(selectedDate);
+    }, [selectedDate, fetchSlots]);
+
+    // Real-time updates via Socket.io
+    useEffect(() => {
+        const { socket } = require("@/lib/socket");
+        socket.connect();
+
+        const onSlotBooked = (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId ? { ...s, status: 'booked' } : s
+                ));
+                if (selectedSlot?._id === data.slotId) {
+                    setSelectedSlot(null);
+                }
+            }
+        };
+
+        const onSlotsUpdated = (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                fetchSlots(selectedDate);
+            }
+        };
+
+        socket.on("slotBooked", onSlotBooked);
+        socket.on("slotsUpdated", onSlotsUpdated);
+
+        return () => {
+            socket.off("slotBooked", onSlotBooked);
+            socket.off("slotsUpdated", onSlotsUpdated);
+            socket.disconnect();
+        };
+    }, [doctor._id, selectedDate, selectedSlot, fetchSlots]);
+
+    const handleBook = async () => {
+        if (!selectedSlot) return;
+        setBookingLoading(true);
+        setError("");
+        try {
+            await api.post("/hospital/dashboard/appointments", {
+                doctorId: doctor._id,
+                hospitalId: hospital._id,
+                slotId: selectedSlot._id,
+                slotTime: selectedSlot.startTime
+            });
+            setSuccess(true);
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Booking failed. Please try again.");
+        } finally {
+            setBookingLoading(false);
+        }
+    };
+
+    if (success) {
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-5 p-5 bg-emerald-50 rounded-2xl border border-emerald-100 text-center"
+            >
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                </div>
+                <h4 className="text-base font-extrabold text-slate-800">Booking Confirmed!</h4>
+                <p className="text-xs text-slate-500 font-medium mt-1">Your appointment with Dr. {doctor.name} has been scheduled successfully.</p>
+                <button 
+                    onClick={() => {
+                        setSuccess(false);
+                        setSelectedSlot(null);
+                        fetchSlots(selectedDate);
+                    }} 
+                    className="mt-4 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+                >
+                    Book Another Slot
+                </button>
+            </motion.div>
+        );
+    }
+
+    return (
+        <div className="mt-5 pt-5 border-t border-slate-100 space-y-4">
+            {error && (
+                <div className="p-3.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-[11px] font-bold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div className="sm:col-span-2 space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-0.5">Choose Appointment Date</label>
+                    <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="date"
+                            min={today}
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-sm"
+                        />
+                    </div>
+                </div>
+                
+                <div className="flex gap-4 pb-2 sm:justify-end">
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="text-[8px] font-black text-slate-400 uppercase">Available</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-slate-200" />
+                        <span className="text-[8px] font-black text-slate-400 uppercase">Booked</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-3.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Select Time Slot</label>
+
+                {loading ? (
+                    <div className="flex items-center justify-center py-6">
+                        <motion.div 
+                            animate={{ rotate: 360 }} 
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-6 h-6 border-2 border-blue-50 border-t-blue-600 rounded-full" 
+                        />
+                    </div>
+                ) : slots.length === 0 ? (
+                    <div className="text-center py-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                        <p className="text-slate-400 font-bold italic text-xs">No slots generated for this date yet.</p>
+                        <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest mt-1">Please try another date</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
+                        {slots.map((slot) => {
+                            const isSelected = selectedSlot?._id === slot._id;
+                            const isBooked = slot.status !== 'available';
+                            
+                            return (
+                                <button
+                                    key={slot._id}
+                                    disabled={isBooked}
+                                    onClick={() => setSelectedSlot(slot)}
+                                    className={`
+                                        relative py-2.5 rounded-xl text-[10px] font-black transition-all duration-300
+                                        flex items-center justify-center border
+                                        ${isSelected 
+                                            ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-400/20 scale-105 z-10' 
+                                            : !isBooked
+                                                ? 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50' 
+                                                : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
+                                        }
+                                    `}
+                                >
+                                    <span className={`flex flex-col items-center leading-none ${isBooked ? 'line-through decoration-slate-300/50' : ''}`}>
+                                        <span className="font-extrabold">{new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                                        <span className="text-[7.5px] opacity-60 mt-0.5">{new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            <button
+                disabled={!selectedSlot || bookingLoading}
+                onClick={handleBook}
+                className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-gray-900/10 hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50"
+            >
+                {bookingLoading ? (
+                    <motion.div 
+                        animate={{ rotate: 360 }} 
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full mx-auto" 
+                    />
+                ) : "Confirm Booking"}
+            </button>
+        </div>
+    );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function HospitalDetailPage() {
     const params = useParams();
     const router = useRouter();
     const [hospital, setHospital] = useState<Hospital | null>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
 
     const fallbackImage = '/premium-hospital.png';
 
@@ -359,9 +569,9 @@ export default function HospitalDetailPage() {
                                         {hospital.doctors.length} Doctor{hospital.doctors.length > 1 ? 's' : ''}
                                     </span>
                                 </div>
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                     {hospital.doctors.map((doc, i) => (
-                                        <div key={i} className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 sm:p-5">
+                                        <div key={i} className="bg-gradient-to-br from-blue-50/35 to-indigo-50/35 border border-blue-100/60 rounded-[2rem] p-6 shadow-sm">
                                             <div className="flex items-center gap-3 mb-3">
                                                 <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
                                                     <User className="w-4 h-4 text-indigo-600" />
@@ -374,25 +584,20 @@ export default function HospitalDetailPage() {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <button 
-                                                    onClick={() => setSelectedDoctor(doc)}
-                                                    className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
-                                                >
-                                                    Book Now
-                                                </button>
                                             </div>
-                                            <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+                                            <div className="flex flex-wrap gap-3 text-xs text-gray-600 mb-4">
                                                 {doc.timing && (
-                                                    <span className="flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-gray-200">
+                                                    <span className="flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-gray-200 font-semibold shadow-sm">
                                                         <Clock className="w-3.5 h-3.5 text-blue-500" /> {doc.timing}
                                                     </span>
                                                 )}
                                                 {doc.daysAvailable && doc.daysAvailable.length > 0 && doc.daysAvailable.map(d => (
-                                                    <span key={d} className="bg-green-100 text-green-800 border border-green-200 px-2 py-0.5 rounded-md font-medium">
+                                                    <span key={d} className="bg-green-100 text-green-800 border border-green-200 px-2.5 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wide">
                                                         {d.slice(0, 3)}
                                                     </span>
                                                 ))}
                                             </div>
+                                            <DoctorBookingInline doctor={doc} hospital={hospital} />
                                         </div>
                                     ))}
                                 </div>
@@ -487,22 +692,6 @@ export default function HospitalDetailPage() {
                     </div>
                 </div>
             </div>
-
-            <AnimatePresence>
-                {selectedDoctor && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md">
-                        <motion.div 
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="bg-white w-full max-w-xl rounded-[3rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10" />
-                            <BookingModal doctor={selectedDoctor} hospital={hospital} onClose={() => setSelectedDoctor(null)} />
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }
