@@ -11,10 +11,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
 interface Doctor {
+    _id: string;
     name: string;
     specialization?: string;
     daysAvailable?: string[];
     timing?: string;
+    isSpecialtyGroup?: boolean;
+    department?: string;
+    maxAppointmentsPerSlot?: number;
+    doctorsCount?: number;
+    description?: string;
 }
 
 interface Hospital {
@@ -219,7 +225,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                     <CheckCircle className="w-6 h-6 text-emerald-600" />
                 </div>
                 <h4 className="text-base font-extrabold text-slate-800">Booking Confirmed!</h4>
-                <p className="text-xs text-slate-500 font-medium mt-1">Your appointment with Dr. {doctor.name} has been scheduled successfully.</p>
+                <p className="text-xs text-slate-500 font-medium mt-1">Your appointment with {doctor.isSpecialtyGroup ? "" : "Dr. "}{doctor.name} has been scheduled successfully.</p>
                 <button 
                     onClick={() => {
                         setSuccess(false);
@@ -577,11 +583,21 @@ export default function HospitalDetailPage() {
                                                     <User className="w-4 h-4 text-indigo-600" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <p className="font-bold text-gray-900 text-sm sm:text-base">{doc.name}</p>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="font-bold text-gray-900 text-sm sm:text-base">{doc.isSpecialtyGroup ? "" : "Dr. "}{doc.name}</p>
+                                                        {doc.isSpecialtyGroup && (
+                                                            <span className="text-[9px] font-black bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                                Specialty Group
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     {doc.specialization && (
                                                         <span className="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full inline-block mt-0.5">
                                                             {doc.specialization}
                                                         </span>
+                                                    )}
+                                                    {doc.isSpecialtyGroup && doc.department && (
+                                                        <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">{doc.department}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -597,6 +613,15 @@ export default function HospitalDetailPage() {
                                                     </span>
                                                 ))}
                                             </div>
+                                            {doc.isSpecialtyGroup && (
+                                                <div className="mb-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/60 flex items-start gap-3">
+                                                    <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Specialty Pool Protocol</p>
+                                                        <p className="text-xs text-slate-500 font-bold mt-1">Doctor will be assigned on the day of visit based on the group pool ({doc.doctorsCount || 1} doctors available).</p>
+                                                    </div>
+                                                </div>
+                                            )}
                                             <DoctorBookingInline doctor={doc} hospital={hospital} />
                                         </div>
                                     ))}
