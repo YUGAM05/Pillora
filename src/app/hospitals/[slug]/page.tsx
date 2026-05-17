@@ -133,7 +133,10 @@ interface Slot {
     _id: string;
     startTime: string;
     endTime: string;
-    status: 'available' | 'booked' | 'blocked';
+    status: 'available' | 'booked' | 'blocked' | 'cancelled';
+    booked_count?: number;
+    max_appointments?: number;
+    hold_count?: number;
 }
 
 function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any }) {
@@ -145,6 +148,8 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
     const [bookingLoading, setBookingLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+    const [tokenNumber, setTokenNumber] = useState<number | null>(null);
 
     const fetchSlots = useCallback(async (date: string) => {
         setLoading(true);
@@ -163,6 +168,51 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
         if (selectedDate) fetchSlots(selectedDate);
     }, [selectedDate, fetchSlots]);
 
+    // Handle release hold API call helper
+    const handleReleaseHold = useCallback(async (slotId: string) => {
+        try {
+            await api.post("/hospital/dashboard/slots/release-hold", { slotId });
+        } catch (err) {
+            console.error("Error releasing hold:", err);
+        }
+    }, []);
+
+    // Release hold on date change
+    useEffect(() => {
+        if (selectedSlot) {
+            handleReleaseHold(selectedSlot._id);
+            setSelectedSlot(null);
+            setTimeLeft(0);
+        }
+    }, [selectedDate, handleReleaseHold]);
+
+    // Release hold on unmount
+    useEffect(() => {
+        return () => {
+            if (selectedSlot) {
+                handleReleaseHold(selectedSlot._id);
+            }
+        };
+    }, [selectedSlot, handleReleaseHold]);
+
+    // Hold Timer countdown hook
+    useEffect(() => {
+        if (timeLeft <= 0) {
+            if (selectedSlot) {
+                handleReleaseHold(selectedSlot._id);
+                setSelectedSlot(null);
+                setError("Your temporary slot reservation has expired. Please select a slot again.");
+            }
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            setTimeLeft(prev => prev - 1);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [timeLeft, selectedSlot, handleReleaseHold]);
+
     // Real-time updates via Socket.io
     useEffect(() => {
         const { socket } = require("@/lib/socket");
@@ -171,11 +221,49 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
         const onSlotBooked = (data: any) => {
             if (data.doctorId === doctor._id && data.date === selectedDate) {
                 setSlots(prev => prev.map(s => 
-                    s._id === data.slotId ? { ...s, status: 'booked' } : s
+                    s._id === data.slotId 
+                        ? { 
+                            ...s, 
+                            status: data.bookedCount >= data.maxAppointments ? 'booked' : 'available',
+                            booked_count: data.bookedCount,
+                            hold_count: data.holdCount,
+                            max_appointments: data.maxAppointments
+                          } 
+                        : s
                 ));
-                if (selectedSlot?._id === data.slotId) {
+                if (selectedSlot?._id === data.slotId && data.bookedCount >= data.maxAppointments) {
                     setSelectedSlot(null);
+                    setTimeLeft(0);
+                    setError("This slot was just fully booked by another user.");
                 }
+            }
+        };
+
+        const onSlotHeld = (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId 
+                        ? { 
+                            ...s, 
+                            hold_count: data.holdCount,
+                            max_appointments: data.maxAppointments
+                          } 
+                        : s
+                ));
+            }
+        };
+
+        const onSlotHoldReleased = (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId 
+                        ? { 
+                            ...s, 
+                            hold_count: data.holdCount,
+                            max_appointments: data.maxAppointments
+                          } 
+                        : s
+                ));
             }
         };
 
@@ -186,29 +274,101 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
         };
 
         socket.on("slotBooked", onSlotBooked);
+        socket.on("slotHeld", onSlotHeld);
+        socket.on("slotHoldReleased", onSlotHoldReleased);
         socket.on("slotsUpdated", onSlotsUpdated);
 
         return () => {
             socket.off("slotBooked", onSlotBooked);
+            socket.off("slotHeld", onSlotHeld);
+            socket.off("slotHoldReleased", onSlotHoldReleased);
             socket.off("slotsUpdated", onSlotsUpdated);
             socket.disconnect();
         };
     }, [doctor._id, selectedDate, selectedSlot, fetchSlots]);
 
+    const handleSelectSlot = async (slot: Slot) => {
+        setError("");
+        
+        // If clicking the currently selected slot, ignore
+        if (selectedSlot?._id === slot._id) {
+            return;
+        }
+
+        // Release prior hold first
+        if (selectedSlot) {
+            await handleReleaseHold(selectedSlot._id);
+            setSelectedSlot(null);
+            setTimeLeft(0);
+        }
+
+        setLoading(true);
+        try {
+            const res = await api.post("/hospital/dashboard/slots/hold", { slotId: slot._id });
+            if (res.data.success) {
+                setSelectedSlot(slot);
+                setTimeLeft(300); // Start 5 minutes hold countdown timer
+            }
+        } catch (err: any) {
+            const code = err.response?.data?.code;
+            const msg = err.response?.data?.message;
+            
+            if (code === 'ALREADY_BOOKED') {
+                setError("You already have an appointment for this slot.");
+            } else if (code === 'SLOT_FULL') {
+                setError("Sorry, this slot was just booked by someone else. Please choose another slot.");
+            } else if (code === 'SLOT_ON_HOLD') {
+                setError("This slot is temporarily held by another user. Please choose another.");
+            } else if (code === 'SLOT_CANCELLED') {
+                setError("This slot has been cancelled by the hospital. Please choose another.");
+            } else {
+                setError(msg || "Could not hold slot. Please try again.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleBook = async () => {
         if (!selectedSlot) return;
         setBookingLoading(true);
         setError("");
+        
+        // Generate a cryptographically strong client side unique booking request key
+        const bookingRequestId = typeof crypto !== 'undefined' && crypto.randomUUID 
+            ? crypto.randomUUID() 
+            : `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
         try {
-            await api.post("/hospital/dashboard/appointments", {
+            const res = await api.post("/hospital/dashboard/appointments", {
                 doctorId: doctor._id,
                 hospitalId: hospital._id,
                 slotId: selectedSlot._id,
-                slotTime: selectedSlot.startTime
+                slotTime: selectedSlot.startTime,
+                bookingRequestId
             });
-            setSuccess(true);
+            
+            if (res.data.success) {
+                setTokenNumber(res.data.appointment?.tokenNumber || null);
+                setSuccess(true);
+                setSelectedSlot(null);
+                setTimeLeft(0);
+            }
         } catch (err: any) {
-            setError(err.response?.data?.message || "Booking failed. Please try again.");
+            const code = err.response?.data?.code;
+            const msg = err.response?.data?.message;
+            
+            if (code === 'SLOT_FULL') {
+                setError("Sorry, this slot was just booked by someone else. Please choose another slot.");
+            } else if (code === 'SLOT_CANCELLED') {
+                setError("This slot has been cancelled by the hospital. Please choose another.");
+            } else if (code === 'DUPLICATE_SUBMISSION') {
+                setError("Your booking request is currently in flight. Please wait a moment.");
+            } else if (code === 'ALREADY_BOOKED') {
+                setError("You already have an appointment booked for this slot.");
+            } else {
+                setError(msg || "Booking failed. Please try again.");
+            }
         } finally {
             setBookingLoading(false);
         }
@@ -219,20 +379,26 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
             <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-5 p-5 bg-emerald-50 rounded-2xl border border-emerald-100 text-center"
+                className="mt-5 p-6 bg-emerald-50 rounded-3xl border border-emerald-100 text-center shadow-sm"
             >
                 <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                    <CheckCircle className="w-6 h-6 text-emerald-600 animate-bounce" />
                 </div>
-                <h4 className="text-base font-extrabold text-slate-800">Booking Confirmed!</h4>
-                <p className="text-xs text-slate-500 font-medium mt-1">Your appointment with {doctor.isSpecialtyGroup ? "" : "Dr. "}{doctor.name} has been scheduled successfully.</p>
+                <h4 className="text-base font-black text-slate-800">Booking Confirmed!</h4>
+                {tokenNumber !== null && (
+                    <div className="my-3 inline-block bg-emerald-600/10 border border-emerald-200 text-emerald-800 rounded-2xl px-4 py-1.5 font-bold text-xs">
+                        Token Number: <span className="font-black text-sm">{tokenNumber}</span>
+                    </div>
+                )}
+                <p className="text-xs text-slate-500 font-bold mt-1">Your appointment with {doctor.isSpecialtyGroup ? "" : "Dr. "}{doctor.name} has been scheduled successfully.</p>
                 <button 
                     onClick={() => {
                         setSuccess(false);
+                        setTokenNumber(null);
                         setSelectedSlot(null);
                         fetchSlots(selectedDate);
                     }} 
-                    className="mt-4 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+                    className="mt-4 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md"
                 >
                     Book Another Slot
                 </button>
@@ -269,6 +435,10 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                         <span className="text-[8px] font-black text-slate-400 uppercase">Available</span>
                     </div>
                     <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="text-[8px] font-black text-slate-400 uppercase">Held</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full bg-slate-200" />
                         <span className="text-[8px] font-black text-slate-400 uppercase">Booked</span>
                     </div>
@@ -295,34 +465,91 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
                         {slots.map((slot) => {
                             const isSelected = selectedSlot?._id === slot._id;
-                            const isBooked = slot.status !== 'available';
                             
+                            const maxAppts = slot.max_appointments || 1;
+                            const bookedCount = slot.booked_count || 0;
+                            const holdCount = slot.hold_count || 0;
+                            const slotsLeft = maxAppts - (bookedCount + holdCount);
+
+                            const isBooked = bookedCount >= maxAppts;
+                            const isHeldByOthers = slotsLeft <= 0 && !isBooked; 
+                            const isDisabled = isBooked || (isHeldByOthers && !isSelected);
+
                             return (
-                                <button
-                                    key={slot._id}
-                                    disabled={isBooked}
-                                    onClick={() => setSelectedSlot(slot)}
-                                    className={`
-                                        relative py-2.5 rounded-xl text-[10px] font-black transition-all duration-300
-                                        flex items-center justify-center border
-                                        ${isSelected 
-                                            ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-400/20 scale-105 z-10' 
-                                            : !isBooked
-                                                ? 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50' 
-                                                : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
-                                        }
-                                    `}
-                                >
-                                    <span className={`flex flex-col items-center leading-none ${isBooked ? 'line-through decoration-slate-300/50' : ''}`}>
-                                        <span className="font-extrabold">{new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-                                        <span className="text-[7.5px] opacity-60 mt-0.5">{new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-                                    </span>
-                                </button>
+                                <div key={slot._id} className="relative group">
+                                    <button
+                                        disabled={isDisabled}
+                                        onClick={() => handleSelectSlot(slot)}
+                                        className={`
+                                            w-full relative py-3 rounded-xl text-[10px] font-black transition-all duration-300
+                                            flex flex-col items-center justify-center border
+                                            ${isSelected 
+                                                ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-400/20 scale-105 z-10' 
+                                                : isBooked
+                                                    ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
+                                                    : isHeldByOthers
+                                                        ? 'bg-amber-50/50 border-amber-200 text-amber-600 cursor-not-allowed opacity-75'
+                                                        : slotsLeft === 1
+                                                            ? 'bg-rose-50/60 border-rose-100 text-rose-600 hover:border-rose-500 hover:bg-rose-50 font-bold'
+                                                            : (slotsLeft === 2 || slotsLeft === 3)
+                                                                ? 'bg-amber-50/60 border-amber-100 text-amber-600 hover:border-amber-500 hover:bg-amber-50 font-bold'
+                                                                : 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50'
+                                            }
+                                        `}
+                                    >
+                                        <span className="font-extrabold leading-none">
+                                            {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        </span>
+                                        <span className="text-[7.5px] opacity-60 mt-0.5 leading-none">
+                                            {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        </span>
+
+                                        {/* Real-time remaining seats/holds indication */}
+                                        {!isBooked && !isSelected && (
+                                            <span className={`text-[6.5px] font-black mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
+                                                isHeldByOthers 
+                                                    ? 'bg-amber-100 text-amber-800'
+                                                    : slotsLeft === 1
+                                                        ? 'bg-rose-100 text-rose-800'
+                                                        : (slotsLeft === 2 || slotsLeft === 3)
+                                                            ? 'bg-amber-100 text-amber-800'
+                                                            : 'bg-emerald-100 text-emerald-800'
+                                            }`}>
+                                                {isHeldByOthers 
+                                                    ? 'Held' 
+                                                    : slotsLeft === 1
+                                                        ? 'Last Slot'
+                                                        : `${slotsLeft} Left`
+                                                }
+                                            </span>
+                                        )}
+
+                                        {isBooked && (
+                                            <span className="text-[6.5px] font-black mt-1 uppercase tracking-wide bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">
+                                                Full
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
                             );
                         })}
                     </div>
                 )}
             </div>
+
+            {selectedSlot && timeLeft > 0 && (
+                <div className="p-4 bg-amber-50/80 backdrop-blur-sm border border-amber-100 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
+                    <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                        <p className="text-xs font-bold text-amber-800">
+                            Slot temporarily reserved for you!
+                        </p>
+                    </div>
+                    <span className="text-xs font-black text-amber-700 bg-amber-100 px-3 py-1 rounded-xl font-mono">
+                        {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
+                    </span>
+                </div>
+            )}
 
             <button
                 disabled={!selectedSlot || bookingLoading}
