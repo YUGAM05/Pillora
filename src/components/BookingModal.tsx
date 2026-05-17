@@ -8,6 +8,7 @@ import { X, Calendar, Clock, CheckCircle, AlertCircle, Loader2, User } from "luc
 interface Slot {
     _id: string;
     startTime: string;
+    endTime: string;
     status: 'available' | 'booked' | 'blocked';
 }
 
@@ -186,8 +187,9 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                                                 }
                                             `}
                                         >
-                                            <span className={isBooked ? 'line-through decoration-slate-300/50' : ''}>
-                                                {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                            <span className={`flex flex-col items-center leading-none ${isBooked ? 'line-through decoration-slate-300/50' : ''}`}>
+                                                <span className="font-extrabold">{new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                                                <span className="text-[8px] opacity-60 mt-0.5">{new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                                             </span>
                                             {isSelected && (
                                                 <motion.div 
