@@ -151,6 +151,28 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
     const [timeLeft, setTimeLeft] = useState<number>(0);
     const [tokenNumber, setTokenNumber] = useState<number | null>(null);
 
+    // Intake Form Details
+    const [patientName, setPatientName] = useState("");
+    const [patientPhone, setPatientPhone] = useState("");
+    const [patientEmail, setPatientEmail] = useState("");
+    const [patientAge, setPatientAge] = useState("");
+    const [showIntakeForm, setShowIntakeForm] = useState(false);
+
+    // Prefill profile details from token storage
+    useEffect(() => {
+        try {
+            const { getUser } = require("@/lib/tokenStorage");
+            const currentUser = getUser();
+            if (currentUser) {
+                setPatientName(currentUser.name || "");
+                setPatientEmail(currentUser.email || "");
+                setPatientPhone(currentUser.phone || "");
+            }
+        } catch (e) {
+            console.error("Failed to load user profile in DoctorBookingInline", e);
+        }
+    }, []);
+
     const fetchSlots = useCallback(async (date: string) => {
         setLoading(true);
         setError("");
@@ -183,6 +205,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
             handleReleaseHold(selectedSlot._id);
             setSelectedSlot(null);
             setTimeLeft(0);
+            setShowIntakeForm(false);
         }
     }, [selectedDate, handleReleaseHold]);
 
@@ -201,6 +224,8 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
             if (selectedSlot) {
                 handleReleaseHold(selectedSlot._id);
                 setSelectedSlot(null);
+                setTimeLeft(0);
+                setShowIntakeForm(false);
                 setError("Your temporary slot reservation has expired. Please select a slot again.");
             }
             return;
@@ -234,6 +259,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                 if (selectedSlot?._id === data.slotId && data.bookedCount >= data.maxAppointments) {
                     setSelectedSlot(null);
                     setTimeLeft(0);
+                    setShowIntakeForm(false);
                     setError("This slot was just fully booked by another user.");
                 }
             }
@@ -300,6 +326,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
             await handleReleaseHold(selectedSlot._id);
             setSelectedSlot(null);
             setTimeLeft(0);
+            setShowIntakeForm(false);
         }
 
         setLoading(true);
@@ -345,7 +372,11 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                 hospitalId: hospital._id,
                 slotId: selectedSlot._id,
                 slotTime: selectedSlot.startTime,
-                bookingRequestId
+                bookingRequestId,
+                patientName,
+                patientPhone,
+                patientEmail,
+                patientAge: Number(patientAge)
             });
             
             if (res.data.success) {
@@ -353,6 +384,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                 setSuccess(true);
                 setSelectedSlot(null);
                 setTimeLeft(0);
+                setShowIntakeForm(false);
             }
         } catch (err: any) {
             const code = err.response?.data?.code;
@@ -390,7 +422,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                         Token Number: <span className="font-black text-sm">{tokenNumber}</span>
                     </div>
                 )}
-                <p className="text-xs text-slate-500 font-bold mt-1">Your appointment with {doctor.isSpecialtyGroup ? "" : "Dr. "}{doctor.name} has been scheduled successfully.</p>
+                <p className="text-xs text-slate-500 font-bold mt-1">Your appointment with {doctor.isSpecialtyGroup ? "" : "Dr. "}{doctor.name} has been scheduled successfully for {patientName}.</p>
                 <button 
                     onClick={() => {
                         setSuccess(false);
@@ -403,6 +435,109 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                     Book Another Slot
                 </button>
             </motion.div>
+        );
+    }
+
+    if (showIntakeForm) {
+        return (
+            <div className="mt-5 pt-5 border-t border-slate-100 space-y-4 animate-fade-in">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h4 className="text-sm font-black text-gray-900">Patient Details</h4>
+                        <p className="text-[10px] text-gray-500 font-medium">Please verify or fill the patient details below.</p>
+                    </div>
+                </div>
+
+                {error && (
+                    <div className="p-3.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-[11px] font-bold flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+                    </div>
+                )}
+
+                <div className="space-y-3">
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-0.5">Patient Name</label>
+                        <input
+                            type="text"
+                            required
+                            placeholder="Full Name"
+                            value={patientName}
+                            onChange={(e) => setPatientName(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none focus:border-blue-500 transition-all text-slate-800"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-0.5">Phone Number</label>
+                            <input
+                                type="tel"
+                                required
+                                placeholder="Phone Number"
+                                value={patientPhone}
+                                onChange={(e) => setPatientPhone(e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none focus:border-blue-500 transition-all text-slate-800"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-0.5">Age</label>
+                            <input
+                                type="number"
+                                required
+                                min="1"
+                                max="120"
+                                placeholder="Age"
+                                value={patientAge}
+                                onChange={(e) => setPatientAge(e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none focus:border-blue-500 transition-all text-slate-800"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-0.5">Email Address</label>
+                        <input
+                            type="email"
+                            required
+                            placeholder="Email Address"
+                            value={patientEmail}
+                            onChange={(e) => setPatientEmail(e.target.value)}
+                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none focus:border-blue-500 transition-all text-slate-800"
+                        />
+                    </div>
+                </div>
+
+                {selectedSlot && timeLeft > 0 && (
+                    <div className="p-3 bg-amber-50/80 backdrop-blur-sm border border-amber-100 rounded-xl flex items-center justify-between gap-3 shadow-sm">
+                        <p className="text-[10px] font-bold text-amber-800">
+                            Slot held: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} remaining
+                        </p>
+                    </div>
+                )}
+
+                <div className="flex gap-3 pt-1">
+                    <button
+                        type="button"
+                        onClick={() => setShowIntakeForm(false)}
+                        className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all"
+                    >
+                        Back
+                    </button>
+                    <button
+                        disabled={!patientName || !patientPhone || !patientEmail || !patientAge || bookingLoading}
+                        onClick={handleBook}
+                        className="flex-[2] py-3 bg-gray-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center"
+                    >
+                        {bookingLoading ? (
+                            <motion.div 
+                                animate={{ rotate: 360 }} 
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" 
+                            />
+                        ) : "Confirm Booking"}
+                    </button>
+                </div>
+            </div>
         );
     }
 
@@ -553,16 +688,10 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
 
             <button
                 disabled={!selectedSlot || bookingLoading}
-                onClick={handleBook}
+                onClick={() => setShowIntakeForm(true)}
                 className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-gray-900/10 hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50"
             >
-                {bookingLoading ? (
-                    <motion.div 
-                        animate={{ rotate: 360 }} 
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full mx-auto" 
-                    />
-                ) : "Confirm Booking"}
+                Confirm Booking
             </button>
         </div>
     );
