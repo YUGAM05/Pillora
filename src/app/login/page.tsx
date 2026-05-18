@@ -7,7 +7,7 @@ import {
   signInWithPopup
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
-import { setToken, setUser as setStoredUser, getToken, getUser } from "@/lib/tokenStorage";
+import { setToken, setUser as setStoredUser, getToken, getUser, clearAuth } from "@/lib/tokenStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ArrowRight, Lock, Mail, KeyRound } from "lucide-react";
 import api from "@/lib/api";
@@ -33,7 +33,7 @@ export default function LoginPage() {
         const token = getToken();
         if (user && token) {
             if (user.role === 'admin' || user.role === 'hospital') {
-                localStorage.clear();
+                clearAuth();
             } else {
                 router.push("/dashboard");
             }
@@ -88,7 +88,7 @@ export default function LoginPage() {
             }
 
             if (data.role === 'admin') {
-                localStorage.clear();
+                clearAuth();
                 setError("Admin access has been moved to the dedicated Admin Portal.");
             } else if (data.role === 'hospital') {
                 router.push("/hospital/dashboard");
@@ -163,7 +163,7 @@ export default function LoginPage() {
             window.dispatchEvent(new Event('storage'));
 
             if (data.role === 'admin') {
-                localStorage.clear();
+                clearAuth();
                 setError("Admin access has been moved to the dedicated Admin Portal.");
             } else if (data.role === 'hospital') {
                 router.push("/hospital/dashboard");
