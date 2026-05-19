@@ -68,7 +68,7 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
             const formData = new FormData();
             formData.append('file', file);
             const res = await api.post('/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': undefined }
             });
             setFormData(prev => ({ ...prev, image: res.data.url }));
         } catch (err) {
@@ -89,7 +89,7 @@ export default function AddHospitalForm({ onClose }: { onClose?: () => void }) {
                 const formData = new FormData();
                 formData.append('file', file);
                 const res = await api.post('/upload', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
+                    headers: { 'Content-Type': undefined }
                 });
                 return res.data.url;
             });
