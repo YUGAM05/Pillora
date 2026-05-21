@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Clock, CheckCircle, AlertCircle, Loader2, User as UserIcon } from "lucide-react";
+import { X, Calendar, Clock, CheckCircle, AlertCircle, Loader2, Lock, User as UserIcon } from "lucide-react";
 
 interface Slot {
     _id: string;
     startTime: string;
     endTime: string;
-    status: 'available' | 'booked' | 'blocked';
+    status: 'available' | 'locked' | 'booked' | 'blocked';
 }
 
 export default function BookingModal({ doctor, hospital, onClose }: any) {
@@ -21,6 +21,9 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
     const [bookingLoading, setBookingLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState("");
+
+    // Hold Timer State
+    const [holdTimeRemaining, setHoldTimeRemaining] = useState<number | null>(null);
 
     // Intake Form Details
     const [patientName, setPatientName] = useState("");
@@ -60,6 +63,35 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
         if (selectedDate) fetchSlots(selectedDate);
     }, [selectedDate, fetchSlots]);
 
+    // Hold expiry countdown timer
+    useEffect(() => {
+        if (holdTimeRemaining === null) return;
+        
+        if (holdTimeRemaining <= 0) {
+            const releaseExpiredHold = async () => {
+                if (selectedSlot) {
+                    try {
+                        await api.post("/hospital/dashboard/slots/release-hold", { slotId: selectedSlot._id });
+                    } catch (e) {
+                        console.error("Failed to release expired hold", e);
+                    }
+                }
+                setSelectedSlot(null);
+                setHoldTimeRemaining(null);
+                setError("Your 3-minute temporary hold expired. Please select a slot again.");
+                setStep(1);
+            };
+            releaseExpiredHold();
+            return;
+        }
+
+        const timerId = setTimeout(() => {
+            setHoldTimeRemaining(prev => (prev !== null ? prev - 1 : null));
+        }, 1000);
+
+        return () => clearTimeout(timerId);
+    }, [holdTimeRemaining, selectedSlot]);
+
     // Real-time updates via Socket.io
     useEffect(() => {
         const { socket } = require("@/lib/socket");
@@ -72,6 +104,29 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                 ));
                 if (selectedSlot?._id === data.slotId) {
                     setSelectedSlot(null);
+                    setHoldTimeRemaining(null);
+                }
+            }
+        });
+
+        socket.on("slotHeld", (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId ? { ...s, status: 'locked' } : s
+                ));
+            }
+        });
+
+        socket.on("slotHoldReleased", (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId ? { ...s, status: 'available' } : s
+                ));
+                if (selectedSlot?._id === data.slotId && data.status === 'available') {
+                    // Force release locally if backend released it under us
+                    setSelectedSlot(null);
+                    setHoldTimeRemaining(null);
+                    setError("Your hold was released by the server. Please select a slot again.");
                 }
             }
         });
@@ -84,10 +139,52 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
 
         return () => {
             socket.off("slotBooked");
+            socket.off("slotHeld");
+            socket.off("slotHoldReleased");
             socket.off("slotsUpdated");
             socket.disconnect();
         };
     }, [doctor._id, selectedDate, selectedSlot, fetchSlots]);
+
+    const handleSelectSlot = async (slot: Slot) => {
+        if (selectedSlot?._id === slot._id) return;
+        
+        setLoading(true);
+        setError("");
+        
+        try {
+            // 1. Release previous slot hold if held
+            if (selectedSlot) {
+                await api.post("/hospital/dashboard/slots/release-hold", { slotId: selectedSlot._id });
+            }
+            
+            // 2. Request new hold from backend
+            const res = await api.post("/hospital/dashboard/slots/hold", { slotId: slot._id });
+            
+            if (res.data.success) {
+                setSelectedSlot(slot);
+                // Backend hold is 180s (3m)
+                setHoldTimeRemaining(180);
+            } else {
+                setError(res.data.message || "Slot is already taken or on temporary hold.");
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Could not reserve this slot. Please choose another.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleClose = async () => {
+        if (selectedSlot) {
+            try {
+                await api.post("/hospital/dashboard/slots/release-hold", { slotId: selectedSlot._id });
+            } catch (e) {
+                console.error("Failed to release slot on modal close", e);
+            }
+        }
+        onClose();
+    };
 
     const handleBook = async () => {
         if (!selectedSlot) return;
@@ -104,9 +201,16 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                 patientEmail,
                 patientAge: Number(patientAge)
             });
+            // Successful booking removes the hold, reset timer state
+            setHoldTimeRemaining(null);
             setSuccess(true);
         } catch (err: any) {
             setError(err.response?.data?.message || "Booking failed. Please try again.");
+            if (err.response?.data?.code === 'SLOT_ON_HOLD' || err.response?.data?.code === 'SLOT_FULL') {
+                setSelectedSlot(null);
+                setHoldTimeRemaining(null);
+                setStep(1);
+            }
         } finally {
             setBookingLoading(false);
         }
@@ -120,10 +224,17 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                 </div>
                 <h3 className="text-2xl font-black text-gray-900 mb-2">Booking Confirmed!</h3>
                 <p className="text-gray-500 font-medium mb-8">Your appointment with Dr. {doctor.name} has been scheduled successfully for {patientName}.</p>
-                <button onClick={onClose} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-colors">Done</button>
+                <button onClick={handleClose} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-colors">Done</button>
             </div>
         );
     }
+
+    // Formatted hold time helper
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
 
     if (step === 2) {
         return (
@@ -131,10 +242,23 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h3 className="text-2xl font-black text-gray-900">Patient Details</h3>
-                        <p className="text-sm text-gray-500 font-medium">Dr. {doctor.name} • Time slot chosen</p>
+                        <p className="text-sm text-gray-500 font-medium">Dr. {doctor.name} • Form intake</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-6 h-6 text-gray-400" /></button>
+                    <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-6 h-6 text-gray-400" /></button>
                 </div>
+
+                {/* Premium hold countdown alert */}
+                {selectedSlot && holdTimeRemaining !== null && (
+                    <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl flex items-center justify-between animate-pulse">
+                        <div className="flex items-center gap-2.5 text-amber-800 text-xs font-extrabold">
+                            <Clock className="w-4 h-4 text-amber-600 animate-spin" style={{ animationDuration: '4s' }} />
+                            <span>Completing slot hold reservation</span>
+                        </div>
+                        <div className="px-3 py-1 bg-amber-500 text-white font-black text-xs rounded-lg shadow-sm shadow-amber-500/20">
+                            {formatTime(holdTimeRemaining)}
+                        </div>
+                    </div>
+                )}
 
                 {error && (
                     <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 text-xs font-bold flex items-center gap-2">
@@ -222,7 +346,7 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                     <h3 className="text-2xl font-black text-gray-900">Book Appointment</h3>
                     <p className="text-sm text-gray-500 font-medium">Dr. {doctor.name} • {doctor.specialization}</p>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-6 h-6 text-gray-400" /></button>
+                <button onClick={handleClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-6 h-6 text-gray-400" /></button>
             </div>
 
             {error && (
@@ -256,6 +380,10 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                                     <span className="text-[9px] font-bold text-slate-400 uppercase">Free</span>
                                 </div>
                                 <div className="flex items-center gap-1.5">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase">On Hold</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
                                     <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
                                     <span className="text-[9px] font-bold text-slate-400 uppercase">Booked</span>
                                 </div>
@@ -283,28 +411,38 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                             <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                 {slots.map((slot) => {
                                     const isSelected = selectedSlot?._id === slot._id;
-                                    const isBooked = slot.status !== 'available';
+                                    const isBooked = slot.status === 'booked' || slot.status === 'blocked';
+                                    const isLocked = slot.status === 'locked';
+                                    const isDisabled = isBooked || (isLocked && !isSelected);
                                     
                                     return (
                                         <button
                                             key={slot._id}
-                                            disabled={isBooked}
-                                            onClick={() => setSelectedSlot(slot)}
+                                            disabled={isDisabled}
+                                            onClick={() => handleSelectSlot(slot)}
                                             className={`
                                                 relative py-3 rounded-xl text-[11px] font-black transition-all duration-300
                                                 flex items-center justify-center border-2
                                                 ${isSelected 
                                                     ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-400/30 scale-110 z-10' 
-                                                    : !isBooked
-                                                        ? 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-900/5' 
-                                                        : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
+                                                    : isLocked
+                                                        ? 'bg-amber-50 border-amber-200 text-amber-600 cursor-not-allowed opacity-80'
+                                                        : !isBooked
+                                                            ? 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-900/5' 
+                                                            : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
                                                 }
                                             `}
                                         >
                                             <span className={`flex flex-col items-center leading-none ${isBooked ? 'line-through decoration-slate-300/50' : ''}`}>
-                                                <span className="font-extrabold">{new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+                                                <span className="font-extrabold flex items-center gap-0.5">
+                                                    {isLocked && !isSelected && <Lock className="w-2.5 h-2.5 text-amber-500" />}
+                                                    {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                </span>
                                                 <span className="text-[8px] opacity-60 mt-0.5">{new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                                             </span>
+                                            {isLocked && !isSelected && (
+                                                <div className="absolute top-0 right-1 text-[7px] font-bold text-amber-500 uppercase tracking-widest scale-75">Hold</div>
+                                            )}
                                             {isSelected && (
                                                 <motion.div 
                                                     layoutId="selection-ring"
@@ -321,6 +459,19 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                     </div>
                 )}
             </div>
+
+            {/* Premium hold countdown alert at Step 1 */}
+            {selectedSlot && holdTimeRemaining !== null && (
+                <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl flex items-center justify-between animate-pulse">
+                    <div className="flex items-center gap-2.5 text-amber-800 text-xs font-extrabold">
+                        <Clock className="w-4 h-4 text-amber-600 animate-spin" style={{ animationDuration: '4s' }} />
+                        <span>Slot temporarily held for booking</span>
+                    </div>
+                    <div className="px-3 py-1 bg-amber-500 text-white font-black text-xs rounded-lg shadow-sm shadow-amber-500/20">
+                        {formatTime(holdTimeRemaining)}
+                    </div>
+                </div>
+            )}
 
             <button
                 disabled={!selectedSlot || bookingLoading}
