@@ -624,11 +624,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                                                     ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
                                                     : isHeldByOthers
                                                         ? 'bg-amber-50/50 border-amber-200 text-amber-600 cursor-not-allowed opacity-75'
-                                                        : slotsLeft === 1
-                                                            ? 'bg-rose-50/60 border-rose-100 text-rose-600 hover:border-rose-500 hover:bg-rose-50 font-bold'
-                                                            : (slotsLeft === 2 || slotsLeft === 3)
-                                                                ? 'bg-amber-50/60 border-amber-100 text-amber-600 hover:border-amber-500 hover:bg-amber-50 font-bold'
-                                                                : 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50'
+                                                        : 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50'
                                             }
                                         `}
                                     >
@@ -640,22 +636,9 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                                         </span>
 
                                         {/* Real-time remaining seats/holds indication */}
-                                        {!isBooked && !isSelected && (
-                                            <span className={`text-[6.5px] font-black mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
-                                                isHeldByOthers 
-                                                    ? 'bg-amber-100 text-amber-800'
-                                                    : slotsLeft === 1
-                                                        ? 'bg-rose-100 text-rose-800'
-                                                        : (slotsLeft === 2 || slotsLeft === 3)
-                                                            ? 'bg-amber-100 text-amber-800'
-                                                            : 'bg-emerald-100 text-emerald-800'
-                                            }`}>
-                                                {isHeldByOthers 
-                                                    ? 'Held' 
-                                                    : slotsLeft === 1
-                                                        ? 'Last Slot'
-                                                        : `${slotsLeft} Left`
-                                                }
+                                        {!isBooked && !isSelected && isHeldByOthers && (
+                                            <span className="text-[6.5px] font-black mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                                                Held
                                             </span>
                                         )}
 
