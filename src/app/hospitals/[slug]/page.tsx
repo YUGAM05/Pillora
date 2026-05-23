@@ -334,7 +334,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
             const res = await api.post("/hospital/dashboard/slots/hold", { slotId: slot._id });
             if (res.data.success) {
                 setSelectedSlot(slot);
-                setTimeLeft(300); // Start 5 minutes hold countdown timer
+                setTimeLeft(120); // Start 2 minutes hold countdown timer
             }
         } catch (err: any) {
             const code = err.response?.data?.code;

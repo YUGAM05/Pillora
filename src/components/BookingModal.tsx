@@ -78,7 +78,7 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
                 }
                 setSelectedSlot(null);
                 setHoldTimeRemaining(null);
-                setError("Your 3-minute temporary hold expired. Please select a slot again.");
+                setError("Your 2-minute temporary hold expired. Please select a slot again.");
                 setStep(1);
             };
             releaseExpiredHold();
@@ -163,8 +163,8 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
             
             if (res.data.success) {
                 setSelectedSlot(slot);
-                // Backend hold is 180s (3m)
-                setHoldTimeRemaining(180);
+                // Backend hold is 120s (2m)
+                setHoldTimeRemaining(120);
             } else {
                 setError(res.data.message || "Slot is already taken or on temporary hold.");
             }
