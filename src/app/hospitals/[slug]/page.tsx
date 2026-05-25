@@ -140,7 +140,12 @@ interface Slot {
 }
 
 function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any }) {
-    const today = new Date().toISOString().split('T')[0];
+    const getLocalDateString = () => {
+        const d = new Date();
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        return d.toISOString().split('T')[0];
+    };
+    const today = getLocalDateString();
     const [selectedDate, setSelectedDate] = useState(today);
     const [slots, setSlots] = useState<Slot[]>([]);
     const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
