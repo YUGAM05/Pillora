@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { User, Phone, LogOut, LayoutDashboard, ShoppingBag, Heart, Calendar, Clock, MapPin, Stethoscope, Loader2 } from "lucide-react";
+import { User, Phone, LogOut, LayoutDashboard, ShoppingBag, Heart, Calendar, Clock, MapPin, Stethoscope, Loader2, FileText } from "lucide-react";
 import { getUser, clearAuth } from "@/lib/tokenStorage";
 import api from "@/lib/api";
 
@@ -12,6 +12,24 @@ export default function DashboardPage() {
     const [user, setUser] = useState<any>(null);
     const [bookings, setBookings] = useState<any[]>([]);
     const [bookingsLoading, setBookingsLoading] = useState(true);
+    const [fetchingPrescriptionId, setFetchingPrescriptionId] = useState<string | null>(null);
+
+    const handleViewPrescription = async (appointmentId: string) => {
+        setFetchingPrescriptionId(appointmentId);
+        try {
+            // Note: Use hospital route, since the backend getAppointmentPrescription checks patient matching
+            const res = await api.get(`/hospital/dashboard/appointments/${appointmentId}/prescription`);
+            if (res.data.url) {
+                window.open(res.data.url, "_blank");
+            } else {
+                alert("No prescription found.");
+            }
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to fetch prescription");
+        } finally {
+            setFetchingPrescriptionId(null);
+        }
+    };
 
     useEffect(() => {
         const storedUser = getUser();
@@ -161,6 +179,23 @@ export default function DashboardPage() {
                                                     <span className="leading-snug">{booking.hospital?.name} • <span className="text-[11px] font-medium text-slate-400">{booking.hospital?.address}, {booking.hospital?.city}</span></span>
                                                 </div>
                                             </div>
+
+                                            {booking.prescriptionUploadedAt && (
+                                                <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end">
+                                                    <button 
+                                                        onClick={() => handleViewPrescription(booking._id)}
+                                                        disabled={fetchingPrescriptionId === booking._id}
+                                                        className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-2 disabled:opacity-50"
+                                                    >
+                                                        {fetchingPrescriptionId === booking._id ? (
+                                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                                        ) : (
+                                                            <FileText className="w-3 h-3" />
+                                                        )}
+                                                        {fetchingPrescriptionId === booking._id ? "Opening..." : "View Prescription"}
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })
