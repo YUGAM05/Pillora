@@ -541,6 +541,14 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
         );
     }
 
+    const currentTimeWithBuffer = new Date(new Date().getTime() + 15 * 60000);
+    const validSlots = slots.filter(slot => {
+        if (selectedDate === today) {
+            return new Date(slot.startTime) >= currentTimeWithBuffer;
+        }
+        return true;
+    });
+
     return (
         <div className="mt-5 pt-5 border-t border-slate-100 space-y-4">
             {error && (
@@ -591,14 +599,14 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                             className="w-6 h-6 border-2 border-blue-50 border-t-blue-600 rounded-full" 
                         />
                     </div>
-                ) : slots.length === 0 ? (
+                ) : validSlots.length === 0 ? (
                     <div className="text-center py-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                        <p className="text-slate-400 font-bold italic text-xs">No slots generated for this date yet.</p>
+                        <p className="text-slate-400 font-bold italic text-xs">No slots available for this date.</p>
                         <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest mt-1">Please try another date</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
-                        {slots.map((slot) => {
+                        {validSlots.map((slot) => {
                             const isSelected = selectedSlot?._id === slot._id;
                             
                             const maxAppts = slot.max_appointments || 1;
