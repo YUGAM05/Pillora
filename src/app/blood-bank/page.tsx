@@ -870,7 +870,7 @@ function RequestForm() {
     const [formData, setFormData] = useState({
         patientName: '', age: '', bloodGroup: 'A+', units: '1',
         hospitalAddress: '', area: '', city: 'Ahmedabad', contactNumber: '', isUrgent: false,
-        kycDocumentType: 'Aadhar Card', kycDocumentId: '', kycDocumentImage: ''
+        kycDocumentType: 'Aadhar Card', kycDocumentId: '', kycDocumentImage: '', email: ''
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -944,6 +944,11 @@ function RequestForm() {
         if (!formData.hospitalAddress.trim()) newErrors.hospitalAddress = 'Hospital Address is required';
         if (!formData.area.trim()) newErrors.area = 'Area is required';
         if (!formData.contactNumber.trim()) newErrors.contactNumber = 'Contact Number is required';
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email Address is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Email Address is invalid';
+        }
         if (!formData.kycDocumentId.trim()) newErrors.kycDocumentId = 'Document ID is required';
         
         setErrors(newErrors);
@@ -986,6 +991,7 @@ function RequestForm() {
             kycDocumentType: formData.kycDocumentType,
             kycDocumentId: formData.kycDocumentId,
             kycDocumentImage: formData.kycDocumentImage || undefined, // strip empty string
+            email: formData.email,
         };
 
         // Remove undefined/empty fields
@@ -1191,6 +1197,11 @@ function RequestForm() {
                     <label className="text-sm font-bold text-gray-700 block mb-1.5 ml-1">Contact Person Number</label>
                     <input name="contactNumber" required value={formData.contactNumber} onChange={handleChange} className={`w-full px-4 py-3 bg-white border ${errors.contactNumber ? 'border-red-500' : 'border-gray-200'} rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none`} placeholder="For coordination" />
                     {errors.contactNumber && <p className="text-red-500 text-xs mt-1 ml-1">{errors.contactNumber}</p>}
+                </div>
+                <div>
+                    <label className="text-sm font-bold text-gray-700 block mb-1.5 ml-1">Email Address</label>
+                    <input name="email" type="email" required value={formData.email} onChange={handleChange} className={`w-full px-4 py-3 bg-white border ${errors.email ? 'border-red-500' : 'border-gray-200'} rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none`} placeholder="For email notifications" />
+                    {errors.email && <p className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>}
                 </div>
             </div>
 
