@@ -865,7 +865,7 @@ export default function HospitalDetailPage() {
                             />
                             <StatCard
                                 icon={<Ambulance className="w-5 h-5" />}
-                                label="Ambulance"
+                                label="Hospital Contact No"
                                 value={hospital.ambulanceContact || '—'}
                                 valueClass="font-semibold text-red-600 text-base"
                             />
