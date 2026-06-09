@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Calendar, Loader2, ArrowLeft, Share2, Clock } from 'lucide-react';
+import { Calendar, Loader2, ArrowLeft, Share2, Clock, Check } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -19,6 +19,34 @@ export default function HealthTipDetailPage() {
     const [tip, setTip] = useState<HealthTip | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+
+    const handleShare = async () => {
+        if (!tip) return;
+        const shareData = {
+            title: tip.title,
+            text: tip.description,
+            url: typeof window !== 'undefined' ? window.location.href : ''
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                if ((err as Error).name !== 'AbortError') {
+                    console.error("Error sharing:", err);
+                }
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareData.url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                console.error("Error copying to clipboard:", err);
+            }
+        }
+    };
 
     useEffect(() => {
         const fetchTip = async () => {
@@ -133,9 +161,23 @@ export default function HealthTipDetailPage() {
                             <div className="text-sm text-gray-400 font-medium">
                                 Published by Pillora Medical Team
                             </div>
-                            <button className="flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-colors">
-                                <Share2 className="w-4 h-4" />
-                                Share Article
+                            <button 
+                                onClick={handleShare}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+                                    copied ? 'bg-green-50 text-green-600 border border-green-200' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                }`}
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check className="w-4 h-4" />
+                                        Copied!
+                                    </>
+                                ) : (
+                                    <>
+                                        <Share2 className="w-4 h-4" />
+                                        Share Article
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

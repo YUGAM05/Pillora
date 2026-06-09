@@ -15,7 +15,8 @@ import {
     Pill,
     Cpu,
     MapPin,
-    Building2
+    Building2,
+    Check
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -40,6 +41,34 @@ export default function BlogPostDetail() {
     const router = useRouter();
     const [blog, setBlog] = useState<Blog | null>(null);
     const [loading, setLoading] = useState(true);
+    const [copied, setCopied] = useState(false);
+
+    const handleShare = async () => {
+        if (!blog) return;
+        const shareData = {
+            title: blog.title,
+            text: blog.description,
+            url: typeof window !== 'undefined' ? window.location.href : ''
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                if ((err as Error).name !== 'AbortError') {
+                    console.error("Error sharing:", err);
+                }
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareData.url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                console.error("Error copying to clipboard:", err);
+            }
+        }
+    };
 
     useEffect(() => {
         const fetchBlogDetail = async () => {
@@ -110,8 +139,19 @@ export default function BlogPostDetail() {
                         <button className="text-gray-400 hover:text-red-500 transition-colors">
                             <Heart className="w-5 h-5" />
                         </button>
-                        <button className="text-gray-400 hover:text-blue-600 transition-colors">
-                            <Share2 className="w-5 h-5" />
+                        <button 
+                            onClick={handleShare}
+                            className={`transition-colors flex items-center gap-1 ${copied ? 'text-green-600 hover:text-green-700' : 'text-gray-400 hover:text-blue-600'}`}
+                            title="Share Post"
+                        >
+                            {copied ? (
+                                <>
+                                    <Check className="w-5 h-5 text-green-600" />
+                                    <span className="text-[10px] font-bold text-green-600">Copied!</span>
+                                </>
+                            ) : (
+                                <Share2 className="w-5 h-5" />
+                            )}
                         </button>
                     </div>
                 </div>
@@ -198,8 +238,22 @@ export default function BlogPostDetail() {
                             <p className="text-gray-500 font-medium">Share this article with your community to spread correct healthcare knowledge.</p>
                         </div>
                         <div className="flex gap-4">
-                            <button className="px-8 py-4 bg-white border border-gray-200 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2">
-                                <Share2 className="w-4 h-4" /> Share Post
+                            <button 
+                                onClick={handleShare}
+                                className={`px-8 py-4 bg-white border rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex items-center gap-2 ${
+                                    copied ? 'border-green-200 text-green-600 hover:bg-green-50/10' : 'border-gray-200 text-gray-900 hover:bg-gray-50'
+                                }`}
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check className="w-4 h-4 text-green-600" />
+                                        Copied!
+                                    </>
+                                ) : (
+                                    <>
+                                        <Share2 className="w-4 h-4" /> Share Post
+                                    </>
+                                )}
                             </button>
                             <button className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-800 transition-all shadow-lg flex items-center gap-2">
                                 <Bookmark className="w-4 h-4" /> Save Later
