@@ -123,7 +123,7 @@ export default function AboutPage() {
                                     Pillora is an emerging healthcare coordination platform built for the moments that cannot wait. We connect patients with verified blood donors, deliver transparent hospital pricing, show which government schemes are accepted at each hospital, and facilitate seamless appointment booking—all from a single platform.
                                 </p>
                                 <p className="text-lg text-slate-600 leading-relaxed font-medium">
-                                    Founded in 2024 and based in Ahmedabad, Gujarat, Pillora was born from a frustrating but universal truth: when someone needs blood urgently or wants to understand what a hospital procedure will cost, the healthcare system offers no reliable, fast, or transparent answer. We are fixing that by bridging the gap between people in need and the resources available around them.
+                                    Founded in 2026 and based in Ahmedabad, Gujarat, Pillora was born from a frustrating but universal truth: when someone needs blood urgently or wants to understand what a hospital procedure will cost, the healthcare system offers no reliable, fast, or transparent answer. Our aim is to have a one-stop solution for this, bridging the gap between people in need and the resources available around them.
                                 </p>
                             </div>
 
@@ -383,9 +383,9 @@ export default function AboutPage() {
                     {/* Timeline */}
                     <div className="relative max-w-3xl mx-auto before:absolute before:inset-y-0 before:left-1/2 before:w-0.5 before:bg-slate-200">
                         {[
-                            { year: "2024", text: "Pillora founded; Blood Connect MVP launched in Ahmedabad, Gujarat." },
-                            { year: "2025", text: "Local hospital information database goes live; Government scheme acceptance mapping added." },
-                            { year: "2026", text: "Appointment booking feature launched; optimizing core services across Ahmedabad." }
+                            { year: "2026", text: "Pillora founded; launched emergency blood coordination and hospital directory database in Ahmedabad, Gujarat." },
+                            { year: "2026+", text: "Verified doctor scheduling and scheme mapping added; optimizing core services." },
+                            { year: "Aim", text: "Consolidating all features to serve as the ultimate one-stop healthcare coordination solution." }
                         ].map((item, index) => (
                             <div key={index} className={`relative flex items-center justify-between mb-8 ${index % 2 === 0 ? 'flex-row-reverse' : ''}`}>
                                 <div className="w-[45%]" />
