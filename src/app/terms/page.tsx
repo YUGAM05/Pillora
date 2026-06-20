@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { FileText, Shield, UserCheck, AlertCircle, Scale, HeartHandshake } from "lucide-react";
+import { FileText, Shield, UserCheck, AlertCircle, Scale, HeartHandshake, CreditCard } from "lucide-react";
 
 export default function TermsPage() {
     const sections = [
@@ -31,7 +31,19 @@ export default function TermsPage() {
             )
         },
         {
-            title: "5. Liability",
+            title: "5. Payments, Advance Booking & Refunds",
+            icon: <CreditCard className="w-6 h-6 text-primary" />,
+            content: (
+                <ul className="list-disc list-inside space-y-2 text-gray-600">
+                    <li><strong>5.1.</strong> Booking an appointment requires payment of an advance amount equal to 20% of the doctor&apos;s consultation fee, collected at the time of booking.</li>
+                    <li><strong>5.2.</strong> Refund and cancellation terms are governed by Pillora&apos;s <a href="/returns" className="text-primary hover:underline font-medium">Refund and Cancellation Policy</a>, which forms part of these Terms by reference.</li>
+                    <li><strong>5.3.</strong> Pillora uses third-party payment gateways for transaction processing. Pillora is not liable for delays or failures caused by the payment gateway, bank, or User&apos;s payment provider.</li>
+                    <li><strong>5.4.</strong> Hospitals are responsible for honoring confirmed bookings and for the accuracy of consultation fees displayed on the Platform.</li>
+                </ul>
+            )
+        },
+        {
+            title: "6. Liability",
             icon: <Shield className="w-6 h-6 text-blue-500" />,
             content: "Pillora and its founder (Shah Yugam) are not liable for adverse medication reactions or inaccuracies in third-party facility data."
         }
