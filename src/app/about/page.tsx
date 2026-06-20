@@ -18,8 +18,10 @@ import {
     Eye,
     Shield,
     Calendar,
-    BookOpen
+    BookOpen,
+    MapPin
 } from "lucide-react";
+
 
 const fadeIn = {
     initial: { opacity: 0, y: 20 },
@@ -407,6 +409,32 @@ export default function AboutPage() {
                                 Pillora is currently bootstrapped and building toward its first institutional funding round. We are driven by mission first, metrics second.
                             </p>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 8. Office Location / Contact Info */}
+            <section className="py-24 px-6 bg-slate-50 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-5xl font-black text-slate-900 mb-4 flex items-center justify-center gap-3">
+                            <MapPin className="w-10 h-10 text-rose-600" />
+                            Our Office
+                        </h2>
+                        <div className="h-2 w-24 bg-rose-600 mx-auto rounded-full" />
+                    </div>
+
+                    <div className="max-w-3xl mx-auto bg-white border border-slate-200 p-8 md:p-12 rounded-[2.5rem] shadow-xl relative overflow-hidden group text-center">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full -mr-16 -mt-16 blur-xl" />
+                        <div className="w-16 h-16 rounded-2xl bg-rose-600/10 flex items-center justify-center mx-auto mb-6 text-rose-600">
+                            <Building2 className="w-8 h-8" />
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 mb-4">Registered Business Address</h3>
+                        <p className="text-lg text-slate-600 leading-relaxed font-semibold max-w-xl mx-auto">
+                            4 Pansheel Society, Jintan Road,<br />
+                            Infront of Ultra Vision School,<br />
+                            Surendranagar - 363002, Gujarat, India
+                        </p>
                     </div>
                 </div>
             </section>
