@@ -153,7 +153,7 @@ const slides = [
         buttonText: "Become a donor",
         buttonLink: "/blood-bank",
         icon: <Heart className="w-8 h-8 md:w-16 md:h-16 text-white" strokeWidth={1.5} />,
-        sideText: "10,000+",
+        sideText: "10+",
         sideSubText: "donors registered",
         bgColor: "bg-indigo-600", // Rich Indigo Blue
         circleBg: "bg-white/20"
