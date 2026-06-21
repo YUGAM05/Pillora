@@ -242,7 +242,7 @@ export default function HospitalsPage() {
         fetchHospitals();
     }, [selectedCity, selectedSpecs, isPmjayAccepted, selectedGovtSchemes, selectedTypes, selectedBedRanges, isEmergency247, isBookingAvailable, ratingThreshold, sortBy]);
 
-    // Reverse geocode geolocation coordinate to city via Google Geocoding API
+    // Reverse geocode geolocation coordinate to city via Nominatim (OpenStreetMap)
     const handleUseMyLocation = () => {
         if (!navigator.geolocation) {
             alert("Geolocation is not supported by your browser.");
@@ -253,29 +253,20 @@ export default function HospitalsPage() {
             async (position) => {
                 const { latitude, longitude } = position.coords;
                 try {
-                    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
                     const response = await fetch(
-                        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`
+                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
                     );
                     const data = await response.json();
-                    if (data.status === 'OK' && data.results.length > 0) {
-                        let detectedCity = "";
-                        for (const result of data.results) {
-                            const localityComponent = result.address_components.find((comp: any) =>
-                                comp.types.includes('locality')
-                            );
-                            if (localityComponent) {
-                                detectedCity = localityComponent.long_name;
-                                break;
-                            }
-                        }
-                        if (detectedCity) {
-                            handleSelectCity(detectedCity);
-                        } else {
-                            alert("Could not detect your city. Please select manually.");
-                        }
+                    const detectedCity = data.address?.city || 
+                                         data.address?.town || 
+                                         data.address?.village || 
+                                         data.address?.municipality || 
+                                         data.address?.county;
+                    
+                    if (detectedCity) {
+                        handleSelectCity(detectedCity);
                     } else {
-                        alert("Failed to reverse geocode location. Please select manually.");
+                        alert("Could not detect your city. Please select manually.");
                     }
                 } catch (error) {
                     console.error(error);
