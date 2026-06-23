@@ -140,6 +140,7 @@ interface Slot {
 }
 
 function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any }) {
+    const router = useRouter();
     const getLocalDateString = () => {
         const d = new Date();
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -386,10 +387,10 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
             
             if (res.data.success) {
                 setTokenNumber(res.data.appointment?.tokenNumber || null);
-                setSuccess(true);
                 setSelectedSlot(null);
                 setTimeLeft(0);
                 setShowIntakeForm(false);
+                router.push(`/checkout/appointment/${res.data.appointment._id}`);
             }
         } catch (err: any) {
             const code = err.response?.data?.code;
