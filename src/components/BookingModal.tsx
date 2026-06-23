@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, CheckCircle, AlertCircle, Loader2, Lock, User as UserIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Slot {
     _id: string;
@@ -13,6 +14,7 @@ interface Slot {
 }
 
 export default function BookingModal({ doctor, hospital, onClose }: any) {
+    const router = useRouter();
     const [step, setStep] = useState(1); // Step 1: Slot selection, Step 2: Patient details form
     const [selectedDate, setSelectedDate] = useState("");
     const [slots, setSlots] = useState<Slot[]>([]);
@@ -191,7 +193,7 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
         setBookingLoading(true);
         setError("");
         try {
-            await api.post("/hospital/dashboard/appointments", {
+            const res = await api.post("/hospital/dashboard/appointments", {
                 doctorId: doctor._id,
                 hospitalId: hospital._id,
                 slotId: selectedSlot._id,
@@ -203,7 +205,7 @@ export default function BookingModal({ doctor, hospital, onClose }: any) {
             });
             // Successful booking removes the hold, reset timer state
             setHoldTimeRemaining(null);
-            setSuccess(true);
+            router.push(`/checkout/appointment/${res.data.appointment._id}`);
         } catch (err: any) {
             setError(err.response?.data?.message || "Booking failed. Please try again.");
             if (err.response?.data?.code === 'SLOT_ON_HOLD' || err.response?.data?.code === 'SLOT_FULL') {
