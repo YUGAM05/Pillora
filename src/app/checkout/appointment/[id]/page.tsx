@@ -218,16 +218,16 @@ export default function AppointmentCheckoutPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] pb-24">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50/40 via-[#F8FAFC] to-blue-50/20 pb-24">
             <div className="max-w-4xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
-                    <Link href="/dashboard" className="p-3 bg-white border border-slate-200/60 rounded-2xl hover:bg-slate-50 transition-colors shadow-sm">
-                        <ArrowLeft className="w-5 h-5 text-slate-600" />
+                    <Link href="/dashboard" className="p-3 bg-white border border-blue-100 rounded-2xl hover:bg-blue-50/50 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_4px_12px_rgba(37,99,235,0.03)] flex items-center justify-center">
+                        <ArrowLeft className="w-5 h-5 text-blue-600" />
                     </Link>
                     <div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pillora Secure Checkout</span>
-                        <h1 className="text-3xl font-black text-slate-950 leading-none mt-1">Confirm & Pay</h1>
+                        <span className="text-[10px] font-black text-blue-600/70 uppercase tracking-widest bg-blue-50/50 px-2.5 py-1 rounded-full border border-blue-100/40">Pillora Secure Checkout</span>
+                        <h1 className="text-3xl font-black text-slate-900 leading-none mt-2.5">Confirm & Pay</h1>
                     </div>
                 </div>
 
@@ -242,34 +242,34 @@ export default function AppointmentCheckoutPage() {
                     {/* Left Column: Details & Policies */}
                     <div className="lg:col-span-7 space-y-6">
                         {/* Consultation Summary */}
-                        <div className="bg-white rounded-3xl border border-slate-100 p-6 md:p-8 shadow-sm space-y-6">
-                            <h2 className="text-lg font-black text-slate-950 border-b pb-4 flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-blue-600" /> Appointment Summary
+                        <div className="bg-white rounded-[2rem] border border-blue-50/80 p-6 md:p-8 shadow-[0_10px_35px_rgba(37,99,235,0.03)] space-y-6">
+                            <h2 className="text-lg font-black text-slate-900 border-b border-slate-100 pb-4 flex items-center gap-2.5">
+                                <Calendar className="w-5 h-5 text-blue-600" /> Appointment Details
                             </h2>
 
                             <div className="space-y-4">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0 font-black text-lg">
+                                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl flex items-center justify-center shrink-0 font-black text-xl shadow-md shadow-blue-500/20 border border-blue-400/20">
                                         {(appointment.doctorName || "Dr").charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="font-extrabold text-slate-900 text-base">{appointment.doctorName || "Consultant"}</h3>
-                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-0.5">Specialist</p>
+                                        <h3 className="font-black text-slate-900 text-base">{appointment.doctorName || "Consultant"}</h3>
+                                        <p className="text-xs text-blue-600/90 font-extrabold uppercase tracking-widest mt-0.5">Specialist</p>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                                     <div>
                                         <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Hospital / Clinic</span>
-                                        <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1">
-                                            <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                                        <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                                            <Building2 className="w-4 h-4 text-blue-600/80" />
                                             {appointment.hospitalName || "Pillora Hospital"}
                                         </span>
                                     </div>
                                     <div>
                                         <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Slot Date & Time</span>
-                                        <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1">
-                                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                        <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                                            <Clock className="w-4 h-4 text-blue-600/80" />
                                             {appointment.appointmentDate && appointment.appointmentTime ? (
                                                 `${appointment.appointmentDate} at ${appointment.appointmentTime}`
                                             ) : (
@@ -280,26 +280,30 @@ export default function AppointmentCheckoutPage() {
                                 </div>
 
                                 <div className="pt-4 border-t border-slate-100">
-                                    <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Patient Details</span>
-                                    <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                        <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                                        {appointment.patientName} ({appointment.patientAge} Yrs) • {appointment.patientPhone}
-                                    </span>
+                                    <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Patient Details</span>
+                                    <div className="p-4 bg-blue-50/20 border border-blue-100/50 rounded-2xl flex items-center gap-3">
+                                        <UserIcon className="w-4 h-4 text-blue-500 shrink-0" />
+                                        <span className="font-extrabold text-slate-800 text-xs leading-none">
+                                            {appointment.patientName} ({appointment.patientAge} Yrs) • {appointment.patientPhone}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Cancellation Policy */}
-                        <div className="bg-white rounded-3xl border border-slate-100 p-6 md:p-8 shadow-sm space-y-4">
-                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                                <HelpCircle className="w-4 h-4 text-slate-500" /> Cancellation Policy
+                        <div className="bg-white rounded-[2rem] border border-blue-50/80 p-6 md:p-8 shadow-[0_10px_35px_rgba(37,99,235,0.03)] space-y-4">
+                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2.5">
+                                <HelpCircle className="w-4 h-4 text-blue-500" /> Cancellation Policy
                             </h2>
-                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3.5">
-                                <p className="text-xs font-bold text-slate-700 leading-relaxed">
-                                    User cancellation = <span className="text-rose-600 font-extrabold">no refund</span>.
+                            <div className="p-4.5 bg-slate-50 border border-slate-100 rounded-2xl space-y-3.5">
+                                <p className="text-xs font-bold text-slate-700 leading-relaxed flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                                    User cancellation = <span className="inline-flex items-center px-2 py-0.5 bg-rose-50 border border-rose-100 rounded-md text-[10px] text-rose-600 font-extrabold uppercase tracking-wider">no refund</span>
                                 </p>
-                                <p className="text-xs font-bold text-slate-700 leading-relaxed">
-                                    Hospital cancellation = <span className="text-emerald-600 font-extrabold">full refund within 48 hours</span>.
+                                <p className="text-xs font-bold text-slate-700 leading-relaxed flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                    Hospital cancellation = <span className="inline-flex items-center px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded-md text-[10px] text-emerald-600 font-extrabold uppercase tracking-wider">full refund</span> within 48 hours
                                 </p>
                             </div>
                         </div>
@@ -307,42 +311,42 @@ export default function AppointmentCheckoutPage() {
 
                     {/* Right Column: Pricing & Pay CTA */}
                     <div className="lg:col-span-5">
-                        <div className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-xl shadow-slate-950/10 space-y-8 sticky top-4">
-                            <div className="flex items-center gap-2 text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] border-b border-white/5 pb-4">
-                                <ShieldCheck className="w-4 h-4 text-blue-400 animate-pulse" /> Guaranteed Secure Transaction
+                        <div className="bg-white/95 backdrop-blur-md rounded-[2.2rem] p-6 md:p-8 shadow-[0_20px_50px_rgba(37,99,235,0.08)] border border-blue-100/70 space-y-8 sticky top-4">
+                            <div className="flex items-center gap-2 text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] border-b border-blue-50 pb-4">
+                                <ShieldCheck className="w-4 h-4 text-blue-500 animate-pulse" /> Guaranteed Secure Transaction
                             </div>
 
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center text-slate-400">
-                                    <span className="text-sm font-bold">Consultation Fee</span>
-                                    <span className="font-bold text-white">₹{consultationFee.toFixed(2)}</span>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-bold text-slate-500">Consultation Fee</span>
+                                    <span className="font-extrabold text-slate-800">₹{consultationFee.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-slate-400">
-                                    <span className="text-sm font-bold">Upfront Booking Fee (20%)</span>
-                                    <span className="font-bold text-white">₹{advanceFee.toFixed(2)}</span>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-bold text-slate-500">Upfront Booking Fee (20%)</span>
+                                    <span className="font-extrabold text-slate-800">₹{advanceFee.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-slate-400 pt-3 border-t border-white/5">
-                                    <span className="text-sm font-bold">Payable at Clinic</span>
-                                    <span className="font-bold text-white">₹{remainingFee.toFixed(2)}</span>
+                                <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                                    <span className="text-sm font-bold text-slate-500">Payable at Clinic</span>
+                                    <span className="font-extrabold text-slate-800">₹{remainingFee.toFixed(2)}</span>
                                 </div>
 
-                                <div className="pt-4 border-t border-white/5 space-y-1">
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total to Pay Now</span>
-                                    <div className="flex justify-between items-end">
-                                        <span className="text-3xl font-black text-blue-400 leading-none">₹{advanceFee.toFixed(2)}</span>
-                                        <span className="text-[10px] text-slate-400 font-bold">INR</span>
+                                <div className="pt-5 border-t border-blue-50 space-y-2">
+                                    <span className="text-[10px] font-black text-blue-600/80 uppercase tracking-widest">Total to Pay Now</span>
+                                    <div className="flex justify-between items-center p-4 bg-blue-50/50 border border-blue-100/50 rounded-2xl">
+                                        <span className="text-3xl font-black text-blue-600 leading-none">₹{advanceFee.toFixed(2)}</span>
+                                        <span className="text-[10px] text-blue-600 font-black bg-blue-100/50 px-2.5 py-1 rounded-md">INR</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-bold text-slate-300 leading-relaxed">
+                            <div className="p-4.5 bg-blue-50/20 border border-blue-100/30 rounded-2xl text-[11px] font-bold text-slate-600 leading-relaxed">
                                 💡 <strong>20% advance booking fee.</strong> The remaining amount (₹{remainingFee.toFixed(2)}) is payable in cash or card at the clinic/hospital during your check-in.
                             </div>
 
                             <button
                                 onClick={handlePayment}
                                 disabled={paymentLoading}
-                                className="w-full py-4.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl text-sm uppercase tracking-widest shadow-xl shadow-blue-600/30 hover:scale-[1.01] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-4.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
                             >
                                 {paymentLoading ? (
                                     <>
