@@ -357,15 +357,15 @@ export default function AppointmentCheckoutPage() {
                             <button
                                 onClick={handlePayment}
                                 disabled={paymentLoading}
-                                className="w-full py-4.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
+                                className="w-full py-4 px-5 bg-[#0052CC] hover:bg-[#003da3] text-white text-[16px] font-bold uppercase tracking-wider rounded-lg shadow-none transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
                             >
                                 {paymentLoading ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Processing Payment...
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        PROCESSING PAYMENT...
                                     </>
                                 ) : (
-                                    "Proceed to Payment"
+                                    "PROCEED TO PAYMENT"
                                 )}
                             </button>
                         </div>
