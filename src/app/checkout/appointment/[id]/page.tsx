@@ -9,7 +9,15 @@ import Link from "next/link";
 export default function AppointmentCheckoutPage() {
     const params = useParams();
     const router = useRouter();
-    const appointmentId = params.id as string;
+    const [appointmentId, setAppointmentId] = useState<string>("");
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const searchParamId = new URLSearchParams(window.location.search).get("appointmentId");
+            const routeParamId = params?.id as string;
+            setAppointmentId(searchParamId || routeParamId || "");
+        }
+    }, [params]);
 
     const [appointment, setAppointment] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -17,18 +25,29 @@ export default function AppointmentCheckoutPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
 
+    const consultationFee = Number(appointment?.consultationFee || 0);
+    const advanceFee = consultationFee * 0.20;
+    const remainingFee = consultationFee - advanceFee;
+
     // Fetch appointment details
     const fetchAppointment = useCallback(async () => {
+        if (!appointmentId) return;
         try {
-            const res = await api.get("/hospital/dashboard/appointments/my-bookings");
-            const app = res.data.find((a: any) => a._id === appointmentId);
-            if (!app) {
-                setError("Appointment not found or you do not have permission to view it.");
+            setLoading(true);
+            setError("");
+            const res = await api.get(`/appointments/${appointmentId}`);
+            const data = res.data;
+            if (!data || data.consultationFee <= 0) {
+                setError("Invalid appointment fee");
             } else {
-                setAppointment(app);
+                setAppointment(data);
             }
         } catch (err: any) {
-            setError("Failed to fetch appointment details. Please try again.");
+            if (err.response?.status === 404) {
+                setError("Appointment not found");
+            } else {
+                setError("Unable to load appointment details");
+            }
         } finally {
             setLoading(false);
         }
@@ -70,35 +89,37 @@ export default function AppointmentCheckoutPage() {
             }
 
             // 2. Initiate Payment Order on Backend
-            const initRes = await api.post("/payments/initiate", {
-                appointmentId: appointment._id,
-                doctorId: appointment.doctor?._id || appointment.doctor,
-                hospitalId: appointment.hospital?._id || appointment.hospital,
-                consultationFee: appointment.doctor?.fee || 500
+            const response = await api.post("/payments/initiate", {
+                appointmentId: appointment.appointmentId || appointmentId,
+                userId: localStorage.getItem("userId"),
+                doctorId: appointment.doctorId,
+                hospitalId: appointment.hospitalId,
+                consultationFee: appointment.consultationFee
             });
 
-            if (!initRes.data.success) {
-                throw new Error(initRes.data.message || "Failed to initiate payment order");
+            if (!response.data.razorpayOrderId) {
+                setError("Payment gateway error. Try again.");
+                return;
             }
 
-            const { orderId, amount, currency, advanceFee } = initRes.data;
+            const { razorpayOrderId, advanceFee, keyId } = response.data;
 
             // 3. Open Razorpay Checkout Widget
             const options = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_51Mz2wYSHB3q5Xn",
-                amount: amount,
-                currency: currency,
+                key: keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_51Mz2wYSHB3q5Xn",
+                amount: Math.round(advanceFee * 100), // paise
+                currency: "INR",
                 name: "Pillora Healthcare",
-                description: `20% Advance Booking Fee for Dr. ${appointment.doctor?.name || "Consultant"}`,
-                order_id: orderId,
+                description: `20% Advance Booking Fee for Dr. ${appointment.doctorName || "Consultant"}`,
+                order_id: razorpayOrderId,
                 prefill: {
                     name: appointment.patientName || "",
                     email: appointment.patientEmail || "",
                     contact: appointment.patientPhone || ""
                 },
                 notes: {
-                    appointmentId: appointment._id,
-                    hospitalId: appointment.hospital?._id || appointment.hospital
+                    appointmentId: appointment.appointmentId || appointmentId,
+                    hospitalId: appointment.hospitalId
                 },
                 theme: {
                     color: "#2563eb" // Pillora Blue
@@ -138,8 +159,18 @@ export default function AppointmentCheckoutPage() {
             const rzp = new (window as any).Razorpay(options);
             rzp.open();
         } catch (err: any) {
-            console.error(err);
-            setError(err.response?.data?.message || err.message || "An unexpected error occurred during payment setup.");
+            // Handle different error types
+            if (err.response?.status === 401) {
+                setError("Please login first");
+            } else if (err.response?.status === 404) {
+                setError("Appointment not found");
+            } else if (err.response?.status === 400) {
+                setError(err.response.data.error || err.response.data.message);
+            } else {
+                setError("Payment failed. Try again.");
+            }
+            console.error("Payment error:", err.response?.data);
+        } finally {
             setPaymentLoading(false);
         }
     };
@@ -176,7 +207,7 @@ export default function AppointmentCheckoutPage() {
                         <CheckCircle className="w-14 h-14 text-emerald-500" />
                     </div>
                     <h1 className="text-3xl font-black text-slate-950 mb-2">Booking Confirmed!</h1>
-                    <p className="text-emerald-600 font-bold text-sm mb-4">₹{(Number(appointment?.doctor?.fee || 500) * 0.20).toFixed(2)} Paid Successfully</p>
+                    <p className="text-emerald-600 font-bold text-sm mb-4">₹{advanceFee.toFixed(2)} Paid Successfully</p>
                     <p className="text-slate-400 font-medium mb-6">Your appointment is now confirmed. We have sent a confirmation email to you. Redirecting to dashboard...</p>
                     <Link href="/dashboard" className="px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition block">
                         View Dashboard Now
@@ -185,10 +216,6 @@ export default function AppointmentCheckoutPage() {
             </div>
         );
     }
-
-    const consultationFee = Number(appointment.doctor?.fee || 0);
-    const advanceFee = Math.round(consultationFee * 0.20);
-    const remainingFee = consultationFee - advanceFee;
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] pb-24">
@@ -223,11 +250,11 @@ export default function AppointmentCheckoutPage() {
                             <div className="space-y-4">
                                 <div className="flex items-start gap-4">
                                     <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0 font-black text-lg">
-                                        {(appointment.doctor?.name || "Dr").charAt(0)}
+                                        {(appointment.doctorName || "Dr").charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="font-extrabold text-slate-900 text-base">Dr. {appointment.doctor?.name || "Consultant"}</h3>
-                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-0.5">{appointment.doctor?.specialty || appointment.doctor?.specialization}</p>
+                                        <h3 className="font-extrabold text-slate-900 text-base">{appointment.doctorName || "Consultant"}</h3>
+                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-0.5">Specialist</p>
                                     </div>
                                 </div>
 
@@ -236,14 +263,18 @@ export default function AppointmentCheckoutPage() {
                                         <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Hospital / Clinic</span>
                                         <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1">
                                             <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                                            {appointment.hospital?.name || "Pillora Hospital"}
+                                            {appointment.hospitalName || "Pillora Hospital"}
                                         </span>
                                     </div>
                                     <div>
                                         <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Slot Date & Time</span>
                                         <span className="font-extrabold text-slate-800 text-xs flex items-center gap-1">
                                             <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                            {new Date(appointment.slotTime).toLocaleDateString([], { month: 'short', day: '2-digit' })}, {new Date(appointment.slotTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                                            {appointment.appointmentDate && appointment.appointmentTime ? (
+                                                `${appointment.appointmentDate} at ${appointment.appointmentTime}`
+                                            ) : (
+                                                appointment.slotTime ? `${new Date(appointment.slotTime).toLocaleDateString([], { month: 'short', day: '2-digit' })}, ${new Date(appointment.slotTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}` : ""
+                                            )}
                                         </span>
                                     </div>
                                 </div>
