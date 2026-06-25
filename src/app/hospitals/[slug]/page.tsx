@@ -112,18 +112,26 @@ function ImageSlideshow({ images, alt }: { images: string[]; alt: string }) {
 }
 
 // ─── Stat Card ─────────────────────────────────────────────────────────────────
-function StatCard({ icon, label, value, valueClass = 'font-bold text-slate-900 text-base' }: {
+function StatCard({ icon, label, value, color = 'blue', valueClass = 'font-bold text-slate-900 text-base' }: {
     icon: React.ReactNode;
     label: string;
     value: React.ReactNode;
+    color?: 'blue' | 'rose' | 'emerald' | 'indigo' | 'amber';
     valueClass?: string;
 }) {
+    const colors = {
+        blue: 'bg-blue-50/80 text-blue-600 border-blue-100/50',
+        rose: 'bg-rose-50/80 text-rose-650 border-rose-100/50',
+        emerald: 'bg-emerald-50/80 text-emerald-650 border-emerald-100/50',
+        indigo: 'bg-indigo-50/80 text-indigo-600 border-indigo-100/50',
+        amber: 'bg-amber-50/80 text-amber-600 border-amber-100/50',
+    };
     return (
-        <div className="flex items-start gap-3.5 p-4 sm:p-5 bg-white border border-slate-100 shadow-sm rounded-2xl hover:shadow-md hover:border-blue-100 transition-all duration-300">
-            <div className="p-3 bg-blue-50/70 text-blue-600 rounded-xl shrink-0 shadow-sm">{icon}</div>
+        <div className="flex items-start gap-3.5 p-4 sm:p-5 bg-white border border-slate-100/60 shadow-[0_4px_20px_rgba(0,0,0,0.01)] rounded-[1.8rem] hover:shadow-[0_12px_30px_rgba(0,0,0,0.03)] hover:border-blue-100 transition-all duration-300">
+            <div className={`p-3 rounded-2xl shrink-0 shadow-sm border ${colors[color]}`}>{icon}</div>
             <div className="min-w-0">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{label}</p>
-                <div className={`mt-2 ${valueClass} leading-snug`}>{value}</div>
+                <p className="text-[9px] font-black text-slate-405 uppercase tracking-widest leading-none">{label}</p>
+                <div className={`mt-2.5 ${valueClass} leading-snug`}>{value}</div>
             </div>
         </div>
     );
@@ -415,20 +423,22 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
     if (success) {
         return (
             <motion.div 
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-5 p-6 bg-emerald-50 rounded-3xl border border-emerald-100 text-center shadow-sm"
+                className="mt-6 p-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border border-emerald-100/60 rounded-3xl text-center shadow-lg shadow-emerald-500/5 relative overflow-hidden"
             >
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle className="w-6 h-6 text-emerald-600 animate-bounce" />
+                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl" />
+                <div className="w-14 h-14 bg-emerald-100/80 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 shadow-sm">
+                    <CheckCircle className="w-7 h-7 text-emerald-600 animate-bounce" />
                 </div>
-                <h4 className="text-base font-black text-slate-800">Booking Confirmed!</h4>
+                <h4 className="text-base font-black text-slate-800 tracking-tight">Booking Confirmed!</h4>
                 {tokenNumber !== null && (
-                    <div className="my-3 inline-block bg-emerald-600/10 border border-emerald-200 text-emerald-800 rounded-2xl px-4 py-1.5 font-bold text-xs">
-                        Token Number: <span className="font-black text-sm">{tokenNumber}</span>
+                    <div className="my-4 inline-flex flex-col bg-white border border-emerald-250 text-emerald-800 rounded-2xl px-6 py-2 shadow-sm relative">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Queue Token Pass</span>
+                        <span className="font-black text-2xl text-emerald-600 mt-1">{tokenNumber}</span>
                     </div>
                 )}
-                <p className="text-xs text-slate-500 font-bold mt-1">Your appointment with {doctor.isSpecialtyGroup ? "" : "Dr. "}{doctor.name} has been scheduled successfully for {patientName}.</p>
+                <p className="text-xs text-slate-500 font-bold max-w-xs mx-auto leading-relaxed mt-1">Your appointment with {doctor.isSpecialtyGroup ? "" : "Dr. "}{doctor.name} has been scheduled successfully for {patientName}.</p>
                 <button 
                     onClick={() => {
                         setSuccess(false);
@@ -436,7 +446,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                         setSelectedSlot(null);
                         fetchSlots(selectedDate);
                     }} 
-                    className="mt-4 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md"
+                    className="mt-5 w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98] shadow-md shadow-emerald-600/10"
                 >
                     Book Another Slot
                 </button>
@@ -446,12 +456,10 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
 
     if (showIntakeForm) {
         return (
-            <div className="mt-5 pt-5 border-t border-slate-100 space-y-4 animate-fade-in">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h4 className="text-sm font-black text-slate-900">Patient Details</h4>
-                        <p className="text-[10px] text-slate-400 font-bold">Please verify or fill the patient details below.</p>
-                    </div>
+            <div className="mt-6 pt-6 border-t border-slate-100 space-y-4 animate-fade-in">
+                <div>
+                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-wide">Patient Details Form</h4>
+                    <p className="text-[10px] text-slate-400 font-bold">Please verify or fill the patient details below.</p>
                 </div>
 
                 {error && (
@@ -460,7 +468,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                     </div>
                 )}
 
-                <div className="space-y-3">
+                <div className="space-y-3 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-100 shadow-inner">
                     <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Patient Name</label>
                         <input
@@ -469,7 +477,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                             placeholder="Full Name"
                             value={patientName}
                             onChange={(e) => setPatientName(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-100 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-slate-800"
+                            className="w-full px-3.5 py-3 bg-white border border-slate-200 focus:border-blue-500 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-800 shadow-sm animate-fade-in"
                         />
                     </div>
 
@@ -482,7 +490,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                                 placeholder="Phone Number"
                                 value={patientPhone}
                                 onChange={(e) => setPatientPhone(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-100 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-slate-800"
+                                className="w-full px-3.5 py-3 bg-white border border-slate-200 focus:border-blue-500 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-800 shadow-sm animate-fade-in"
                             />
                         </div>
                         <div className="space-y-1">
@@ -495,7 +503,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                                 placeholder="Age"
                                 value={patientAge}
                                 onChange={(e) => setPatientAge(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-100 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-slate-800"
+                                className="w-full px-3.5 py-3 bg-white border border-slate-200 focus:border-blue-500 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-800 shadow-sm animate-fade-in"
                             />
                         </div>
                     </div>
@@ -508,16 +516,20 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                             placeholder="Email Address"
                             value={patientEmail}
                             onChange={(e) => setPatientEmail(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-slate-50/70 border border-slate-100 rounded-xl font-bold text-xs outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all text-slate-800"
+                            className="w-full px-3.5 py-3 bg-white border border-slate-200 focus:border-blue-500 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-800 shadow-sm animate-fade-in"
                         />
                     </div>
                 </div>
 
                 {selectedSlot && timeLeft > 0 && (
-                    <div className="p-3 bg-amber-50/80 backdrop-blur-sm border border-amber-100 rounded-xl flex items-center justify-between gap-3 shadow-sm">
-                        <p className="text-[10px] font-bold text-amber-800">
-                            Slot held: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')} remaining
-                        </p>
+                    <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between gap-3 shadow-sm animate-pulse">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-850">
+                            <Clock className="w-3.5 h-3.5 text-amber-600 animate-spin" style={{ animationDuration: '4s' }} />
+                            <span>Slot held safely for details completion</span>
+                        </div>
+                        <span className="text-[10px] font-black bg-amber-500 text-white px-2.5 py-0.5 rounded-lg">
+                            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                        </span>
                     </div>
                 )}
 
@@ -525,14 +537,14 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                     <button
                         type="button"
                         onClick={() => setShowIntakeForm(false)}
-                        className="flex-1 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                        className="flex-1 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-[0.98]"
                     >
                         Back
                     </button>
                     <button
                         disabled={!patientName || !patientPhone || !patientEmail || !patientAge || bookingLoading}
                         onClick={handleBook}
-                        className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center"
+                        className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 hover:shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
                     >
                         {bookingLoading ? (
                             <motion.div 
@@ -580,15 +592,15 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                 
                 <div className="flex gap-4 pb-2 sm:justify-end">
                     <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
                         <span className="text-[8px] font-black text-slate-450 uppercase">Available</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" />
                         <span className="text-[8px] font-black text-slate-450 uppercase">Held</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-slate-200" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-200 shadow-sm" />
                         <span className="text-[8px] font-black text-slate-450 uppercase">Booked</span>
                     </div>
                 </div>
@@ -635,10 +647,10 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                                             ${isSelected 
                                                 ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-400/20 scale-105 z-10' 
                                                 : isBooked
-                                                    ? 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed opacity-60'
+                                                    ? 'bg-slate-50 border-slate-100/60 text-slate-300 cursor-not-allowed opacity-60'
                                                     : isHeldByOthers
-                                                        ? 'bg-amber-50/50 border-amber-200 text-amber-600 cursor-not-allowed opacity-75'
-                                                        : 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50'
+                                                        ? 'bg-amber-50/20 border-amber-100/50 text-amber-500 cursor-not-allowed opacity-75'
+                                                        : 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.06)] hover:-translate-y-0.5'
                                             }
                                         `}
                                     >
@@ -670,14 +682,14 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
             </div>
 
             {selectedSlot && timeLeft > 0 && (
-                <div className="p-4 bg-amber-50/80 backdrop-blur-sm border border-amber-100 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-between gap-3 shadow-sm animate-pulse">
                     <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
                         <p className="text-xs font-bold text-amber-800">
                             Slot temporarily reserved for you!
                         </p>
                     </div>
-                    <span className="text-xs font-black text-amber-700 bg-amber-100 px-3 py-1 rounded-xl font-mono">
+                    <span className="text-xs font-black text-white bg-amber-500 px-3 py-1 rounded-lg font-mono">
                         {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
                     </span>
                 </div>
@@ -686,7 +698,7 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
             <button
                 disabled={!selectedSlot || bookingLoading}
                 onClick={() => setShowIntakeForm(true)}
-                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all active:scale-95 disabled:opacity-50"
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 hover:shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50"
             >
                 Confirm Booking
             </button>
@@ -790,16 +802,17 @@ export default function HospitalDetailPage() {
         : '';
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-16">
+        <div className="min-h-screen bg-[#F8FAFC] pb-20">
 
             {/* ── Hero Image — fixed height, no text overlay ── */}
-            <div className="relative w-full h-56 sm:h-72 md:h-80 lg:h-96 bg-slate-100 overflow-hidden">
+            <div className="relative w-full h-56 sm:h-72 md:h-80 lg:h-96 bg-slate-100 overflow-hidden shadow-inner">
                 <ImageSlideshow images={imgs} alt={hospital.name} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-black/20 pointer-events-none z-10" />
 
                 {/* Back button */}
                 <button
                     onClick={() => router.push('/hospitals')}
-                    className="absolute top-4 left-4 z-20 bg-white/80 hover:bg-white text-slate-800 shadow-md backdrop-blur-md border border-slate-100/50 px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all text-xs font-black uppercase tracking-wider active:scale-95"
+                    className="absolute top-4 left-4 z-20 bg-white/90 hover:bg-white text-slate-800 shadow-md backdrop-blur-md border border-slate-200/60 px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all text-xs font-black uppercase tracking-wider active:scale-95"
                 >
                     <ArrowLeft className="w-4 h-4 text-slate-700" />
                     <span className="hidden sm:inline">Back</span>
@@ -807,11 +820,11 @@ export default function HospitalDetailPage() {
 
                 {/* Rating + 24/7 badges */}
                 <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
-                    <span className="bg-white/95 backdrop-blur-sm text-slate-800 px-3.5 py-2 rounded-xl text-xs font-black shadow flex items-center gap-1.5 border border-slate-100">
-                        <Star className="w-4 h-4 fill-amber-550 text-amber-500" /> {hospital.rating}
+                    <span className="bg-white/95 backdrop-blur-md text-slate-800 px-3.5 py-2 rounded-xl text-xs font-black shadow flex items-center gap-1.5 border border-white/40">
+                        <Star className="w-4 h-4 fill-amber-500 text-amber-500 animate-pulse" /> {hospital.rating}
                     </span>
                     {hospital.isOpen24Hours && (
-                        <span className="bg-emerald-500/95 backdrop-blur-sm text-white px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-emerald-400">
+                        <span className="bg-emerald-500/95 backdrop-blur-md text-white px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-emerald-400/30">
                             <Clock className="w-3.5 h-3.5" /> Open 24/7
                         </span>
                     )}
@@ -819,7 +832,7 @@ export default function HospitalDetailPage() {
             </div>
 
             {/* ── Hospital Name + Address — clearly below image, white background ── */}
-            <div className="bg-white border-b border-slate-100 shadow-sm relative z-10">
+            <div className="bg-white border-b border-slate-100/80 shadow-sm relative z-10">
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
                         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 leading-tight tracking-tight">
@@ -835,7 +848,7 @@ export default function HospitalDetailPage() {
                                     alert('Link copied to clipboard!');
                                 }
                             }}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-100/50 rounded-xl transition-all duration-200 shrink-0 font-bold text-xs sm:text-sm shadow-sm active:scale-95"
+                            className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-750 hover:bg-blue-600 hover:text-white border border-blue-100/50 rounded-xl transition-all duration-200 shrink-0 font-bold text-xs sm:text-sm shadow-sm active:scale-95"
                         >
                             <Share2 className="w-4 h-4" />
                             <span>Share</span>
@@ -848,7 +861,7 @@ export default function HospitalDetailPage() {
                         className="inline-flex items-start gap-1.5 text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:underline underline-offset-2 transition-colors font-extrabold group/map"
                         title="Open in Google Maps"
                     >
-                        <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-blue-550" />
+                        <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />
                         <span>{hospital.address}, {hospital.city}</span>
                         <ExternalLink className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-0 group-hover/map:opacity-100 transition-opacity" />
                     </a>
@@ -867,18 +880,21 @@ export default function HospitalDetailPage() {
                             <StatCard
                                 icon={<CreditCard className="w-5 h-5" />}
                                 label="Consultation Fee"
+                                color="blue"
                                 value={`₹${hospital.consultationFee}`}
                                 valueClass="font-black text-slate-900 text-lg"
                             />
                             <StatCard
                                 icon={<Ambulance className="w-5 h-5" />}
                                 label="Hospital Contact No"
+                                color="rose"
                                 value={hospital.ambulanceContact || '—'}
                                 valueClass="font-black text-rose-600 text-base"
                             />
                             <StatCard
                                 icon={<Clock className="w-5 h-5" />}
                                 label="Open 24/7"
+                                color="emerald"
                                 value={
                                     hospital.isOpen24Hours
                                         ? <span className="flex items-center gap-1.5 text-emerald-600 font-black"><CheckCircle className="w-4 h-4 text-emerald-500" /> Yes</span>
@@ -888,6 +904,7 @@ export default function HospitalDetailPage() {
                             <StatCard
                                 icon={<CreditCard className="w-5 h-5" />}
                                 label="Online Payment"
+                                color="indigo"
                                 value={
                                     hospital.isOnlinePaymentAvailable
                                         ? <span className="flex items-center gap-1.5 text-blue-600 font-black"><CheckCircle className="w-4 h-4 text-blue-500" /> Available</span>
