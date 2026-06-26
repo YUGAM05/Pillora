@@ -149,6 +149,7 @@ interface Slot {
 
 function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any }) {
     const router = useRouter();
+    const params = useParams();
     const getLocalDateString = () => {
         const d = new Date();
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -329,41 +330,22 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
 
     const handleSelectSlot = async (slot: Slot) => {
         setError("");
-        
-        // If clicking the currently selected slot, ignore
-        if (selectedSlot?._id === slot._id) {
-            return;
-        }
-
-        // Release prior hold first
-        if (selectedSlot) {
-            await handleReleaseHold(selectedSlot._id);
-            setSelectedSlot(null);
-            setTimeLeft(0);
-            setShowIntakeForm(false);
-        }
-
         setLoading(true);
         try {
-            const res = await api.post("/hospital/dashboard/slots/hold", { slotId: slot._id });
-            if (res.data.success) {
-                setSelectedSlot(slot);
-                setTimeLeft(120); // Start 2 minutes hold countdown timer
+            const res = await api.post("/appointments/hold", {
+                doctorId: doctor._id,
+                slotStart: slot.startTime,
+                slotEnd: slot.endTime,
+                date: selectedDate
+            });
+            if (res.data.appointmentId) {
+                router.push(`/checkout/appointment/${res.data.appointmentId}`);
             }
         } catch (err: any) {
-            const code = err.response?.data?.code;
-            const msg = err.response?.data?.message;
-            
-            if (code === 'ALREADY_BOOKED') {
-                setError("You already have an appointment for this slot.");
-            } else if (code === 'SLOT_FULL') {
-                setError("Sorry, this slot was just booked by someone else. Please choose another slot.");
-            } else if (code === 'SLOT_ON_HOLD') {
-                setError("This slot is temporarily held by another user. Please choose another.");
-            } else if (code === 'SLOT_CANCELLED') {
-                setError("This slot has been cancelled by the hospital. Please choose another.");
+            if (err.response?.status === 401) {
+                router.push(`/login?redirect=/hospitals/${params.slug}`);
             } else {
-                setError(msg || "Could not hold slot. Please try again.");
+                setError(err.response?.data?.message || err.response?.data?.error || "Failed to hold slot and initiate checkout.");
             }
         } finally {
             setLoading(false);

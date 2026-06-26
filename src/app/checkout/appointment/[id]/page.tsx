@@ -3,8 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft, ShieldCheck, HelpCircle, Calendar, Clock, User as UserIcon, Building2 } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, ArrowLeft, ShieldCheck, HelpCircle, Calendar, Clock, User as UserIcon, Building2, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { getUser } from "@/lib/tokenStorage";
 
 export default function AppointmentCheckoutPage() {
     const params = useParams();
@@ -26,6 +27,13 @@ export default function AppointmentCheckoutPage() {
     const [success, setSuccess] = useState(false);
     const [patientDetailsExpanded, setPatientDetailsExpanded] = useState(true);
 
+    // Patient Form States
+    const [patientName, setPatientName] = useState("");
+    const [patientAge, setPatientAge] = useState("");
+    const [patientEmail, setPatientEmail] = useState("");
+    const [patientPhone, setPatientPhone] = useState("");
+    const [formErrors, setFormErrors] = useState<any>({});
+
     const consultationFee = Number(appointment?.consultationFee || 0);
     const advanceFee = consultationFee * 0.20;
     const remainingFee = consultationFee - advanceFee;
@@ -42,6 +50,11 @@ export default function AppointmentCheckoutPage() {
                 setError("Invalid appointment fee");
             } else {
                 setAppointment(data);
+                // Prefill if appointment has existing details
+                setPatientName(data.patientName || "");
+                setPatientAge(data.patientAge ? String(data.patientAge) : "");
+                setPatientEmail(data.patientEmail || data.email || "");
+                setPatientPhone(data.patientPhone || "");
             }
         } catch (err: any) {
             if (err.response?.status === 404) {
@@ -60,6 +73,69 @@ export default function AppointmentCheckoutPage() {
         }
     }, [appointmentId, fetchAppointment]);
 
+    // Prefill Details Handler
+    const handlePrefill = () => {
+        try {
+            // Check pillora_user_profile first
+            const stored = localStorage.getItem("pillora_user_profile");
+            if (stored) {
+                const profile = JSON.parse(stored);
+                if (profile.name) setPatientName(profile.name);
+                if (profile.age) setPatientAge(String(profile.age));
+                if (profile.email) setPatientEmail(profile.email);
+                if (profile.phone) setPatientPhone(profile.phone);
+                // Clear errors on prefill
+                setFormErrors({});
+                return;
+            }
+            
+            // Fallback to token storage
+            const currentUser = getUser();
+            if (currentUser) {
+                if (currentUser.name) setPatientName(currentUser.name);
+                if (currentUser.email) setPatientEmail(currentUser.email);
+                if (currentUser.phone) setPatientPhone(currentUser.phone);
+                setFormErrors({});
+            }
+        } catch (e) {
+            console.error("Failed to prefill details", e);
+        }
+    };
+
+    // Form Validation
+    const validateForm = () => {
+        const errors: any = {};
+        if (!patientName.trim()) {
+            errors.patientName = "Name is required";
+        } else if (patientName.trim().length < 2) {
+            errors.patientName = "Name must be at least 2 characters long";
+        }
+
+        const ageNum = Number(patientAge);
+        if (!patientAge) {
+            errors.patientAge = "Age is required";
+        } else if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
+            errors.patientAge = "Age must be between 1 and 120";
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!patientEmail.trim()) {
+            errors.patientEmail = "Email is required";
+        } else if (!emailRegex.test(patientEmail.trim())) {
+            errors.patientEmail = "Invalid email address";
+        }
+
+        const phoneRegex = /^\+?[0-9]{10,12}$/;
+        if (!patientPhone.trim()) {
+            errors.patientPhone = "Phone number is required";
+        } else if (!phoneRegex.test(patientPhone.trim().replace(/[-\s]/g, ""))) {
+            errors.patientPhone = "Phone number must be between 10 and 12 digits";
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     // Load Razorpay SDK Script
     const loadRazorpay = () => {
         return new Promise((resolve) => {
@@ -77,8 +153,16 @@ export default function AppointmentCheckoutPage() {
 
     const handlePayment = async () => {
         if (!appointment) return;
-        setPaymentLoading(true);
         setError("");
+
+        // Run validation first
+        if (!validateForm()) {
+            setPatientDetailsExpanded(true);
+            setError("Please fill all required patient details correctly.");
+            return;
+        }
+
+        setPaymentLoading(true);
 
         try {
             // 1. Load Razorpay script
@@ -89,34 +173,36 @@ export default function AppointmentCheckoutPage() {
                 return;
             }
 
-            // 2. Initiate Payment Order on Backend
-            const response = await api.post("/payments/initiate", {
+            // 2. Initiate Payment Order on Backend (using create-order route)
+            const response = await api.post("/payments/create-order", {
                 appointmentId: appointment.appointmentId || appointmentId,
-                userId: localStorage.getItem("userId"),
-                doctorId: appointment.doctorId,
-                hospitalId: appointment.hospitalId,
-                consultationFee: appointment.consultationFee
+                amount: Math.round(advanceFee * 100), // in paise
+                patientName: patientName.trim(),
+                patientPhone: patientPhone.trim(),
+                patientEmail: patientEmail.trim(),
+                patientAge: Number(patientAge)
             });
 
-            if (!response.data.razorpayOrderId) {
+            if (!response.data.orderId) {
                 setError("Payment gateway error. Try again.");
+                setPaymentLoading(false);
                 return;
             }
 
-            const { razorpayOrderId, advanceFee, keyId } = response.data;
+            const { orderId, amount: orderAmount } = response.data;
 
             // 3. Open Razorpay Checkout Widget
             const options = {
-                key: keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_51Mz2wYSHB3q5Xn",
-                amount: Math.round(advanceFee * 100), // paise
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_51Mz2wYSHB3q5Xn",
+                amount: orderAmount,
                 currency: "INR",
                 name: "Pillora Healthcare",
                 description: `20% Advance Booking Fee for Dr. ${appointment.doctorName || "Consultant"}`,
-                order_id: razorpayOrderId,
+                order_id: orderId,
                 prefill: {
-                    name: appointment.patientName || "",
-                    email: appointment.patientEmail || "",
-                    contact: appointment.patientPhone || ""
+                    name: patientName.trim(),
+                    email: patientEmail.trim(),
+                    contact: patientPhone.trim()
                 },
                 notes: {
                     appointmentId: appointment.appointmentId || appointmentId,
@@ -160,7 +246,6 @@ export default function AppointmentCheckoutPage() {
             const rzp = new (window as any).Razorpay(options);
             rzp.open();
         } catch (err: any) {
-            // Handle different error types
             if (err.response?.status === 401) {
                 setError("Please login first");
             } else if (err.response?.status === 404) {
@@ -171,7 +256,6 @@ export default function AppointmentCheckoutPage() {
                 setError("Payment failed. Try again.");
             }
             console.error("Payment error:", err.response?.data);
-        } finally {
             setPaymentLoading(false);
         }
     };
@@ -210,13 +294,14 @@ export default function AppointmentCheckoutPage() {
                     <h1 className="text-3xl font-black text-slate-950 mb-2">Booking Confirmed!</h1>
                     <p className="text-emerald-600 font-bold text-sm mb-4">₹{advanceFee.toFixed(2)} Paid Successfully</p>
                     <p className="text-slate-400 font-medium mb-6">Your appointment is now confirmed. We have sent a confirmation email to you. Redirecting to dashboard...</p>
-                    <Link href="/dashboard" className="px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition block">
+                    <Link href="/dashboard" className="px-6 py-3.5 bg-slate-950 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-900 transition block">
                         View Dashboard Now
                     </Link>
                 </div>
             </div>
         );
     }
+
     return (
         <div className="min-h-screen bg-[#F8FAFC] pb-24 relative overflow-hidden">
             <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -327,32 +412,110 @@ export default function AppointmentCheckoutPage() {
                                 </div>
                             </section>
 
-                            {/* Patient Details (Expandable) */}
+                            {/* Patient Details (Expandable / Editable Form) */}
                             <section className="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
-                                <button className="w-full flex justify-between items-center p-padding-card hover:bg-surface-container-low transition-colors text-left" onClick={() => setPatientDetailsExpanded(!patientDetailsExpanded)}>
-                                    <div className="flex items-center gap-3">
+                                <div className="w-full flex justify-between items-center p-padding-card hover:bg-surface-container-low transition-colors">
+                                    <button className="flex items-center gap-3 text-left flex-1" onClick={() => setPatientDetailsExpanded(!patientDetailsExpanded)}>
                                         <UserIcon className="w-5 h-5 text-primary" />
                                         <h2 className="font-headline-md text-headline-md text-primary">Patient Details</h2>
+                                    </button>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={handlePrefill}
+                                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded border border-blue-200 transition-all flex items-center gap-1 active:scale-95 text-button-text"
+                                        >
+                                            <UserIcon className="w-3 h-3 text-blue-700" />
+                                            <span>पहले से जानकारी है (Prefill Details)</span>
+                                        </button>
+                                        <button onClick={() => setPatientDetailsExpanded(!patientDetailsExpanded)} className="text-primary flex items-center justify-center p-1">
+                                            <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${patientDetailsExpanded ? 'rotate-180' : 'rotate-0'}`} />
+                                        </button>
                                     </div>
-                                    <span className={`material-symbols-outlined transition-transform duration-300 ${patientDetailsExpanded ? 'rotate-180' : 'rotate-0'}`} id="expand-icon">expand_more</span>
-                                </button>
+                                </div>
                                 <div className={`px-padding-card pb-padding-card transition-all duration-300 overflow-hidden ${patientDetailsExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`} id="patient-content">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter pt-4 border-t border-outline-variant">
                                         <div>
-                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">PATIENT NAME</label>
-                                            <input readOnly className="w-full border border-outline-variant rounded p-2 text-on-surface bg-slate-50 outline-none" type="text" value={appointment.patientName || ""} />
+                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">PATIENT NAME <span className="text-red-500">*</span></label>
+                                            <input
+                                                className={`w-full border rounded p-2 text-on-surface outline-none focus:ring-2 focus:ring-blue-500/20 ${formErrors.patientName ? 'border-red-500 bg-red-50' : 'border-outline-variant bg-white'}`}
+                                                type="text"
+                                                placeholder="Enter full name"
+                                                value={patientName}
+                                                onChange={(e) => {
+                                                    setPatientName(e.target.value);
+                                                    if (formErrors.patientName) {
+                                                        setFormErrors((prev: any) => ({ ...prev, patientName: "" }));
+                                                    }
+                                                }}
+                                            />
+                                            {formErrors.patientName && (
+                                                <p className="text-red-650 text-red-650 text-[10px] font-bold mt-1 flex items-center gap-1">
+                                                    <AlertCircle className="w-3 h-3 text-red-600" /> {formErrors.patientName}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
-                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">AGE</label>
-                                            <input readOnly className="w-full border border-outline-variant rounded p-2 text-on-surface bg-slate-50 outline-none" type="text" value={appointment.patientAge ? `${appointment.patientAge} Years Old` : ""} />
+                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">AGE <span className="text-red-500">*</span></label>
+                                            <input
+                                                className={`w-full border rounded p-2 text-on-surface outline-none focus:ring-2 focus:ring-blue-500/20 ${formErrors.patientAge ? 'border-red-500 bg-red-50' : 'border-outline-variant bg-white'}`}
+                                                type="number"
+                                                min="1"
+                                                max="120"
+                                                placeholder="Enter age (1-120)"
+                                                value={patientAge}
+                                                onChange={(e) => {
+                                                    setPatientAge(e.target.value);
+                                                    if (formErrors.patientAge) {
+                                                        setFormErrors((prev: any) => ({ ...prev, patientAge: "" }));
+                                                    }
+                                                }}
+                                            />
+                                            {formErrors.patientAge && (
+                                                <p className="text-red-650 text-red-650 text-[10px] font-bold mt-1 flex items-center gap-1">
+                                                    <AlertCircle className="w-3 h-3 text-red-600" /> {formErrors.patientAge}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
-                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">CONTACT EMAIL</label>
-                                            <input readOnly className="w-full border border-outline-variant rounded p-2 text-on-surface bg-slate-50 outline-none" type="email" value={appointment.patientEmail || appointment.email || ""} />
+                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">CONTACT EMAIL <span className="text-red-500">*</span></label>
+                                            <input
+                                                className={`w-full border rounded p-2 text-on-surface outline-none focus:ring-2 focus:ring-blue-500/20 ${formErrors.patientEmail ? 'border-red-500 bg-red-50' : 'border-outline-variant bg-white'}`}
+                                                type="email"
+                                                placeholder="Enter email address"
+                                                value={patientEmail}
+                                                onChange={(e) => {
+                                                    setPatientEmail(e.target.value);
+                                                    if (formErrors.patientEmail) {
+                                                        setFormErrors((prev: any) => ({ ...prev, patientEmail: "" }));
+                                                    }
+                                                }}
+                                            />
+                                            {formErrors.patientEmail && (
+                                                <p className="text-red-650 text-red-650 text-[10px] font-bold mt-1 flex items-center gap-1">
+                                                    <AlertCircle className="w-3 h-3 text-red-600" /> {formErrors.patientEmail}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
-                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">PHONE NUMBER</label>
-                                            <input readOnly className="w-full border border-outline-variant rounded p-2 text-on-surface bg-slate-50 outline-none" type="tel" value={appointment.patientPhone || ""} />
+                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">PHONE NUMBER <span className="text-red-500">*</span></label>
+                                            <input
+                                                className={`w-full border rounded p-2 text-on-surface outline-none focus:ring-2 focus:ring-blue-500/20 ${formErrors.patientPhone ? 'border-red-500 bg-red-50' : 'border-outline-variant bg-white'}`}
+                                                type="tel"
+                                                placeholder="Enter 10-digit mobile number"
+                                                value={patientPhone}
+                                                onChange={(e) => {
+                                                    setPatientPhone(e.target.value);
+                                                    if (formErrors.patientPhone) {
+                                                        setFormErrors((prev: any) => ({ ...prev, patientPhone: "" }));
+                                                    }
+                                                }}
+                                            />
+                                            {formErrors.patientPhone && (
+                                                <p className="text-red-655 text-red-650 text-[10px] font-bold mt-1 flex items-center gap-1">
+                                                    <AlertCircle className="w-3 h-3 text-red-600" /> {formErrors.patientPhone}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -418,7 +581,7 @@ export default function AppointmentCheckoutPage() {
                                 <button
                                     onClick={handlePayment}
                                     disabled={paymentLoading}
-                                    className="w-[180px] py-3.5 px-4 bg-blue-650 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest rounded-none shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between gap-2"
+                                    className="w-full py-4 px-4 bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-black uppercase tracking-widest rounded-none shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     {paymentLoading ? (
                                         <div className="flex items-center gap-2 mx-auto">
@@ -427,7 +590,8 @@ export default function AppointmentCheckoutPage() {
                                         </div>
                                     ) : (
                                         <>
-                                            <span>PROCEED TO PAYMENT</span>
+                                            <ShieldCheck className="w-4 h-4 text-white shrink-0" />
+                                            <span>PAY ₹{advanceFee.toFixed(2)} NOW</span>
                                             <span className="text-[8px] font-black bg-white/20 px-1.5 py-0.5 rounded border border-white/10 shrink-0">SECURED</span>
                                         </>
                                     )}
