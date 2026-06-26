@@ -255,7 +255,7 @@ export default function AppointmentCheckoutPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-black text-slate-900 text-base">{appointment.doctorName || "Consultant"}</h3>
-                                        <p className="text-xs text-blue-650 font-extrabold uppercase tracking-widest mt-1">Specialist Physician</p>
+                                        <p className="text-xs text-blue-600 font-extrabold uppercase tracking-widest mt-1">Specialist Physician</p>
                                     </div>
                                 </div>
 
@@ -319,12 +319,33 @@ export default function AppointmentCheckoutPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Payment Action Button */}
+                        <div className="flex justify-start pt-2">
+                            <button
+                                onClick={handlePayment}
+                                disabled={paymentLoading}
+                                className="w-[180px] py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest rounded-none shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between gap-2"
+                            >
+                                {paymentLoading ? (
+                                    <div className="flex items-center gap-2 mx-auto">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>PROCESSING...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <span>PROCEED TO PAYMENT</span>
+                                        <span className="text-[8px] font-black bg-white/20 px-1.5 py-0.5 rounded border border-white/10 shrink-0">SECURED</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Right Column: Pricing & Pay CTA */}
                     <div className="lg:col-span-5">
                         <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-[0_15px_40px_rgba(59,130,246,0.04)] border border-slate-100/80 space-y-6 sticky top-4">
-                            <div className="flex items-center gap-2 text-[9px] font-black text-blue-650 uppercase tracking-[0.2em] border-b border-slate-50 pb-4">
+                            <div className="flex items-center gap-2 text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] border-b border-slate-50 pb-4">
                                 <ShieldCheck className="w-4 h-4 text-blue-500" /> Guaranteed Secure Checkout
                             </div>
 
@@ -357,21 +378,6 @@ export default function AppointmentCheckoutPage() {
                                     The remaining amount of <strong>₹{remainingFee.toFixed(2)}</strong> will be collected in cash or card directly at the hospital counter.
                                 </span>
                             </div>
-
-                            <button
-                                onClick={handlePayment}
-                                disabled={paymentLoading}
-                                className="w-full py-4.5 px-5 bg-blue-650 hover:bg-blue-700 text-white text-sm font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25 transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
-                            >
-                                {paymentLoading ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        PROCESSING PAYMENT...
-                                    </>
-                                ) : (
-                                    "PROCEED TO PAYMENT"
-                                )}
-                            </button>
                         </div>
                     </div>
                 </div>
