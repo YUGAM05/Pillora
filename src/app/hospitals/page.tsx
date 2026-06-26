@@ -558,36 +558,36 @@ export default function HospitalsPage() {
     );
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] flex flex-col text-slate-700">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-slate-50/50 to-slate-50 flex flex-col text-slate-700">
 
             {/* ── Hero Banner ── */}
-            <div className="relative bg-[#0F172A] text-white border-b border-slate-800 z-20 overflow-hidden">
+            <div className="relative bg-gradient-to-br from-blue-50/60 via-white to-white text-slate-900 border-b border-blue-100/40 z-20 overflow-hidden">
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdHRoIGQ9Ik0gNDAgMCBMIDAgMCAwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-40" />
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full sm:w-[800px] h-[400px] bg-blue-600/15 rounded-full blur-[120px]" />
-                    <div className="absolute -top-24 -right-24 w-[400px] h-[400px] bg-indigo-600/15 rounded-full blur-[100px]" />
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdHRoIGQ9Ik0gNDAgMCBMIDAgMCAwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoNTksMTMwLDI0NiwwLjAzKSIiIHN0cm9rZS13aWR0aD0iMSfvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-50" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full sm:w-[800px] h-[400px] bg-blue-100/40 rounded-full blur-[120px]" />
+                    <div className="absolute -top-24 -right-24 w-[400px] h-[400px] bg-indigo-100/35 rounded-full blur-[100px]" />
                 </div>
                 
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 z-10">
                     <div className="text-center max-w-2xl mx-auto">
-                        <div className="inline-flex items-center gap-2.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-4.5 py-1.5 text-xs sm:text-sm font-semibold mb-6 text-blue-200 shadow-inner">
+                        <div className="inline-flex items-center gap-2.5 bg-blue-50 border border-blue-100/80 rounded-full px-4.5 py-1.5 text-xs sm:text-sm font-semibold mb-6 text-blue-700 shadow-sm shadow-blue-100/20">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
                             </span>
                             <span>{hospitals.length > 0 ? `${hospitals.length} Premium Facilities Partnered` : 'Hospital Directory'}</span>
                         </div>
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-5 text-transparent bg-clip-text bg-gradient-to-br from-white via-slate-100 to-slate-400">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-5 text-transparent bg-clip-text bg-gradient-to-br from-slate-900 via-blue-950 to-blue-900">
                             Trusted Healthcare<br className="hidden sm:block" /> When You Need It Most
                         </h1>
 
                         {/* Location Header Info */}
-                        <div className="flex items-center justify-center gap-2 mb-8 text-xs sm:text-sm text-slate-400 font-bold">
-                            <MapPin className="w-4 h-4 text-blue-400" />
-                            <span>Hospitals in <strong className="text-white font-black">{selectedCity || 'All Cities'}</strong></span>
+                        <div className="flex items-center justify-center gap-2 mb-8 text-xs sm:text-sm text-slate-500 font-bold">
+                            <MapPin className="w-4 h-4 text-blue-600" />
+                            <span>Hospitals in <strong className="text-blue-950 font-black">{selectedCity || 'All Cities'}</strong></span>
                             <button 
                                 onClick={handleChangeCity}
-                                className="text-xs text-blue-400 hover:text-blue-300 underline underline-offset-4 font-black ml-1.5 transition-colors"
+                                className="text-xs text-blue-600 hover:text-blue-700 underline underline-offset-4 font-black ml-1.5 transition-colors"
                             >
                                 Change city
                             </button>
@@ -596,11 +596,11 @@ export default function HospitalsPage() {
                         {/* Search Input Box */}
                         <div className="relative max-w-lg mx-auto" ref={searchRef}>
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Search className="h-5 w-5 text-blue-400" />
+                                <Search className="h-5 w-5 text-blue-600" />
                             </div>
                             <input
                                 type="text"
-                                className="block w-full pl-11 pr-4 py-3.5 sm:py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-slate-400 focus:bg-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 text-sm sm:text-base shadow-2xl transition-all outline-none"
+                                className="block w-full pl-11 pr-4 py-3.5 sm:py-4 bg-white border border-blue-100 rounded-2xl text-slate-900 placeholder-slate-400 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 text-sm sm:text-base shadow-lg shadow-blue-900/5 transition-all outline-none"
                                 placeholder="Search by hospital name or city..."
                                 value={searchTerm}
                                 onChange={e => { setSearchTerm(e.target.value); setShowSuggestions(true); }}
@@ -608,30 +608,30 @@ export default function HospitalsPage() {
                             />
                             {/* Autocomplete Dropdown */}
                             {showSuggestions && (suggestions.length > 0 || searchTerm.length >= 2) && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 rounded-2xl shadow-[0_30px_70px_rgba(0,0,0,0.5)] border border-slate-800 overflow-hidden z-[60] py-2 text-left animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_50px_rgba(59,130,246,0.12)] border border-blue-50/80 overflow-hidden z-[60] py-2 text-left animate-in fade-in slide-in-from-top-2 duration-200">
                                     {suggestions.length > 0 ? (
                                         <>
-                                            <div className="px-4 py-2 text-[10px] font-black text-blue-400 uppercase tracking-widest border-b border-slate-800 mb-1">Top Matches</div>
+                                            <div className="px-4 py-2 text-[10px] font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 mb-1">Top Matches</div>
                                             {suggestions.map(h => (
                                                 <button key={h._id} onClick={() => { setSearchTerm(h.name); setShowSuggestions(false); }}
-                                                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left group">
-                                                    <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex-shrink-0 overflow-hidden relative">
+                                                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50/50 transition-colors text-left group">
+                                                    <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex-shrink-0 overflow-hidden relative">
                                                         <Image src={resolveSrc(h.images?.[0] ?? h.image)} alt={h.name} fill className="object-cover" unoptimized />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="font-extrabold text-white text-sm truncate group-hover:text-blue-400 transition-colors">{h.name}</p>
-                                                        <div className="flex items-center text-[10px] text-slate-400 font-bold uppercase mt-0.5">
-                                                            <MapPin className="w-2.5 h-2.5 mr-1 text-blue-400" />{h.city}
+                                                        <p className="font-extrabold text-slate-800 text-sm truncate group-hover:text-blue-600 transition-colors">{h.name}</p>
+                                                        <div className="flex items-center text-[10px] text-slate-500 font-bold uppercase mt-0.5">
+                                                            <MapPin className="w-2.5 h-2.5 mr-1 text-blue-500" />{h.city}
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-[10px] font-black bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-lg shrink-0">
-                                                        <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />{h.rating}
+                                                    <div className="flex items-center gap-1 text-[10px] font-black bg-amber-50 text-amber-600 border border-amber-200/50 px-2 py-1 rounded-lg shrink-0">
+                                                        <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />{h.rating}
                                                     </div>
                                                 </button>
                                             ))}
                                         </>
                                     ) : (
-                                        <div className="px-4 py-6 text-center text-slate-400">
+                                        <div className="px-4 py-6 text-center text-slate-500">
                                             <p className="text-sm font-semibold">No hospitals found matching &quot;{searchTerm}&quot;</p>
                                         </div>
                                     )}
@@ -648,7 +648,7 @@ export default function HospitalsPage() {
                     
                     {/* Left Sticky Sidebar Panel (Desktop Only) */}
                     <div className="hidden lg:block w-72 shrink-0 sticky top-24">
-                        <div className="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm max-h-[80vh] overflow-y-auto custom-scrollbar">
+                        <div className="bg-white rounded-[2rem] border border-blue-50/80 p-6 shadow-[0_8px_30px_rgba(59,130,246,0.015)] max-h-[80vh] overflow-y-auto custom-scrollbar">
                             {renderFilterPanelContent()}
                         </div>
                     </div>
@@ -683,7 +683,7 @@ export default function HospitalsPage() {
 
                         {/* Active Filter Chips */}
                         {activeChips.length > 0 && (
-                            <div className="flex flex-wrap gap-2 items-center mb-6 bg-white border border-slate-100 p-3.5 rounded-3xl shadow-sm">
+                            <div className="flex flex-wrap gap-2 items-center mb-6 bg-white border border-blue-50/80 p-3.5 rounded-3xl shadow-[0_8px_30px_rgba(59,130,246,0.01)]">
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Active Filters:</span>
                                 {activeChips.map(chip => (
                                     <div key={chip.id} className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50/70 border border-blue-100/50 rounded-full text-xs font-bold text-blue-700 shadow-sm animate-fade-in">
@@ -704,8 +704,8 @@ export default function HospitalsPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                                 {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
                             </div>
-                        ) : filteredHospitals.length === 0 ? (
-                            <div className="text-center py-24 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
+) : filteredHospitals.length === 0 ? (
+                            <div className="text-center py-24 bg-white border border-blue-50/80 rounded-[2rem] shadow-sm">
                                 <Building2 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
                                 <p className="text-lg font-black text-slate-800">No Hospitals Found</p>
                                 <p className="text-slate-400 text-sm mt-1 max-w-sm mx-auto px-4 font-semibold">We couldn&apos;t find any hospitals matching your current active filters. Try clearing some selections.</p>
@@ -727,7 +727,7 @@ export default function HospitalsPage() {
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.05 }}
                                             key={hospital._id}
-                                            className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(59,130,246,0.08)] hover:-translate-y-1.5 transition-all duration-300 border border-slate-100/60 overflow-hidden flex flex-col cursor-pointer group"
+                                            className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgba(59,130,246,0.015)] hover:shadow-[0_20px_50px_rgba(59,130,246,0.06)] hover:-translate-y-1.5 transition-all duration-300 border border-slate-100/60 overflow-hidden flex flex-col cursor-pointer group"
                                             onClick={() => router.push(`/hospitals/${hospital.slug}`)}
                                         >
                                             {/* Slideshow image container */}
@@ -737,7 +737,7 @@ export default function HospitalsPage() {
                                                 </div>
                                                 
                                                 {/* Star rating */}
-                                                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-xl flex items-center gap-1 shadow-md z-10 border border-white/40">
+                                                <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl flex items-center gap-1 shadow-sm z-10 border border-white/40">
                                                     <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500 animate-pulse" />
                                                     <span className="font-black text-slate-800 text-xs sm:text-sm">{hospital.rating}</span>
                                                 </div>
@@ -745,13 +745,13 @@ export default function HospitalsPage() {
                                                 {/* Top Badges */}
                                                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
                                                     {hospital.is_verified && (
-                                                        <div className="bg-blue-600/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md flex items-center gap-1 border border-blue-500/30">
-                                                            <ShieldCheck className="w-3.5 h-3.5 text-blue-300" /> Verified
+                                                        <div className="bg-white/95 backdrop-blur-md text-blue-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-blue-100">
+                                                            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Verified
                                                         </div>
                                                     )}
                                                     {hospital.isOpen24Hours && (
-                                                        <div className="bg-emerald-600/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md flex items-center gap-1 border border-emerald-500/30">
-                                                            <Clock className="w-3.5 h-3.5 text-emerald-300" /> 24/7
+                                                        <div className="bg-emerald-500/95 backdrop-blur-md text-white px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 border border-emerald-400/20">
+                                                            <Clock className="w-3.5 h-3.5 text-white" /> 24/7 Emergency
                                                         </div>
                                                     )}
                                                 </div>
@@ -759,16 +759,16 @@ export default function HospitalsPage() {
                                                 {/* Lower Management Tag */}
                                                 <div className={`absolute bottom-3 left-3 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider z-10 backdrop-blur-md shadow-sm border ${
                                                     hospital.management_type === 'SELF' 
-                                                        ? 'bg-emerald-50/95 text-emerald-700 border-emerald-200' 
-                                                        : 'bg-blue-50/95 text-blue-700 border-blue-200'
+                                                        ? 'bg-white/95 text-emerald-700 border-emerald-100' 
+                                                        : 'bg-blue-600/95 text-white border-blue-500/35'
                                                 }`}>
-                                                    {hospital.management_type === 'SELF' ? '🏥 Self Managed' : '⚙️ Managed'}
+                                                    {hospital.management_type === 'SELF' ? '🏥 Self Managed' : '✨ Pillora Managed'}
                                                 </div>
 
                                                 {/* Payment details tag */}
                                                 <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider z-10 backdrop-blur-md shadow-sm border ${
                                                     hospital.isOnlinePaymentAvailable
-                                                        ? 'bg-white/95 text-slate-800 border-slate-100'
+                                                        ? 'bg-white/95 text-blue-700 border-blue-100'
                                                         : 'bg-slate-900/90 text-white border-slate-800'
                                                 }`}>
                                                     {hospital.isOnlinePaymentAvailable ? '💳 Online Pay' : 'Cash Only'}
@@ -799,9 +799,9 @@ export default function HospitalsPage() {
                                                 <div className="mt-auto space-y-2.5 border-t border-slate-50 pt-3.5">
                                                     
                                                     {/* Consultation cost */}
-                                                    <div className="flex items-center justify-between text-xs sm:text-sm border-b border-dashed border-slate-100 pb-2">
+                                                    <div className="flex items-center justify-between text-xs sm:text-sm border-b border-dashed border-slate-100/60 pb-2">
                                                         <span className="text-slate-500 flex items-center gap-1.5 font-bold">
-                                                            <CreditCard className="w-3.5 h-3.5 text-slate-400" /> Fee
+                                                            <CreditCard className="w-3.5 h-3.5 text-blue-500" /> Consultation Fee
                                                         </span>
                                                         <span className="font-black text-slate-900">
                                                             ₹{hospital.consultationFee}
@@ -809,9 +809,9 @@ export default function HospitalsPage() {
                                                     </div>
 
                                                     {phones.length > 0 && (
-                                                        <div className="flex items-center justify-between text-xs sm:text-sm border-b border-dashed border-slate-100 pb-2">
+                                                        <div className="flex items-center justify-between text-xs sm:text-sm border-b border-dashed border-slate-100/60 pb-2">
                                                             <span className="text-slate-500 flex items-center gap-1.5 font-bold">
-                                                                <Phone className="w-3.5 h-3.5 text-slate-400" /> Contact
+                                                                <Phone className="w-3.5 h-3.5 text-blue-500" /> Emergency Contact
                                                             </span>
                                                             <a
                                                                 href={`tel:${phones[0]}`}
@@ -828,9 +828,9 @@ export default function HospitalsPage() {
 
                                                     {/* Doctor availability count */}
                                                     {hospital.doctors && hospital.doctors.length > 0 && (
-                                                        <div className="flex items-center justify-between text-xs sm:text-sm border-b border-dashed border-slate-100 pb-2">
+                                                        <div className="flex items-center justify-between text-xs sm:text-sm border-b border-dashed border-slate-100/60 pb-2">
                                                             <span className="text-slate-500 flex items-center gap-1.5 font-bold">
-                                                                <User className="w-3.5 h-3.5 text-slate-400" /> Doctors
+                                                                <User className="w-3.5 h-3.5 text-blue-500" /> Doctors
                                                             </span>
                                                             <span className="font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] sm:text-xs border border-blue-100/50">
                                                                 {hospital.doctors.length} Available
@@ -840,9 +840,9 @@ export default function HospitalsPage() {
 
                                                     {/* Beds capacity count info */}
                                                     {hospital.bedCapacity !== undefined && (
-                                                        <div className="flex items-center justify-between text-xs sm:text-sm border-b border-dashed border-slate-100 pb-2">
+                                                        <div className="flex items-center justify-between text-xs sm:text-sm border-b border-dashed border-slate-100/60 pb-2">
                                                             <span className="text-slate-500 flex items-center gap-1.5 font-bold">
-                                                                <Building2 className="w-3.5 h-3.5 text-slate-400" /> Bed Capacity
+                                                                <Building2 className="w-3.5 h-3.5 text-blue-500" /> Bed Capacity
                                                             </span>
                                                             <span className="font-black text-slate-800">
                                                                 {hospital.bedCapacity} Beds
