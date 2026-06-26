@@ -189,11 +189,11 @@ export default function AppointmentCheckoutPage() {
                 return;
             }
 
-            const { orderId, amount: orderAmount } = response.data;
+            const { orderId, amount: orderAmount, keyId } = response.data;
 
             // 3. Open Razorpay Checkout Widget
             const options = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_51Mz2wYSHB3q5Xn",
+                key: keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_51Mz2wYSHB3q5Xn",
                 amount: orderAmount,
                 currency: "INR",
                 name: "Pillora Healthcare",
