@@ -302,6 +302,39 @@ export default function AppointmentCheckoutPage() {
         );
     }
 
+    const formatSchedule = () => {
+        if (!appointment) return "";
+        let dateObj: Date;
+        if (appointment.slotTime) {
+            dateObj = new Date(appointment.slotTime);
+        } else if (appointment.appointmentDate && appointment.appointmentTime) {
+            dateObj = new Date(`${appointment.appointmentDate}T${appointment.appointmentTime}`);
+        } else {
+            return "";
+        }
+        
+        if (isNaN(dateObj.getTime())) {
+            return `${appointment.appointmentDate || ""} ${appointment.appointmentTime || ""}`;
+        }
+        
+        const datePart = dateObj.toLocaleDateString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            weekday: 'long',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+        
+        const timePart = dateObj.toLocaleTimeString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        
+        return `${datePart} at ${timePart}`;
+    };
+
     return (
         <div className="min-h-screen bg-[#F8FAFC] pb-24 relative overflow-hidden">
             <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -400,11 +433,7 @@ export default function AppointmentCheckoutPage() {
                                             <div>
                                                 <p className="font-label-md text-label-md text-outline uppercase">Schedule</p>
                                                 <p className="font-value-main text-on-surface">
-                                                    {appointment.appointmentDate && appointment.appointmentTime ? (
-                                                        `${appointment.appointmentDate} at ${appointment.appointmentTime}`
-                                                    ) : (
-                                                        appointment.slotTime ? `${new Date(appointment.slotTime).toLocaleDateString([], { month: 'short', day: '2-digit' })}, ${new Date(appointment.slotTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}` : ""
-                                                    )}
+                                                    {formatSchedule()}
                                                 </p>
                                             </div>
                                         </div>
