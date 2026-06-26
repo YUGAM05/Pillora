@@ -24,6 +24,7 @@ export default function AppointmentCheckoutPage() {
     const [paymentLoading, setPaymentLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
+    const [patientDetailsExpanded, setPatientDetailsExpanded] = useState(true);
 
     const consultationFee = Number(appointment?.consultationFee || 0);
     const advanceFee = consultationFee * 0.20;
@@ -215,10 +216,50 @@ export default function AppointmentCheckoutPage() {
                 </div>
             </div>
         );
-    }    return (
+    }
+    return (
         <div className="min-h-screen bg-[#F8FAFC] pb-24 relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full sm:w-[800px] h-[300px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
+            <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+            <style dangerouslySetInnerHTML={{ __html: `
+                .bg-surface-container-lowest { background-color: #ffffff; }
+                .bg-surface-container-low { background-color: #eff4ff; }
+                .bg-surface-container { background-color: #e6eeff; }
+                .bg-primary-container { background-color: #1e40af; }
+                .border-outline-variant { border-color: #c4c5d5; }
+                .text-outline { color: #757684; }
+                .text-on-surface-variant { color: #444653; }
+                .text-primary { color: #00288e; }
+                .text-secondary { color: #0058be; }
+                .text-on-surface { color: #121c2a; }
+                .text-on-primary-container { color: #a8b8ff; }
+                .text-on-primary { color: #ffffff; }
+                .text-error { color: #ba1a1a; }
+                .bg-tertiary-container { background-color: #00563a; }
+                .hover\\:bg-on-primary-fixed-variant:hover { background-color: #173bab; }
+                .hover\\:bg-surface-container-low:hover { background-color: #eff4ff; }
+
+                /* Spacing & Layout */
+                .px-margin-desktop { padding-left: 32px; padding-right: 32px; }
+                .gap-gap-section { gap: 24px; }
+                .p-padding-card { padding: 16px; }
+                .pb-padding-card { padding-bottom: 16px; }
+                .px-padding-card { padding-left: 16px; padding-right: 16px; }
+                .gap-gutter { gap: 16px; }
+                .mb-stack-md { margin-bottom: 8px; }
+                .gap-stack-md { gap: 8px; }
+
+                /* Typography */
+                .font-headline-md { font-family: 'Manrope', sans-serif; }
+                .text-headline-md { font-size: 18px; line-height: 1.6; letter-spacing: -0.01em; font-weight: 600; }
+                .font-label-md { font-family: 'Inter', sans-serif; }
+                .text-label-md { font-size: 12px; line-height: 1.6; letter-spacing: 0.02em; font-weight: 500; }
+                .font-value-main { font-family: 'Inter', sans-serif; }
+                .text-value-main { font-size: 16px; line-height: 1.6; font-weight: 400; }
+                .font-button-text { font-family: 'Inter', sans-serif; }
+                .text-button-text { font-size: 14px; line-height: 1.2; font-weight: 700; }
+                .font-caption-sm { font-family: 'Inter', sans-serif; }
+                .text-caption-sm { font-size: 12px; line-height: 1.6; font-weight: 400; }
+            `}} />
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16 relative z-10">
                 {/* Header */}
@@ -239,148 +280,162 @@ export default function AppointmentCheckoutPage() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                    {/* Left Column: Details & Policies */}
-                    <div className="lg:col-span-7 space-y-6">
-                        {/* Consultation Summary */}
-                        <div className="bg-white rounded-[2rem] border border-slate-100/80 p-6 md:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-6">
-                            <h2 className="text-base font-black text-slate-900 border-b border-slate-50 pb-4 flex items-center gap-2.5">
-                                <Calendar className="w-5 h-5 text-blue-600" /> Appointment Details
-                            </h2>
-
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl flex items-center justify-center shrink-0 font-black text-xl shadow-md shadow-blue-500/20 border border-blue-400/20">
-                                        {(appointment.doctorName || "Dr").charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-black text-slate-900 text-base">{appointment.doctorName || "Consultant"}</h3>
-                                        <p className="text-xs text-blue-600 font-extrabold uppercase tracking-widest mt-1">Specialist Physician</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-5 border-t border-slate-50">
-                                    <div>
-                                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Hospital / Clinic</span>
-                                        <span className="font-extrabold text-slate-800 text-xs flex items-center gap-2">
-                                            <Building2 className="w-4 h-4 text-blue-500 shrink-0" />
-                                            {appointment.hospitalName || "Pillora Hospital"}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Slot Date & Time</span>
-                                        <span className="font-extrabold text-slate-800 text-xs flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-blue-500 shrink-0" />
-                                            {appointment.appointmentDate && appointment.appointmentTime ? (
-                                                `${appointment.appointmentDate} at ${appointment.appointmentTime}`
-                                            ) : (
-                                                appointment.slotTime ? `${new Date(appointment.slotTime).toLocaleDateString([], { month: 'short', day: '2-digit' })}, ${new Date(appointment.slotTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}` : ""
-                                            )}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="pt-5 border-t border-slate-50">
-                                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Patient Details</span>
-                                    <div className="p-4 bg-slate-50/70 border border-slate-100 rounded-2xl flex items-center gap-3">
-                                        <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-100/50 shadow-sm">
-                                            <UserIcon className="w-4 h-4" />
+                <main className="max-w-[1280px] mx-auto py-2">
+                    {/* Main Layout Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-gap-section items-start">
+                        {/* LEFT COLUMN (70%) */}
+                        <div className="flex flex-col gap-gap-section">
+                            {/* Appointment Details Card */}
+                            <section className="bg-surface-container-lowest border border-outline-variant rounded-lg p-padding-card">
+                                <h2 className="font-headline-md text-headline-md text-primary mb-6">Appointment Details</h2>
+                                <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                                    {/* Doctor Profile Info */}
+                                    <div className="flex items-center gap-4 flex-1">
+                                        <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container text-xl font-bold">
+                                            {(appointment.doctorName || "Dr").substring(0, 2).toUpperCase()}
                                         </div>
-                                        <div className="min-w-0">
-                                            <span className="font-black text-slate-800 text-xs sm:text-sm block">
-                                                {appointment.patientName}
-                                            </span>
-                                            <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
-                                                {appointment.patientAge} Years Old • {appointment.patientPhone}
-                                            </span>
+                                        <div>
+                                            <h3 className="font-headline-md text-headline-md text-primary-container">Dr. {appointment.doctorName || "Consultant"}</h3>
+                                            <p className="font-label-md text-label-md text-outline">{appointment.specialty || "Specialist Physician"}</p>
+                                        </div>
+                                    </div>
+                                    {/* Divider for Mobile */}
+                                    <div className="h-px w-full bg-outline-variant md:hidden"></div>
+                                    {/* Location & Time Info */}
+                                    <div className="flex flex-col gap-stack-md flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <Building2 className="w-5 h-5 text-primary shrink-0" />
+                                            <div>
+                                                <p className="font-label-md text-label-md text-outline uppercase">Clinic</p>
+                                                <p className="font-value-main text-on-surface">{appointment.hospitalName || "Pillora Hospital"}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-5 h-5 text-primary shrink-0" />
+                                            <div>
+                                                <p className="font-label-md text-label-md text-outline uppercase">Schedule</p>
+                                                <p className="font-value-main text-on-surface">
+                                                    {appointment.appointmentDate && appointment.appointmentTime ? (
+                                                        `${appointment.appointmentDate} at ${appointment.appointmentTime}`
+                                                    ) : (
+                                                        appointment.slotTime ? `${new Date(appointment.slotTime).toLocaleDateString([], { month: 'short', day: '2-digit' })}, ${new Date(appointment.slotTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}` : ""
+                                                    )}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            </section>
 
-                        {/* Cancellation Policy */}
-                        <div className="bg-white rounded-[2rem] border border-slate-100/80 p-6 md:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-4">
-                            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2.5">
-                                <HelpCircle className="w-4 h-4 text-slate-400" /> Cancellation & Refund Policy
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="p-4.5 bg-rose-500/5 border border-rose-500/10 rounded-2xl space-y-1.5">
-                                    <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest block">User Cancellation</span>
-                                    <p className="text-xs font-bold text-slate-600 leading-normal">
-                                        Cancellation requested by user is <span className="text-rose-600 font-black">non-refundable</span>.
-                                    </p>
-                                </div>
-                                <div className="p-4.5 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl space-y-1.5">
-                                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest block">Hospital Cancellation</span>
-                                    <p className="text-xs font-bold text-slate-600 leading-normal">
-                                        If hospital cancels, you receive a <span className="text-emerald-600 font-black">100% full refund</span> within 48 hours.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Payment Action Button */}
-                        <div className="flex justify-start pt-2">
-                            <button
-                                onClick={handlePayment}
-                                disabled={paymentLoading}
-                                className="w-[180px] py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest rounded-none shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between gap-2"
-                            >
-                                {paymentLoading ? (
-                                    <div className="flex items-center gap-2 mx-auto">
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        <span>PROCESSING...</span>
+                            {/* Patient Details (Expandable) */}
+                            <section className="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
+                                <button className="w-full flex justify-between items-center p-padding-card hover:bg-surface-container-low transition-colors text-left" onClick={() => setPatientDetailsExpanded(!patientDetailsExpanded)}>
+                                    <div className="flex items-center gap-3">
+                                        <UserIcon className="w-5 h-5 text-primary" />
+                                        <h2 className="font-headline-md text-headline-md text-primary">Patient Details</h2>
                                     </div>
-                                ) : (
-                                    <>
-                                        <span>PROCEED TO PAYMENT</span>
-                                        <span className="text-[8px] font-black bg-white/20 px-1.5 py-0.5 rounded border border-white/10 shrink-0">SECURED</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Right Column: Pricing & Pay CTA */}
-                    <div className="lg:col-span-5">
-                        <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-[0_15px_40px_rgba(59,130,246,0.04)] border border-slate-100/80 space-y-6 sticky top-4">
-                            <div className="flex items-center gap-2 text-[9px] font-black text-blue-600 uppercase tracking-[0.2em] border-b border-slate-50 pb-4">
-                                <ShieldCheck className="w-4 h-4 text-blue-500" /> Guaranteed Secure Checkout
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center text-sm font-bold text-slate-500">
-                                    <span>Consultation Fee</span>
-                                    <span className="text-slate-800">₹{consultationFee.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm font-bold text-slate-500 pb-3 border-b border-slate-50">
-                                    <span>Advance Booking Fee (20%)</span>
-                                    <span className="text-blue-600 font-black">₹{advanceFee.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between items-center pt-1 text-sm font-bold text-slate-500">
-                                    <span>Payable at Clinic</span>
-                                    <span className="text-slate-800">₹{remainingFee.toFixed(2)}</span>
-                                </div>
-
-                                <div className="pt-4 space-y-2">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Total to Pay Now</span>
-                                    <div className="flex justify-between items-center p-4 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl shadow-md shadow-blue-500/10">
-                                        <span className="text-3xl font-black leading-none">₹{advanceFee.toFixed(2)}</span>
-                                        <span className="text-[8px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">Secured</span>
+                                    <span className={`material-symbols-outlined transition-transform duration-300 ${patientDetailsExpanded ? 'rotate-180' : 'rotate-0'}`} id="expand-icon">expand_more</span>
+                                </button>
+                                <div className={`px-padding-card pb-padding-card transition-all duration-300 overflow-hidden ${patientDetailsExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`} id="patient-content">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter pt-4 border-t border-outline-variant">
+                                        <div>
+                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">PATIENT NAME</label>
+                                            <input readOnly className="w-full border border-outline-variant rounded p-2 text-on-surface bg-slate-50 outline-none" type="text" value={appointment.patientName || ""} />
+                                        </div>
+                                        <div>
+                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">AGE</label>
+                                            <input readOnly className="w-full border border-outline-variant rounded p-2 text-on-surface bg-slate-50 outline-none" type="text" value={appointment.patientAge ? `${appointment.patientAge} Years Old` : ""} />
+                                        </div>
+                                        <div>
+                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">CONTACT EMAIL</label>
+                                            <input readOnly className="w-full border border-outline-variant rounded p-2 text-on-surface bg-slate-50 outline-none" type="email" value={appointment.patientEmail || appointment.email || ""} />
+                                        </div>
+                                        <div>
+                                            <label className="font-label-md text-label-md text-outline block mb-stack-md">PHONE NUMBER</label>
+                                            <input readOnly className="w-full border border-outline-variant rounded p-2 text-on-surface bg-slate-50 outline-none" type="tel" value={appointment.patientPhone || ""} />
+                                        </div>
                                     </div>
                                 </div>
+                            </section>
+                        </div>
+
+                        {/* RIGHT COLUMN (30%) */}
+                        <div className="flex flex-col gap-gap-section">
+                            {/* Payment Summary Card */}
+                            <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-padding-card shadow-sm">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <ShieldCheck className="w-5 h-5 text-secondary shrink-0" />
+                                    <span className="font-label-md text-label-md text-secondary tracking-widest font-bold">GUARANTEED SECURE CHECKOUT</span>
+                                </div>
+                                <div className="flex flex-col gap-4 mb-6">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-value-main text-on-surface">Consultation Fee</span>
+                                        <span className="font-value-main text-on-surface">₹{consultationFee.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-value-main text-on-surface">Advance Booking Fee (20%)</span>
+                                        <span className="font-value-main text-secondary font-bold">₹{advanceFee.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-label-md text-label-md text-outline">Payable at Clinic</span>
+                                        <span className="font-label-md text-label-md text-outline">₹{remainingFee.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                <div className="border-t border-outline-variant pt-6 mb-6">
+                                    <div className="flex justify-between items-end">
+                                        <span className="font-label-md text-label-md text-on-surface-variant">TOTAL TO PAY NOW</span>
+                                        <span className="text-[24px] font-bold text-primary-container leading-none">₹{advanceFee.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                <div className="bg-[#FEF3C7] border border-[#F59E0B] rounded-lg p-3 flex gap-3 mb-6">
+                                    <AlertCircle className="w-5 h-5 text-[#D97706] shrink-0" />
+                                    <p className="text-[12px] text-[#92400E] leading-snug">₹{remainingFee.toFixed(2)} will be collected at clinic during your visit.</p>
+                                </div>
                             </div>
 
-                            <div className="p-4 bg-blue-50/50 border border-blue-100/40 rounded-2xl text-[11px] font-bold text-slate-500 leading-relaxed flex items-start gap-2.5 shadow-sm">
-                                <span className="text-blue-500 text-sm shrink-0">💡</span>
-                                <span>
-                                    The remaining amount of <strong>₹{remainingFee.toFixed(2)}</strong> will be collected in cash or card directly at the hospital counter.
-                                </span>
+                            {/* Cancellation & Refund Policy */}
+                            <div className="bg-surface-container-low border border-outline-variant rounded-lg p-padding-card">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <HelpCircle className="w-5 h-5 text-primary shrink-0" />
+                                    <h3 className="font-label-md text-label-md text-primary font-bold uppercase">Cancellation &amp; Refund Policy</h3>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <p className="font-label-md text-label-md text-outline uppercase text-[10px]">Patient Side</p>
+                                        <p className="text-error font-bold text-[14px]">Non-refundable</p>
+                                        <p className="text-[11px] text-on-surface-variant leading-tight">If cancelled by the user after booking.</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="font-label-md text-label-md text-outline uppercase text-[10px]">Hospital Side</p>
+                                        <p className="text-tertiary-container font-bold text-[14px]">100% Refund</p>
+                                        <p className="text-[11px] text-on-surface-variant leading-tight">If appointment is cancelled by clinic.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Payment Action Button */}
+                            <div className="flex justify-start pt-2">
+                                <button
+                                    onClick={handlePayment}
+                                    disabled={paymentLoading}
+                                    className="w-[180px] py-3.5 px-4 bg-blue-650 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest rounded-none shadow-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between gap-2"
+                                >
+                                    {paymentLoading ? (
+                                        <div className="flex items-center gap-2 mx-auto">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            <span>PROCESSING...</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <span>PROCEED TO PAYMENT</span>
+                                            <span className="text-[8px] font-black bg-white/20 px-1.5 py-0.5 rounded border border-white/10 shrink-0">SECURED</span>
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </main>
             </div>
         </div>
     );
