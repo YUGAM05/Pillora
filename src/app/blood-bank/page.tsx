@@ -931,51 +931,95 @@ function RequestForm() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            
-            // Check file size (warn if > 10MB)
-            if (file.size > 10 * 1024 * 1024) {
-                console.warn("Large image detected, compressing...");
-            }
-
             setIsImageProcessing(true);
+
             const reader = new FileReader();
+            reader.onerror = () => {
+                setIsImageProcessing(false);
+                alert("Failed to read image file.");
+            };
             reader.onload = (event) => {
                 const img = new Image();
-                img.onerror = () => setIsImageProcessing(false);
+                img.onerror = () => {
+                    console.log("Canvas loader failed or format not decoded, attempting direct upload...");
+                    uploadFileToCloudinary(file);
+                };
                 img.onload = () => {
-                    // Create canvas for compression
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
+                    try {
+                        // Create canvas for compression
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
 
-                    // Max dimensions 1000px
-                    const MAX_SIZE = 1000;
-                    if (width > height) {
-                        if (width > MAX_SIZE) {
-                            height *= MAX_SIZE / width;
-                            width = MAX_SIZE;
+                        // Max dimensions 1000px
+                        const MAX_SIZE = 1000;
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
                         }
-                    } else {
-                        if (height > MAX_SIZE) {
-                            width *= MAX_SIZE / height;
-                            height = MAX_SIZE;
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx?.drawImage(img, 0, 0, width, height);
+
+                        // Export as compressed JPEG
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        // Convert base64 to blob and upload
+                        const arr = compressedBase64.split(',');
+                        const mime = arr[0].match(/:(.*?);/)![1];
+                        const bstr = atob(arr[1]);
+                        let n = bstr.length;
+                        const u8arr = new Uint8Array(n);
+                        while (n--) {
+                            u8arr[n] = bstr.charCodeAt(n);
                         }
+                        const blob = new Blob([u8arr], { type: mime });
+                        const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                        
+                        uploadFileToCloudinary(compressedFile);
+                    } catch (err) {
+                        console.error("Canvas compression failed, uploading original...", err);
+                        uploadFileToCloudinary(file);
                     }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx?.drawImage(img, 0, 0, width, height);
-
-                    // Export as compressed JPEG
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    setFormData(prev => ({ ...prev, kycDocumentImage: compressedBase64 }));
-                    setIsImageProcessing(false);
-                    console.log("Image compressed successfully.");
                 };
                 img.src = event.target?.result as string;
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const uploadFileToCloudinary = async (fileToUpload: File) => {
+        try {
+            const uploadData = new FormData();
+            uploadData.append('file', fileToUpload);
+            
+            const response = await api.post('/upload', uploadData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            
+            if (response.data && response.data.url) {
+                setFormData(prev => ({ ...prev, kycDocumentImage: response.data.url }));
+                console.log("Uploaded successfully to Cloudinary:", response.data.url);
+            } else {
+                throw new Error("Invalid upload response");
+            }
+        } catch (error: any) {
+            console.error("Failed to upload KYC document image:", error);
+            alert(`KYC Document Image Upload Failed: ${error.response?.data?.message || error.message}`);
+            setFormData(prev => ({ ...prev, kycDocumentImage: '' }));
+        } finally {
+            setIsImageProcessing(false);
         }
     };
 
