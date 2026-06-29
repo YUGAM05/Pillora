@@ -39,6 +39,7 @@ interface Blog {
     authorRole?: string;
     readTime: string;
     date: string;
+    slug?: string;
 }
 
 export default function BlogPage() {
@@ -163,7 +164,7 @@ export default function BlogPage() {
                                         transition={{ duration: 0.4 }}
                                         className="group bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col h-full overflow-hidden"
                                     >
-                                        <Link href={`/blog/${post._id}`} className="flex flex-col h-full">
+                                        <Link href={`/blog/${post.slug || post._id}`} className="flex flex-col h-full">
                                             {/* Header: Category & Icon */}
                                             <div className="p-8 pb-4">
                                                 <div className="flex items-center justify-between mb-6">

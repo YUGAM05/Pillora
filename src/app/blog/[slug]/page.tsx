@@ -34,6 +34,7 @@ interface Blog {
     authorRole?: string;
     readTime: string;
     date: string;
+    slug?: string;
 }
 
 export default function BlogPostDetail() {
@@ -73,7 +74,7 @@ export default function BlogPostDetail() {
     useEffect(() => {
         const fetchBlogDetail = async () => {
             try {
-                const response = await api.get(`/blogs/${params.id}`);
+                const response = await api.get(`/blogs/${params.slug}`);
                 setBlog(response.data);
             } catch (error) {
                 console.error('Error fetching blog detail:', error);
@@ -82,10 +83,10 @@ export default function BlogPostDetail() {
             }
         };
 
-        if (params.id) {
+        if (params.slug) {
             fetchBlogDetail();
         }
-    }, [params.id]);
+    }, [params.slug]);
 
     const getCategoryIcon = (category: string) => {
         switch (category) {
