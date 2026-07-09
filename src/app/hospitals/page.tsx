@@ -222,15 +222,7 @@ export default function HospitalsPage() {
             if (sortBy) params.sortBy = sortBy;
 
             const res = await api.get('/hospitals', { params });
-            
-            // Check if seeded database is empty
-            if (res.data.length === 0 && !selectedCity) {
-                await api.post('/hospitals/seed');
-                const r2 = await api.get('/hospitals');
-                setHospitals(r2.data);
-            } else {
-                setHospitals(res.data);
-            }
+            setHospitals(res.data);
         } catch (err) {
             console.error('Failed to fetch hospitals', err);
         } finally {
@@ -756,15 +748,6 @@ export default function HospitalsPage() {
                                                     )}
                                                 </div>
                                                 
-                                                {/* Lower Management Tag */}
-                                                <div className={`absolute bottom-3 left-3 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider z-10 backdrop-blur-md shadow-sm border ${
-                                                    hospital.management_type === 'SELF' 
-                                                        ? 'bg-white/95 text-emerald-700 border-emerald-100' 
-                                                        : 'bg-blue-600/95 text-white border-blue-500/35'
-                                                }`}>
-                                                    {hospital.management_type === 'SELF' ? '🏥 Self Managed' : '✨ Pillora Managed'}
-                                                </div>
-
                                                 {/* Payment details tag */}
                                                 <div className={`absolute bottom-3 right-3 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider z-10 backdrop-blur-md shadow-sm border ${
                                                     hospital.isOnlinePaymentAvailable
