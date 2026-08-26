@@ -9,10 +9,9 @@ import {
 import { auth, googleProvider } from "@/lib/firebase";
 import { setToken, setUser as setStoredUser, getToken, getUser, clearAuth } from "@/lib/tokenStorage";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowRight, Lock, Mail, KeyRound } from "lucide-react";
+import { Loader2, Lock, Mail, KeyRound, Phone, MessageSquare } from "lucide-react";
 import api from "@/lib/api";
 import Image from "next/image";
-
 
 export default function LoginPage() {
     const router = useRouter();
@@ -28,6 +27,14 @@ export default function LoginPage() {
     const [mfaUserId, setMfaUserId] = useState("");
     const [qrCode, setQrCode] = useState("");
 
+    // Phone WhatsApp OTP State
+    const [phoneMode, setPhoneMode] = useState(false);
+    const [countryCode, setCountryCode] = useState("91");
+    const [phoneInput, setPhoneInput] = useState("");
+    const [otpSent, setOtpSent] = useState(false);
+    const [phoneOtp, setPhoneOtp] = useState("");
+    const [resendTimer, setResendTimer] = useState(0);
+
     useEffect(() => {
         const user = getUser();
         const token = getToken();
@@ -40,6 +47,17 @@ export default function LoginPage() {
         }
     }, [router]);
 
+    // Resend countdown timer effect
+    useEffect(() => {
+        let timer: any;
+        if (resendTimer > 0) {
+            timer = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [resendTimer]);
+
     const handleEmailLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -49,14 +67,12 @@ export default function LoginPage() {
             const res = await api.post("/auth/login", { email, password });
             const data = res.data;
 
-            // ✅ Handle MFA required (admin flow) — DO NOT save token here
             if (data.mfaRequired) {
                 setMfaUserId(data.userId);
                 setMfaStep(true);
                 return;
             }
 
-            // ✅ Handle MFA setup required (first-time admin)
             if (data.mfaSetupRequired) {
                 setMfaUserId(data.userId);
                 setQrCode(data.qrCode);
@@ -65,7 +81,6 @@ export default function LoginPage() {
                 return;
             }
 
-            // ✅ Non-admin: token is present, save it
             if (!data.token) {
                 setError("Login failed: no token received. Please try again.");
                 return;
@@ -135,7 +150,6 @@ export default function LoginPage() {
         }
     };
 
-
     const handleGoogleLogin = async () => {
         setLoading(true);
         setError("");
@@ -149,7 +163,6 @@ export default function LoginPage() {
             const user = result.user;
             const idToken = await user.getIdToken();
 
-            // Mock backend verification for this demo
             const response = await api.post("/auth/login", { 
                 email: user.email, 
                 googleToken: idToken,
@@ -178,6 +191,84 @@ export default function LoginPage() {
         }
     };
 
+    const handleSendWhatsAppOtp = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        const cleanPhoneNum = phoneInput.replace(/\D/g, '');
+        if (!cleanPhoneNum || cleanPhoneNum.length < 7) {
+            setError("Please enter a valid mobile phone number.");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+
+        try {
+            const fullPhone = `${countryCode}${cleanPhoneNum}`;
+            const res = await api.post("/auth/phone/send-otp", { phoneNumber: fullPhone });
+
+            if (res.data.success) {
+                setOtpSent(true);
+                setResendTimer(30);
+            } else {
+                setError(res.data.message || "Failed to send OTP. Please try again.");
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Failed to send OTP via WhatsApp.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyWhatsAppOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!phoneOtp || phoneOtp.length !== 6) {
+            setError("Please enter the 6-digit verification code.");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+
+        try {
+            const cleanPhoneNum = phoneInput.replace(/\D/g, '');
+            const fullPhone = `${countryCode}${cleanPhoneNum}`;
+            const res = await api.post("/auth/phone/verify-otp", { 
+                phoneNumber: fullPhone,
+                otp: phoneOtp
+            });
+
+            const data = res.data;
+            if (!data.token) {
+                setError("Verification failed: no token received.");
+                return;
+            }
+
+            setToken(data.token);
+            setStoredUser(JSON.stringify({
+                _id: data._id,
+                name: data.name,
+                email: data.email || '',
+                phoneNumber: data.phoneNumber,
+                role: data.role,
+                status: data.status
+            }));
+            window.dispatchEvent(new Event('storage'));
+
+            if (data.role === 'admin') {
+                clearAuth();
+                setError("Admin access has been moved to the dedicated Admin Portal.");
+            } else if (data.role === 'hospital') {
+                router.push("/hospital/dashboard");
+            } else {
+                router.push("/dashboard");
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Invalid verification code");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-[#f8fafc] p-6 relative overflow-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full" />
@@ -195,16 +286,16 @@ export default function LoginPage() {
                         </div>
                     </div>
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">
-                        {mfaStep ? 'Admin Verification' : 'Welcome Back'}
+                        {mfaStep ? 'Admin Verification' : phoneMode ? 'WhatsApp Sign-In' : 'Welcome Back'}
                     </h2>
                     <p className="text-gray-500 mt-2 text-sm font-medium">
-                        {mfaStep ? 'Enter your 6-digit authenticator code' : 'Enter your credentials to access Pillora'}
+                        {mfaStep ? 'Enter your 6-digit authenticator code' : phoneMode ? 'Sign in using WhatsApp OTP verification' : 'Enter your credentials to access Pillora'}
                     </p>
                 </div>
 
                 {error && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold text-center border border-red-100 flex items-center justify-center gap-2">
-                        <Lock className="w-4 h-4" /> {error}
+                        <Lock className="w-4 h-4 flex-shrink-0" /> {error}
                     </motion.div>
                 )}
 
@@ -249,6 +340,109 @@ export default function LoginPage() {
                             ← Back to Login
                         </button>
                     </motion.form>
+                ) : phoneMode ? (
+                    <motion.div key="phoneAuth" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                        {!otpSent ? (
+                            <form onSubmit={handleSendWhatsAppOtp} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mobile Phone Number</label>
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={countryCode}
+                                            onChange={(e) => setCountryCode(e.target.value)}
+                                            className="px-3 py-4 bg-gray-50 border-none rounded-2xl font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer text-sm"
+                                        >
+                                            <option value="91">🇮🇳 +91</option>
+                                            <option value="1">🇺🇸 +1</option>
+                                            <option value="44">🇬🇧 +44</option>
+                                            <option value="971">🇦🇪 +971</option>
+                                            <option value="65">🇸🇬 +65</option>
+                                        </select>
+                                        <div className="relative flex-1">
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                            <input
+                                                required
+                                                type="tel"
+                                                value={phoneInput}
+                                                onChange={(e) => setPhoneInput(e.target.value)}
+                                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-bold text-gray-900 transition-all"
+                                                placeholder="9876543210"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || !phoneInput.trim()}
+                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-600/20 transition-all active:scale-95 disabled:opacity-70 flex items-center justify-center gap-2"
+                                >
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (
+                                        <>
+                                            <MessageSquare className="w-4 h-4" /> Send WhatsApp OTP
+                                        </>
+                                    )}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => { setPhoneMode(false); setError(''); }}
+                                    className="w-full text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors text-center py-2"
+                                >
+                                    ← Back to Email / Google Login
+                                </button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleVerifyWhatsAppOtp} className="space-y-4">
+                                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-center">
+                                    <p className="text-xs text-emerald-800 font-medium">
+                                        OTP sent via WhatsApp to <span className="font-bold">+{countryCode} {phoneInput}</span>
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 text-center block">Enter 6-Digit OTP</label>
+                                    <input
+                                        type="text"
+                                        maxLength={6}
+                                        value={phoneOtp}
+                                        onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        className="block w-full px-4 py-4 rounded-2xl border border-slate-200 bg-gray-50 text-slate-900 text-center text-2xl tracking-[0.5em] font-bold outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                        placeholder="000000"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || phoneOtp.length !== 6}
+                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-600/20 transition-all active:scale-95 disabled:opacity-70"
+                                >
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Verify & Continue"}
+                                </button>
+
+                                <div className="flex justify-between items-center pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setOtpSent(false); setPhoneOtp(''); setError(''); }}
+                                        className="text-xs font-bold text-gray-400 hover:text-gray-600"
+                                    >
+                                        Change Number
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        disabled={resendTimer > 0 || loading}
+                                        onClick={() => handleSendWhatsAppOtp()}
+                                        className="text-xs font-bold text-emerald-600 hover:underline disabled:text-gray-300 disabled:no-underline"
+                                    >
+                                        {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </motion.div>
                 ) : (
                     <motion.div key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                     <form onSubmit={handleEmailLogin} className="space-y-4">
@@ -294,19 +488,32 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                <div className="relative my-8">
+                <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
                     <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-white px-4 text-gray-400">Or continue with</span></div>
                 </div>
 
-                <button
-                    onClick={handleGoogleLogin}
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-3 bg-white border border-gray-100 py-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm active:scale-[0.98] disabled:opacity-70"
-                >
-                    <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width={20} height={20} />
-                    Google Account
-                </button>
+                <div className="space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => { setPhoneMode(true); setError(''); }}
+                        disabled={loading}
+                        className="w-full flex items-center justify-center gap-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/60 py-4 rounded-2xl font-bold transition-all shadow-sm active:scale-[0.98] disabled:opacity-70"
+                    >
+                        <MessageSquare className="w-5 h-5 text-emerald-600" />
+                        Continue with Phone Number
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        disabled={loading}
+                        className="w-full flex items-center justify-center gap-3 bg-white border border-gray-100 py-4 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm active:scale-[0.98] disabled:opacity-70"
+                    >
+                        <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width={20} height={20} />
+                        Google Account
+                    </button>
+                </div>
                 
                 <p className="text-[10px] text-gray-400 text-center mt-8 font-medium">
                     By continuing, you agree to our 
@@ -326,4 +533,3 @@ export default function LoginPage() {
         </div>
     );
 }
-
