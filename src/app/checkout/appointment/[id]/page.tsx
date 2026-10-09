@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { CheckCircle, AlertCircle, Loader2, ArrowLeft, ShieldCheck, HelpCircle, Calendar, Clock, User as UserIcon, Building2, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { getUser } from "@/lib/tokenStorage";
 
 export default function AppointmentCheckoutPage() {
     const params = useParams();
@@ -50,10 +49,10 @@ export default function AppointmentCheckoutPage() {
                 setError("Invalid appointment fee");
             } else {
                 setAppointment(data);
-                // Prefill if appointment has existing details
+                // Set patient details if already present in appointment
                 setPatientName(data.patientName || "");
                 setPatientAge(data.patientAge ? String(data.patientAge) : "");
-                setPatientEmail(data.patientEmail || data.email || "");
+                setPatientEmail(data.patientEmail || "");
                 setPatientPhone(data.patientPhone || "");
             }
         } catch (err: any) {
@@ -72,35 +71,6 @@ export default function AppointmentCheckoutPage() {
             fetchAppointment();
         }
     }, [appointmentId, fetchAppointment]);
-
-    // Prefill Details Handler
-    const handlePrefill = () => {
-        try {
-            // Check pillora_user_profile first
-            const stored = localStorage.getItem("pillora_user_profile");
-            if (stored) {
-                const profile = JSON.parse(stored);
-                if (profile.name) setPatientName(profile.name);
-                if (profile.age) setPatientAge(String(profile.age));
-                if (profile.email) setPatientEmail(profile.email);
-                if (profile.phone) setPatientPhone(profile.phone);
-                // Clear errors on prefill
-                setFormErrors({});
-                return;
-            }
-            
-            // Fallback to token storage
-            const currentUser = getUser();
-            if (currentUser) {
-                if (currentUser.name) setPatientName(currentUser.name);
-                if (currentUser.email) setPatientEmail(currentUser.email);
-                if (currentUser.phone) setPatientPhone(currentUser.phone);
-                setFormErrors({});
-            }
-        } catch (e) {
-            console.error("Failed to prefill details", e);
-        }
-    };
 
     // Form Validation
     const validateForm = () => {
@@ -199,11 +169,6 @@ export default function AppointmentCheckoutPage() {
                 name: "Pillora Healthcare",
                 description: `20% Advance Booking Fee for Dr. ${appointment.doctorName || "Consultant"}`,
                 order_id: orderId,
-                prefill: {
-                    name: patientName.trim(),
-                    email: patientEmail.trim(),
-                    contact: patientPhone.trim()
-                },
                 notes: {
                     appointmentId: appointment.appointmentId || appointmentId,
                     hospitalId: appointment.hospitalId
@@ -448,19 +413,9 @@ export default function AppointmentCheckoutPage() {
                                         <UserIcon className="w-5 h-5 text-primary" />
                                         <h2 className="font-headline-md text-headline-md text-primary">Patient Details</h2>
                                     </button>
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={handlePrefill}
-                                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded border border-blue-200 transition-all flex items-center gap-1 active:scale-95 text-button-text"
-                                        >
-                                            <UserIcon className="w-3 h-3 text-blue-700" />
-                                            <span>पहले से जानकारी है (Prefill Details)</span>
-                                        </button>
-                                        <button onClick={() => setPatientDetailsExpanded(!patientDetailsExpanded)} className="text-primary flex items-center justify-center p-1">
-                                            <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${patientDetailsExpanded ? 'rotate-180' : 'rotate-0'}`} />
-                                        </button>
-                                    </div>
+                                    <button onClick={() => setPatientDetailsExpanded(!patientDetailsExpanded)} className="text-primary flex items-center justify-center p-1">
+                                        <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${patientDetailsExpanded ? 'rotate-180' : 'rotate-0'}`} />
+                                    </button>
                                 </div>
                                 <div className={`px-padding-card pb-padding-card transition-all duration-300 overflow-hidden ${patientDetailsExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`} id="patient-content">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter pt-4 border-t border-outline-variant">
