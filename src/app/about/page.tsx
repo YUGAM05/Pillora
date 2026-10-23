@@ -2,6 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import AboutVideoPlayer from "@/components/AboutVideoPlayer";
 import { 
     ShieldCheck, 
     Zap, 
@@ -85,6 +86,15 @@ export default function AboutPage() {
                     </motion.div>
                 </div>
             </section>
+
+            {/* Premium Video Showcase */}
+            <AboutVideoPlayer
+                src="/PILLORA.mp4"
+                title="Experience Pillora in Motion"
+                subtitle="Discover how Pillora bridges patients with verified blood donors, transparent hospital pricing, and instant care coordination."
+                badgeText="Official Intro Film"
+                accentColor="rose"
+            />
 
             {/* 2. Who We Are & Mission */}
             <section className="py-24 px-4 relative bg-slate-50 overflow-hidden">
