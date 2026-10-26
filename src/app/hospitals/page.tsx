@@ -126,11 +126,10 @@ export default function HospitalsPage() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const searchRef = React.useRef<HTMLDivElement>(null);
 
-    // City detection and manual list states
+    // City selection manual list states
     const [selectedCity, setSelectedCity] = useState('');
     const [showCityModal, setShowCityModal] = useState(false);
     const [cities, setCities] = useState<string[]>([]);
-    const [geocodingLoading, setGeocodingLoading] = useState(false);
 
     // Sidebar filter states
     const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
@@ -189,10 +188,18 @@ export default function HospitalsPage() {
         const loadCities = async () => {
             try {
                 const res = await api.get('/hospitals/cities');
-                setCities(res.data);
+                if (Array.isArray(res.data) && res.data.length > 0) {
+                    const uniqueCities = Array.from(new Set([
+                        ...res.data.filter(Boolean),
+                        'Ahmedabad', 'Surendranagar', 'Vadodara', 'Gandhinagar', 'Surat', 'Rajkot'
+                    ])).sort();
+                    setCities(uniqueCities);
+                } else {
+                    setCities(['Ahmedabad', 'Surendranagar', 'Vadodara', 'Gandhinagar', 'Surat', 'Rajkot']);
+                }
             } catch (error) {
                 console.error("Failed to load cities", error);
-                setCities(['Ahmedabad', 'Vadodara', 'Gandhinagar']);
+                setCities(['Ahmedabad', 'Surendranagar', 'Vadodara', 'Gandhinagar', 'Surat', 'Rajkot']);
             }
         };
         loadCities();
@@ -234,49 +241,12 @@ export default function HospitalsPage() {
         fetchHospitals();
     }, [selectedCity, selectedSpecs, isPmjayAccepted, selectedGovtSchemes, selectedTypes, selectedBedRanges, isEmergency247, isBookingAvailable, ratingThreshold, sortBy]);
 
-    // Reverse geocode geolocation coordinate to city via Nominatim (OpenStreetMap)
-    const handleUseMyLocation = () => {
-        if (!navigator.geolocation) {
-            alert("Geolocation is not supported by your browser.");
-            return;
-        }
-        setGeocodingLoading(true);
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                try {
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
-                    );
-                    const data = await response.json();
-                    const detectedCity = data.address?.city || 
-                                         data.address?.town || 
-                                         data.address?.village || 
-                                         data.address?.municipality || 
-                                         data.address?.county;
-                    
-                    if (detectedCity) {
-                        handleSelectCity(detectedCity);
-                    } else {
-                        alert("Could not detect your city. Please select manually.");
-                    }
-                } catch (error) {
-                    console.error(error);
-                    alert("Error getting location. Please select manually.");
-                } finally {
-                    setGeocodingLoading(false);
-                }
-            },
-            (error) => {
-                console.error(error);
-                alert("Location access denied or unavailable. Please select manually.");
-                setGeocodingLoading(false);
-            }
-        );
-    };
-
     const handleSelectCity = (city: string) => {
-        localStorage.setItem('pillora_selected_city', city);
+        if (city) {
+            localStorage.setItem('pillora_selected_city', city);
+        } else {
+            localStorage.removeItem('pillora_selected_city');
+        }
         setSelectedCity(city);
         setShowCityModal(false);
     };
@@ -573,16 +543,25 @@ export default function HospitalsPage() {
                             Trusted Healthcare<br className="hidden sm:block" /> When You Need It Most
                         </h1>
 
-                        {/* Location Header Info */}
+                        {/* Location Header Dropdown Selector */}
                         <div className="flex items-center justify-center gap-2 mb-8 text-xs sm:text-sm text-slate-500 font-bold">
-                            <MapPin className="w-4 h-4 text-blue-600" />
-                            <span>Hospitals in <strong className="text-blue-950 font-black">{selectedCity || 'All Cities'}</strong></span>
-                            <button 
-                                onClick={handleChangeCity}
-                                className="text-xs text-blue-600 hover:text-blue-700 underline underline-offset-4 font-black ml-1.5 transition-colors"
-                            >
-                                Change city
-                            </button>
+                            <div className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md border border-blue-100 rounded-2xl px-4 py-2 shadow-sm">
+                                <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
+                                <span className="text-slate-500 font-bold">Select City:</span>
+                                <div className="relative">
+                                    <select
+                                        value={selectedCity}
+                                        onChange={(e) => handleSelectCity(e.target.value)}
+                                        className="bg-transparent text-slate-900 font-black focus:outline-none cursor-pointer pr-5 appearance-none text-xs sm:text-sm"
+                                    >
+                                        <option value="">All Cities</option>
+                                        {cities.map(c => (
+                                            <option key={c} value={c}>{c}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 rotate-90 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                </div>
+                            </div>
                         </div>
 
                         {/* Search Input Box */}
@@ -924,7 +903,7 @@ export default function HospitalsPage() {
                 )}
             </AnimatePresence>
 
-            {/* ── City Detection Welcome Modal ── */}
+            {/* ── City Selection Modal (Manual Dropdown Only) ── */}
             <AnimatePresence>
                 {showCityModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -933,7 +912,8 @@ export default function HospitalsPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-slate-950/60 backdrop-blur-md"
+                            onClick={() => setShowCityModal(false)}
+                            className="fixed inset-0 bg-slate-950/60 backdrop-blur-md cursor-pointer"
                         />
                         {/* Modal Dialog Card */}
                         <motion.div 
@@ -943,42 +923,53 @@ export default function HospitalsPage() {
                             transition={{ type: 'spring', damping: 25, stiffness: 250 }}
                             className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-md w-full shadow-2xl relative z-10 border border-slate-100 flex flex-col"
                         >
+                            {/* Close button */}
+                            <button
+                                onClick={() => setShowCityModal(false)}
+                                className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                                aria-label="Close modal"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
                             <div className="text-center mb-6">
                                 <div className="w-14 h-14 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600 shadow-sm">
                                     <MapPin className="w-7 h-7" />
                                 </div>
-                                <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Which city are you in?</h2>
-                                <p className="text-slate-500 text-sm mt-2 font-bold">We will show you partner hospitals near your location.</p>
+                                <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Select Your City</h2>
+                                <p className="text-slate-500 text-sm mt-2 font-medium">
+                                    Choose your city from the dropdown list to explore partner hospitals and facilities near you.
+                                </p>
                             </div>
 
                             <div className="space-y-4">
-                                {/* Auto Geolocation Trigger */}
-                                <button 
-                                    onClick={handleUseMyLocation}
-                                    disabled={geocodingLoading}
-                                    className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:scale-100 text-sm"
-                                >
-                                    <MapPin className="w-4 h-4" /> 
-                                    {geocodingLoading ? 'Detecting Location...' : 'Use My Current Location'}
-                                </button>
-
-                                <div className="relative flex py-2 items-center">
-                                    <div className="flex-grow border-t border-slate-100"></div>
-                                    <span className="flex-shrink mx-4 text-slate-400 text-[10px] font-black uppercase tracking-wider">Or select manually</span>
-                                    <div className="flex-grow border-t border-slate-100"></div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                        City Location
+                                    </label>
+                                    <div className="relative">
+                                        <select 
+                                            value={selectedCity} 
+                                            onChange={(e) => {
+                                                handleSelectCity(e.target.value);
+                                            }}
+                                            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 text-slate-800 font-bold shadow-sm cursor-pointer appearance-none"
+                                        >
+                                            <option value="">All Cities (Show Everything)</option>
+                                            {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <ChevronRight className="w-4 h-4 rotate-90" />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Manual Selector dropdown */}
-                                <select 
-                                    value={selectedCity} 
-                                    onChange={(e) => {
-                                        if (e.target.value) handleSelectCity(e.target.value);
-                                    }}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 text-slate-800 font-bold shadow-sm cursor-pointer"
+                                <button
+                                    onClick={() => setShowCityModal(false)}
+                                    className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all text-sm active:scale-95"
                                 >
-                                    <option value="" disabled>Select your city...</option>
-                                    {cities.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
+                                    Confirm City Selection
+                                </button>
                             </div>
                         </motion.div>
                     </div>
