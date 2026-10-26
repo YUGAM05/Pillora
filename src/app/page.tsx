@@ -50,10 +50,22 @@ function HealthTipsSection() {
     return (
         <section className="max-w-7xl mx-auto px-6 pb-16">
             <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Health Tips of the Day</h2>
+                <div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Health Tips of the Day</h2>
+                    <p className="text-sm text-gray-500 mt-1">Simple daily actions with clinically proven long-term benefits</p>
+                </div>
+                <Link
+                    href="/health-hub"
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-700 hidden sm:inline-flex items-center gap-1"
+                >
+                    View All Tips &rarr;
+                </Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row group transition-all hover:shadow-xl hover:-translate-y-1">
+                <Link
+                    href="/health-hub/hydration-science-metabolism"
+                    className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+                >
                     <div className="w-full md:w-2/5 h-48 md:h-auto relative overflow-hidden">
                         <Image 
                             src="/tip1.png" 
@@ -63,13 +75,19 @@ function HealthTipsSection() {
                         />
                     </div>
                     <div className="p-6 md:p-8 flex flex-col justify-center flex-1">
-                        <div className="bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Wellness</div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Hydration is Key</h3>
-                        <p className="text-gray-600 text-sm leading-relaxed">Starting your day with a glass of warm water helps kickstart your metabolism and flushes out toxins from your body.</p>
+                        <div className="bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Preventive Wellness</div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">Hydration is Key</h3>
+                        <p className="text-gray-600 text-sm leading-relaxed mb-4">Starting your day with a glass of warm water helps kickstart your metabolism and flushes out toxins from your body.</p>
+                        <span className="text-xs font-bold text-blue-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                            Read Full Article &rarr;
+                        </span>
                     </div>
-                </div>
+                </Link>
 
-                <div className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row group transition-all hover:shadow-xl hover:-translate-y-1">
+                <Link
+                    href="/health-hub/eat-the-rainbow-antioxidants"
+                    className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+                >
                     <div className="w-full md:w-2/5 h-48 md:h-auto relative overflow-hidden">
                         <Image 
                             src="/tip2.png" 
@@ -79,11 +97,14 @@ function HealthTipsSection() {
                         />
                     </div>
                     <div className="p-6 md:p-8 flex flex-col justify-center flex-1">
-                        <div className="bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Nutrition</div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Eat the Rainbow</h3>
-                        <p className="text-gray-600 text-sm leading-relaxed">Incorporate a variety of colorful fruits and vegetables into your meals to ensure you get a wide spectrum of essential vitamins.</p>
+                        <div className="bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Nutrition & Diet</div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">Eat the Rainbow</h3>
+                        <p className="text-gray-600 text-sm leading-relaxed mb-4">Incorporate a variety of colorful fruits and vegetables into your meals to ensure you get a wide spectrum of essential vitamins.</p>
+                        <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                            Read Full Article &rarr;
+                        </span>
                     </div>
-                </div>
+                </Link>
             </div>
         </section>
     );
