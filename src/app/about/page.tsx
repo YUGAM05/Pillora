@@ -81,7 +81,7 @@ export default function AboutPage() {
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-600 via-red-600 to-rose-700">Built for the Moments that Cannot Wait</span>
                         </h1>
                         <p className="text-xl md:text-2xl text-slate-600 leading-relaxed mb-8 max-w-4xl mx-auto font-medium">
-                            Pillora is an emerging healthcare coordination platform built for the moments that cannot wait. We connect patients with verified blood donors, deliver transparent hospital pricing, show which government schemes are accepted, and facilitate seamless appointment booking—all from a single platform.
+                            Pillora is an emerging healthcare coordination platform built for the moments that cannot wait. We connect patients with registered blood donors, deliver transparent hospital pricing, show which government schemes are accepted, and facilitate seamless appointment booking—all from a single platform.
                         </p>
                     </motion.div>
                 </div>
@@ -91,7 +91,7 @@ export default function AboutPage() {
             <AboutVideoPlayer
                 src="/PILLORA.mp4"
                 title="Experience Pillora in Motion"
-                subtitle="Discover how Pillora bridges patients with verified blood donors, transparent hospital pricing, and instant care coordination."
+                subtitle="Discover how Pillora bridges patients with registered blood donors, transparent hospital pricing, and instant care coordination."
                 badgeText="Official Intro Film"
                 accentColor="rose"
             />
@@ -130,7 +130,7 @@ export default function AboutPage() {
                                     Who We Are
                                 </h2>
                                 <p className="text-lg text-slate-600 leading-relaxed font-medium mb-4">
-                                    Pillora is an emerging healthcare coordination platform built for the moments that cannot wait. We connect patients with verified blood donors, deliver transparent hospital pricing, show which government schemes are accepted at each hospital, and facilitate seamless appointment booking—all from a single platform.
+                                    Pillora is an emerging healthcare coordination platform built for the moments that cannot wait. We connect patients with registered blood donors, deliver transparent hospital pricing, show which government schemes are accepted at each hospital, and facilitate seamless appointment booking—all from a single platform.
                                 </p>
                                 <p className="text-lg text-slate-600 leading-relaxed font-medium">
                                     Founded in 2026 and based in Ahmedabad, Gujarat, Pillora was born from a frustrating but universal truth: when someone needs blood urgently or wants to understand what a hospital procedure will cost, the healthcare system offers no reliable, fast, or transparent answer. Our aim is to have a one-stop solution for this, bridging the gap between people in need and the resources available around them.
@@ -169,7 +169,7 @@ export default function AboutPage() {
                                 </div>
                                 <h3 className="text-3xl font-black text-slate-900 mb-4">Blood Connect</h3>
                                 <p className="text-lg text-slate-600 leading-relaxed mb-6 font-medium">
-                                    Our flagship feature helps streamline the search for blood during emergencies. A patient enters their required blood group and location, and Pillora immediately notifies verified donors in the area to help speed up the search.
+                                    Our flagship feature helps streamline the search for blood during emergencies. A patient enters their required blood group and location, and Pillora finds registered donors in the area and shares their contact details after an ID check, to help speed up the search.
                                 </p>
                             </div>
                             <div className="bg-white/80 backdrop-blur-sm border border-rose-200 p-6 rounded-2xl shadow-sm mt-4">
@@ -230,7 +230,7 @@ export default function AboutPage() {
                             </div>
                             <h3 className="text-2xl font-black text-slate-900 mb-4">Appointment Booking</h3>
                             <p className="text-slate-600 leading-relaxed font-medium text-sm">
-                                Patients can book appointments with verified doctors across partner hospitals directly through Pillora. We verify doctor credentials, show real-time slot availability, and send reminders—reducing no-shows and saving time for both patients and hospitals.
+                                Patients can book appointments with verified doctors across partner hospitals directly through Pillora. We verify doctor credentials, show available slots, and send reminders—reducing no-shows and saving time for both patients and hospitals.
                             </p>
                         </div>
 
@@ -272,7 +272,7 @@ export default function AboutPage() {
                             },
                             {
                                 title: "Verified Networks",
-                                desc: "Only verified doctors and donor profiles—no unverified public listings.",
+                                desc: "Only verified doctors and registered donor profiles.",
                                 icon: ShieldCheck,
                                 colorClass: "text-emerald-500 bg-emerald-50 border-emerald-100"
                             },
@@ -284,7 +284,7 @@ export default function AboutPage() {
                             },
                             {
                                 title: "Government Schemes",
-                                desc: "Real-time visibility into scheme acceptance per hospital.",
+                                desc: "Clear visibility into scheme acceptance per hospital.",
                                 icon: Building2,
                                 colorClass: "text-indigo-500 bg-indigo-50 border-indigo-100"
                             },

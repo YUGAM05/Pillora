@@ -41,6 +41,11 @@ export interface HealthArticle {
     draft?: boolean;
     /** true until a named doctor has reviewed it: the page never claims a review. */
     reviewPending?: boolean;
+    /**
+     * Recorded medical review. The article shows "Medically reviewed" ONLY when
+     * this is set. TODO(reviewer): fill in for each article once a doctor reviews it.
+     */
+    reviewedBy?: { name: string; credentials?: string; date?: string };
     /** Official sources shown at the end of the article. */
     sources?: { title: string; url?: string }[];
 }
@@ -495,7 +500,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
                     'Heat Exhaustion: Move to shade or AC, loosen tight clothing, sip cool salted water, and apply damp cloths to neck and underarms.',
                     'Nosebleeds: Lean forward slightly (never tilt head backward), pinch soft part of nose firmly for 10 full minutes without releasing.'
                 ],
-                callout: 'Pillora Emergency Network: You can quickly find nearby verified emergency blood donors, verified blood banks, and hospital facilities across the Pillora platform 24/7.'
+                callout: 'On Pillora you can find registered blood donors and hospital information. In an emergency, also contact the nearest hospital or licensed blood bank, or call 108.'
             }
         ],
         faqs: [
@@ -598,7 +603,7 @@ export function mapApiHealthTip(d: any): HealthArticle {
         date: d.date || new Date().toISOString(),
         author: d.author || {
             name: 'Pillora Health Team',
-            role: 'Medical Review Board',
+            role: 'Health information',
             avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80'
         },
         mediaType: d.mediaType || 'image',
@@ -607,7 +612,7 @@ export function mapApiHealthTip(d: any): HealthArticle {
         linkUrl: d.linkUrl,
         tags: d.tags || ['Healthcare', 'Wellness'],
         keyTakeaways: [
-            'Evidence-based wellness recommendation reviewed by Pillora clinical experts.'
+            'Health tip from the Pillora Health Hub.'
         ],
         sections: [
             {

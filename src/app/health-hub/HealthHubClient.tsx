@@ -297,7 +297,7 @@ export default function HealthHubPage({ initialTips = null }: { initialTips?: Dy
                                 {selectedCategory === 'All' ? 'All Health Articles & Medical Guides' : `${selectedCategory} Articles`}
                             </h2>
                             <p className="text-sm text-gray-500 mt-1">
-                                Showing {filteredArticles.length} verified health resources
+                                Showing {filteredArticles.length} health resources
                             </p>
                         </div>
                     </div>
@@ -487,7 +487,7 @@ export default function HealthHubPage({ initialTips = null }: { initialTips?: Dy
                             Need Immediate Medical Help or Emergency Blood?
                         </h3>
                         <p className="text-blue-100/80 text-sm leading-relaxed">
-                            Access verified blood donors near your GPS location in real time, or explore accredited multi-speciality hospital networks with live bed availability.
+                            Find registered blood donors in your area, or explore hospitals with their doctors, consultation fees and accepted government schemes.
                         </p>
                     </div>
 

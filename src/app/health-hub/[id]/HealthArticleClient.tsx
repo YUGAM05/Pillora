@@ -124,7 +124,7 @@ export default function HealthTipDetailPage({ initialArticle = null }: { initial
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{error || 'Article not found'}</h2>
                 <p className="text-gray-500 max-w-md mb-6">
-                    The health resource you are looking for may have moved or been updated. Explore our full library of verified guides below.
+                    The health resource you are looking for may have moved or been updated. Explore our full library of guides below.
                 </p>
                 <Link
                     href="/health-hub"
@@ -137,6 +137,8 @@ export default function HealthTipDetailPage({ initialArticle = null }: { initial
     }
 
     const relatedArticles = getRelatedHealthArticles(article._id, article.category);
+    // "Medically Verified" only when a doctor review is actually recorded in the data.
+    const reviewRecorded = !!article.reviewedBy?.name && !article.reviewPending;
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50/30 via-white to-gray-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -255,13 +257,13 @@ export default function HealthTipDetailPage({ initialArticle = null }: { initial
                                         <h4 className="font-bold text-gray-900 text-sm sm:text-base">
                                             {article.author.name}
                                         </h4>
-                                        {!article.reviewPending && <ShieldCheck className="w-4 h-4 text-emerald-600" />}
+                                        {reviewRecorded && <ShieldCheck className="w-4 h-4 text-emerald-600" />}
                                     </div>
                                     <p className="text-xs text-gray-500 font-medium">
                                         {/* Articles with reviewPending never claim a medical review */}
-                                        {article.reviewPending
-                                            ? <>{article.author.role} • Medical review pending</>
-                                            : <>{article.author.role} • Medically Verified</>}
+                                        {reviewRecorded
+                                            ? <>{article.author.role} • Medically reviewed by {article.reviewedBy!.name}{article.reviewedBy!.credentials ? `, ${article.reviewedBy!.credentials}` : ""}</>
+                                            : <>{article.author.role} • Medical review pending</>}
                                     </p>
                                 </div>
                             </div>
@@ -414,11 +416,11 @@ export default function HealthTipDetailPage({ initialArticle = null }: { initial
                         )}
 
                         {/* Medical Advisory Box */}
-                        {article.reviewPending ? (
+                        {!reviewRecorded ? (
                             <div className="bg-amber-50 rounded-2xl p-5 border border-amber-200 text-xs text-amber-900 leading-relaxed space-y-1">
                                 <p className="font-bold uppercase tracking-wider">Medical review pending</p>
                                 <p>
-                                    This article summarises official guidance listed in the sources above. It has not yet been reviewed by a doctor and does not replace advice from a doctor or your blood centre. In an emergency, contact the nearest hospital or licensed blood bank, or call 108.
+                                    This article is general health information and has not yet been reviewed by a doctor. It does not replace advice from your doctor. In an emergency, call 108 or go to the nearest hospital.
                                 </p>
                             </div>
                         ) : (
@@ -427,7 +429,7 @@ export default function HealthTipDetailPage({ initialArticle = null }: { initial
                                 Medical Advisory & Clinical Review
                             </p>
                             <p>
-                                This article is published by Pillora’s Medical Communications Board in consultation with verified clinicians. It does not replace individualized clinical diagnosis. If you are experiencing concerning symptoms, consult a doctor or emergency services immediately.
+                                This article was medically reviewed by {article.reviewedBy?.name}{article.reviewedBy?.credentials ? `, ${article.reviewedBy.credentials}` : ""}. It does not replace individualized clinical diagnosis. If you are experiencing concerning symptoms, consult a doctor or emergency services immediately.
                             </p>
                         </div>
                         )}

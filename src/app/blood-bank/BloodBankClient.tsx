@@ -1163,7 +1163,7 @@ function RequestForm() {
                 </motion.div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">Request Broadcasted</h2>
                 <p className="text-gray-600 max-w-md mx-auto mb-8">
-                    We have notified donors in your vicinity. Our automated system is calling verified donors now. check your mail for your request
+                    Your request has been received. After your ID check, we will send you the contact details of matching registered donors by WhatsApp and email. Check your mail for your request.
                 </p>
                 {kycStatus === 'Verified' && (
                     <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl mb-8 max-w-lg mx-auto flex items-start gap-4 text-left shadow-sm shadow-green-100/50">
