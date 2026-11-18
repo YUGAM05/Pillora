@@ -1,8 +1,16 @@
 import { BLOOD_DONATION_DRAFTS } from '@/content/bloodDonationArticles';
+import { HEALTH_HUB_BYLINE } from '@/content/healthHubByline';
 
+/**
+ * Article author. Health Hub articles use HEALTH_HUB_BYLINE (src/content/healthHubByline.ts)
+ * until a genuine author is confirmed. TODO(real-authors): fill these for real authors only.
+ */
 export interface AuthorInfo {
     name: string;
     role: string;
+    /** Professional credentials, e.g. "MBBS, MD". Only for a confirmed, real author. */
+    credentials?: string;
+    /** Real photo of the author, used with written consent. Never a stock photo. */
     avatar?: string;
 }
 
@@ -76,11 +84,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Preventive Wellness',
         readTime: '4 min read',
         date: '2026-03-24',
-        author: {
-            name: 'Dr. Ananya Sharma',
-            role: 'Preventive Medicine Specialist',
-            avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: '/tip1.jpg',
         tags: ['Hydration', 'Metabolism', 'Detox', 'Wellness', 'Daily Habits'],
@@ -140,11 +144,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Nutrition & Diet',
         readTime: '5 min read',
         date: '2026-03-23',
-        author: {
-            name: 'Rhea Sen, RD',
-            role: 'Clinical Nutritionist & Dietitian',
-            avatar: 'https://images.unsplash.com/photo-1594824813583-0504d60920a0?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: '/tip2.jpg',
         tags: ['Nutrition', 'Antioxidants', 'Diet', 'Vitamins', 'Longevity'],
@@ -194,11 +194,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Heart Health',
         readTime: '6 min read',
         date: '2026-03-22',
-        author: {
-            name: 'Dr. Arvind Mehta',
-            role: 'Senior Consultant Cardiologist',
-            avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: 'https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=1200&auto=format&fit=crop&q=80',
         tags: ['Heart', 'Cardio', 'Blood Pressure', 'Cholesterol', 'Longevity'],
@@ -253,11 +249,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Diagnostics & Labs',
         readTime: '7 min read',
         date: '2026-03-20',
-        author: {
-            name: 'Dr. Priya Nair, MD',
-            role: 'Pathologist & Diagnostic Consultant',
-            avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1200&auto=format&fit=crop&q=80',
         tags: ['Blood Test', 'CBC', 'Cholesterol', 'HbA1c', 'Diagnostics'],
@@ -309,11 +301,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Mental Health',
         readTime: '5 min read',
         date: '2026-03-18',
-        author: {
-            name: 'Dr. K. S. Ramanujam',
-            role: 'Neuropsychiatrist & Behavioral Specialist',
-            avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&auto=format&fit=crop&q=80',
         tags: ['Mental Health', 'Anxiety', 'Stress', 'Mindfulness', 'Neuroscience'],
@@ -360,11 +348,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Diabetes & Chronic',
         readTime: '6 min read',
         date: '2026-03-15',
-        author: {
-            name: 'Dr. Vikram Sethi',
-            role: 'Endocrinologist & Diabetologist',
-            avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&auto=format&fit=crop&q=80',
         tags: ['Diabetes', 'Blood Sugar', 'Insulin', 'Diet', 'Endocrinology'],
@@ -410,11 +394,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Preventive Wellness',
         readTime: '5 min read',
         date: '2026-03-12',
-        author: {
-            name: 'Dr. Sneha Roy',
-            role: 'Immunologist & Public Health Researcher',
-            avatar: 'https://images.unsplash.com/photo-1594824813583-0504d60920a0?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: 'https://images.unsplash.com/photo-1584362917165-526a968579e8?w=1200&auto=format&fit=crop&q=80',
         tags: ['Immunity', 'Vitamins', 'Gut Health', 'Vaccines', 'Wellness'],
@@ -461,11 +441,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Emergency & First Aid',
         readTime: '6 min read',
         date: '2026-03-10',
-        author: {
-            name: 'Dr. Rajesh K. Varma',
-            role: 'Chief of Emergency Medicine',
-            avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=1200&auto=format&fit=crop&q=80',
         tags: ['First Aid', 'Emergency', 'Stroke', 'CPR', 'Choking'],
@@ -517,11 +493,7 @@ export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
         category: 'Sleep & Recovery',
         readTime: '5 min read',
         date: '2026-03-08',
-        author: {
-            name: 'Dr. K. S. Ramanujam',
-            role: 'Neuropsychiatrist & Sleep Medicine Consultant',
-            avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80'
-        },
+        author: HEALTH_HUB_BYLINE,
         mediaType: 'image',
         imageUrl: 'https://images.unsplash.com/photo-1511295742362-92c96b124e52?w=1200&auto=format&fit=crop&q=80',
         tags: ['Sleep', 'Circadian', 'Brain Health', 'Melatonin', 'Recovery'],
@@ -601,11 +573,7 @@ export function mapApiHealthTip(d: any): HealthArticle {
         category: d.category || 'Clinical Guidance',
         readTime: d.readTime || '4 min read',
         date: d.date || new Date().toISOString(),
-        author: d.author || {
-            name: 'Pillora Health Team',
-            role: 'Health information',
-            avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80'
-        },
+        author: d.author || HEALTH_HUB_BYLINE,
         mediaType: d.mediaType || 'image',
         imageUrl: d.imageUrl,
         videoUrl: d.videoUrl,

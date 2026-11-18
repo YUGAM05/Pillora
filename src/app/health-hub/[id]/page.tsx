@@ -7,6 +7,7 @@ import {
     type HealthArticle,
 } from "@/data/healthHubData";
 import { serverGet } from "@/lib/serverApi";
+import { HEALTH_HUB_BYLINE } from "@/content/healthHubByline";
 import { noIndexMetadata, pageMetadata } from "@/lib/seo";
 import { JsonLd, articleJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/structuredData";
 
@@ -58,7 +59,8 @@ export default async function HealthArticlePage({ params }: Params) {
                             path,
                             image: article.imageUrl,
                             datePublished: article.date,
-                            authorName: article.author?.name,
+                            // The neutral Health Hub byline is an organisation, not a person.
+                            authorName: article.author && article.author.name !== HEALTH_HUB_BYLINE.name ? article.author.name : undefined,
                         }),
                         breadcrumbJsonLd([
                             { name: "Home", path: "/" },

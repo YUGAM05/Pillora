@@ -6,6 +6,7 @@ import { Calendar, ArrowRight, Activity, Clock, ShieldCheck } from 'lucide-react
 import { UNVERIFIED_CLAIMS } from "@/content/claims";
 import Image from 'next/image';
 import { HEALTH_HUB_ARTICLES, HealthArticle } from '@/data/healthHubData';
+import { HEALTH_HUB_BYLINE } from '@/content/healthHubByline';
 
 export default function HealthHubSection() {
     const [tips, setTips] = useState<HealthArticle[]>([]);
@@ -27,10 +28,7 @@ export default function HealthHubSection() {
                         category: d.category || 'Clinical Guidance',
                         readTime: d.readTime || '4 min read',
                         date: d.date || new Date().toISOString(),
-                        author: d.author || {
-                            name: 'Pillora Health Team',
-                            role: 'Medical Reviewer'
-                        },
+                        author: d.author || HEALTH_HUB_BYLINE,
                         mediaType: d.mediaType || 'image',
                         imageUrl: d.imageUrl,
                         videoUrl: d.videoUrl,

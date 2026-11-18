@@ -25,6 +25,7 @@ import {
     HEALTH_CATEGORIES, 
     HealthArticle 
 } from '@/data/healthHubData';
+import { HEALTH_HUB_BYLINE } from '@/content/healthHubByline';
 
 export interface DynamicTip {
     _id: string;
@@ -83,11 +84,7 @@ export default function HealthHubPage({ initialTips = null }: { initialTips?: Dy
             category: dt.category || 'Wellness News',
             readTime: dt.readTime || '3 min read',
             date: dt.date || new Date().toISOString(),
-            author: dt.author || {
-                name: 'Pillora Health Advisory',
-                role: 'Editorial Board',
-                avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80'
-            },
+            author: dt.author || HEALTH_HUB_BYLINE,
             mediaType: dt.mediaType || 'image',
             imageUrl: dt.imageUrl,
             videoUrl: dt.videoUrl,
@@ -240,8 +237,14 @@ export default function HealthHubPage({ initialTips = null }: { initialTips?: Dy
                                     </Link>
 
                                     <div className="flex items-center gap-2 text-xs text-blue-200">
-                                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                        <span>Medically Reviewed by {featuredArticle.author.name}</span>
+                                        {featuredArticle.reviewedBy?.name && !featuredArticle.reviewPending ? (
+                                            <>
+                                                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                                                <span>Medically reviewed by {featuredArticle.reviewedBy.name}</span>
+                                            </>
+                                        ) : (
+                                            <span>Medical review pending</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

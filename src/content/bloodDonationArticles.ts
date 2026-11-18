@@ -1,4 +1,5 @@
 import type { HealthArticle } from '@/data/healthHubData';
+import { HEALTH_HUB_BYLINE } from '@/content/healthHubByline';
 import {
     AGE_GUIDANCE,
     ELIGIBILITY_POINTS,
@@ -19,11 +20,8 @@ import {
  * draft: false, reviewPending: false and the real publication date.
  */
 
-const AUTHOR = {
-    name: 'Pillora Editorial Team',
-    // TODO(reviewer): add the reviewing doctor's name and credentials once confirmed.
-    role: 'Health information',
-};
+// TODO(reviewer): record the reviewing doctor in `reviewedBy` once confirmed (not in the byline).
+const AUTHOR = HEALTH_HUB_BYLINE;
 
 export const BLOOD_DONATION_DRAFTS: HealthArticle[] = [
     {
