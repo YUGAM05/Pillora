@@ -45,6 +45,13 @@ interface Hospital {
     doctors?: Doctor[];
 }
 
+/** True for a real value; false for empty or placeholder text like "N/A", "-", "na", "none". */
+function isRealValue(v: unknown): v is string {
+    if (typeof v !== 'string') return false;
+    const t = v.trim().toLowerCase();
+    return t !== '' && !['n/a', 'na', '-', '—', 'none', 'null', 'undefined', '0'].includes(t);
+}
+
 function stripHtml(str: string): string {
     if (!str) return '';
     return str
@@ -854,7 +861,7 @@ export default function HospitalDetailPage() {
         if (h.phoneNumbers && h.phoneNumbers.length > 0) {
             list.push(...h.phoneNumbers);
         }
-        return Array.from(new Set(list)).filter(Boolean);
+        return Array.from(new Set(list)).filter(isRealValue);
     };
 
     const getMapUrl = (h: Hospital) =>
@@ -873,6 +880,13 @@ export default function HospitalDetailPage() {
         };
         if (params.slug) fetchHospital();
     }, [params.slug]);
+
+    // Give each hospital page its own browser-tab / share title
+    useEffect(() => {
+        if (hospital?.name) {
+            document.title = `${hospital.name}${hospital.city ? `, ${hospital.city}` : ''} – Doctors, Fees & Booking | Pillora`;
+        }
+    }, [hospital?.name, hospital?.city]);
 
     const parsedDesc = React.useMemo(() => {
         return parseHospitalDescription(hospital?.description || '');
@@ -1012,7 +1026,11 @@ export default function HospitalDetailPage() {
                                 icon={<Ambulance className="w-5 h-5" />}
                                 label="Hospital Contact No"
                                 color="rose"
-                                value={hospital.ambulanceContact || '—'}
+                                value={
+                                    isRealValue(hospital.ambulanceContact)
+                                        ? <a href={`tel:${hospital.ambulanceContact}`} className="hover:underline">{hospital.ambulanceContact}</a>
+                                        : <span className="text-slate-400 text-sm font-bold">Not provided</span>
+                                }
                                 valueClass="font-black text-rose-600 text-base"
                             />
                             <StatCard
@@ -1037,13 +1055,13 @@ export default function HospitalDetailPage() {
                             />
                         </div>
 
-                        {/* Contact Card */}
+                        {/* Contact Card — only when the hospital has listed numbers */}
+                        {phones.length > 0 && (
                         <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
                             <h3 className="text-base sm:text-lg font-black text-slate-900 mb-5 pb-3 border-b border-slate-50 flex items-center gap-2">
                                 <span className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Phone className="w-4 h-4" /></span>
                                 Contact Details
                             </h3>
-                            {phones.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {phones.map((ph, i) => (
                                         <a href={`tel:${ph}`} key={i}
@@ -1058,10 +1076,8 @@ export default function HospitalDetailPage() {
                                         </a>
                                     ))}
                                 </div>
-                            ) : (
-                                <p className="text-slate-450 text-sm font-bold">No contact numbers listed.</p>
-                            )}
                         </div>
+                        )}
 
                         {/* Doctors */}
                         {hospital.doctors && hospital.doctors.length > 0 && (

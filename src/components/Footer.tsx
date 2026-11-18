@@ -12,7 +12,7 @@ export default function Footer() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             <Image
-                                src="/logo.png"
+                                src="/logo-sm.png"
                                 alt="Pillora"
                                 width={72}
                                 height={72}
@@ -20,7 +20,7 @@ export default function Footer() {
                                 unoptimized
                             />
                             <Image
-                                src="/pillora-text.png"
+                                src="/pillora-text-sm.png"
                                 alt="Pillora"
                                 width={240}
                                 height={80}

@@ -64,7 +64,7 @@ export const HEALTH_HUB_ARTICLES: HealthArticle[] = [
             avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80'
         },
         mediaType: 'image',
-        imageUrl: '/tip1.png',
+        imageUrl: '/tip1.jpg',
         tags: ['Hydration', 'Metabolism', 'Detox', 'Wellness', 'Daily Habits'],
         featured: true,
         description: 'Starting your day with clean warm water activates your internal organs, kickstarts cellular metabolism, and aids kidney filtration after hours of sleep.',
@@ -128,7 +128,7 @@ export const HEALTH_HUB_ARTICLES: HealthArticle[] = [
             avatar: 'https://images.unsplash.com/photo-1594824813583-0504d60920a0?w=150&auto=format&fit=crop&q=80'
         },
         mediaType: 'image',
-        imageUrl: '/tip2.png',
+        imageUrl: '/tip2.jpg',
         tags: ['Nutrition', 'Antioxidants', 'Diet', 'Vitamins', 'Longevity'],
         featured: false,
         description: 'Incorporate deeply pigmented fruits and vegetables into your meals to shield cells against oxidative stress, chronic inflammation, and premature aging.',

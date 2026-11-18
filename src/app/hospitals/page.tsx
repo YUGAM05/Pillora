@@ -188,27 +188,34 @@ export default function HospitalsPage() {
         const loadCities = async () => {
             try {
                 const res = await api.get('/hospitals/cities');
-                if (Array.isArray(res.data) && res.data.length > 0) {
-                    const uniqueCities = Array.from(new Set([
-                        ...res.data.filter(Boolean),
-                        'Ahmedabad', 'Surendranagar', 'Vadodara', 'Gandhinagar', 'Surat', 'Rajkot'
-                    ])).sort();
-                    setCities(uniqueCities);
-                } else {
-                    setCities(['Ahmedabad', 'Surendranagar', 'Vadodara', 'Gandhinagar', 'Surat', 'Rajkot']);
+                // Only list cities that actually have hospitals; de-duplicate
+                // case/whitespace variants ("surat" vs "Surat ").
+                const byKey = new Map<string, string>();
+                for (const c of Array.isArray(res.data) ? res.data : []) {
+                    if (typeof c !== 'string' || !c.trim()) continue;
+                    const key = c.trim().toLowerCase();
+                    if (!byKey.has(key)) byKey.set(key, c.trim());
                 }
+                setCities(Array.from(byKey.values()).sort());
             } catch (error) {
                 console.error("Failed to load cities", error);
-                setCities(['Ahmedabad', 'Surendranagar', 'Vadodara', 'Gandhinagar', 'Surat', 'Rajkot']);
+                setCities([]);
             }
         };
         loadCities();
 
-        const savedCity = localStorage.getItem('pillora_selected_city');
-        if (savedCity) {
-            setSelectedCity(savedCity);
-        } else {
-            setShowCityModal(true);
+        // Ask for a city only on the first visit — "All Cities" and closing
+        // the dialog are remembered too, so it doesn't pop up every time.
+        try {
+            const savedCity = localStorage.getItem('pillora_selected_city');
+            const prompted = localStorage.getItem('pillora_city_prompted');
+            if (savedCity) {
+                setSelectedCity(savedCity);
+            } else if (!prompted) {
+                setShowCityModal(true);
+            }
+        } catch {
+            /* storage unavailable — just show all hospitals */
         }
     }, []);
 
@@ -242,14 +249,30 @@ export default function HospitalsPage() {
     }, [selectedCity, selectedSpecs, isPmjayAccepted, selectedGovtSchemes, selectedTypes, selectedBedRanges, isEmergency247, isBookingAvailable, ratingThreshold, sortBy]);
 
     const handleSelectCity = (city: string) => {
-        if (city) {
-            localStorage.setItem('pillora_selected_city', city);
-        } else {
-            localStorage.removeItem('pillora_selected_city');
-        }
+        try {
+            if (city) {
+                localStorage.setItem('pillora_selected_city', city);
+            } else {
+                localStorage.removeItem('pillora_selected_city');
+            }
+            localStorage.setItem('pillora_city_prompted', '1');
+        } catch { /* ignore */ }
         setSelectedCity(city);
         setShowCityModal(false);
     };
+
+    const dismissCityModal = () => {
+        try { localStorage.setItem('pillora_city_prompted', '1'); } catch { /* ignore */ }
+        setShowCityModal(false);
+    };
+
+    // Lock page scroll while the city dialog is open
+    useEffect(() => {
+        if (!showCityModal) return;
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = prev; };
+    }, [showCityModal]);
 
     const handleChangeCity = () => {
         setShowCityModal(true);
@@ -912,7 +935,7 @@ export default function HospitalsPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setShowCityModal(false)}
+                            onClick={dismissCityModal}
                             className="fixed inset-0 bg-slate-950/60 backdrop-blur-md cursor-pointer"
                         />
                         {/* Modal Dialog Card */}
@@ -925,7 +948,7 @@ export default function HospitalsPage() {
                         >
                             {/* Close button */}
                             <button
-                                onClick={() => setShowCityModal(false)}
+                                onClick={dismissCityModal}
                                 className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                                 aria-label="Close modal"
                             >
@@ -965,7 +988,7 @@ export default function HospitalsPage() {
                                 </div>
 
                                 <button
-                                    onClick={() => setShowCityModal(false)}
+                                    onClick={dismissCityModal}
                                     className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition-all text-sm active:scale-95"
                                 >
                                     Confirm City Selection

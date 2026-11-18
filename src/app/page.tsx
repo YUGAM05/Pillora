@@ -5,7 +5,6 @@ import { CheckCircle, ShieldCheck, Upload, FileHeart, MapPin, Activity, UserChec
 import HealthHubSection from "@/components/HealthHubSection";
 import { getUser, getToken } from "@/lib/tokenStorage";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 interface FeatureItemProps {
     icon: React.ReactNode;
@@ -22,6 +21,9 @@ export default function Home() {
 
     return (
         <main className="bg-gradient-to-b from-blue-50/30 to-white min-h-screen pb-20">
+            {/* Page heading for search engines & screen readers (the visual hero rotates) */}
+            <h1 className="sr-only">Pillora — find blood donors, hospitals, doctors and government health schemes in India</h1>
+
             {/* 1. Rotating Banner Component (Hero) */}
             <div className="pt-6">
                 <RotatingBanner />
@@ -37,76 +39,9 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 3. Health Tips */}
-            <HealthTipsSection />
-
-            {/* 4. Health Hub */}
+            {/* 3. Health Hub (also covers the daily tips, so they are not repeated) */}
             <HealthHubSection />
         </main>
-    );
-}
-
-function HealthTipsSection() {
-    return (
-        <section className="max-w-7xl mx-auto px-6 pb-16">
-            <div className="flex items-center justify-between mb-8">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Health Tips of the Day</h2>
-                    <p className="text-sm text-gray-500 mt-1">Simple daily actions with clinically proven long-term benefits</p>
-                </div>
-                <Link
-                    href="/health-hub"
-                    className="text-sm font-semibold text-blue-600 hover:text-blue-700 hidden sm:inline-flex items-center gap-1"
-                >
-                    View All Tips &rarr;
-                </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Link
-                    href="/health-hub/hydration-science-metabolism"
-                    className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer"
-                >
-                    <div className="w-full md:w-2/5 h-48 md:h-auto relative overflow-hidden">
-                        <Image 
-                            src="/tip1.png" 
-                            alt="Stay Hydrated" 
-                            fill 
-                            className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                        />
-                    </div>
-                    <div className="p-6 md:p-8 flex flex-col justify-center flex-1">
-                        <div className="bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Preventive Wellness</div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">Hydration is Key</h3>
-                        <p className="text-gray-600 text-sm leading-relaxed mb-4">Starting your day with a glass of warm water helps kickstart your metabolism and flushes out toxins from your body.</p>
-                        <span className="text-xs font-bold text-blue-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                            Read Full Article &rarr;
-                        </span>
-                    </div>
-                </Link>
-
-                <Link
-                    href="/health-hub/eat-the-rainbow-antioxidants"
-                    className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 flex flex-col md:flex-row group transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer"
-                >
-                    <div className="w-full md:w-2/5 h-48 md:h-auto relative overflow-hidden">
-                        <Image 
-                            src="/tip2.png" 
-                            alt="Balanced Diet" 
-                            fill 
-                            className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                        />
-                    </div>
-                    <div className="p-6 md:p-8 flex flex-col justify-center flex-1">
-                        <div className="bg-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider py-1 px-3 rounded-full self-start mb-4">Nutrition & Diet</div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">Eat the Rainbow</h3>
-                        <p className="text-gray-600 text-sm leading-relaxed mb-4">Incorporate a variety of colorful fruits and vegetables into your meals to ensure you get a wide spectrum of essential vitamins.</p>
-                        <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                            Read Full Article &rarr;
-                        </span>
-                    </div>
-                </Link>
-            </div>
-        </section>
     );
 }
 
@@ -229,9 +164,12 @@ function RotatingBanner() {
                         <button
                             key={idx}
                             onClick={() => setCurrentSlide(idx)}
-                            className={`h-1.5 md:h-2.5 rounded-full transition-all duration-300 ${idx === currentSlide ? 'w-5 md:w-8 bg-white' : 'w-1.5 md:w-2.5 bg-white/40 hover:bg-white/60'}`}
+                            className="p-2 -m-1 flex items-center justify-center"
                             aria-label={`Go to slide ${idx + 1}`}
-                        />
+                            aria-current={idx === currentSlide}
+                        >
+                            <span className={`block h-1.5 md:h-2.5 rounded-full transition-all duration-300 ${idx === currentSlide ? 'w-5 md:w-8 bg-white' : 'w-1.5 md:w-2.5 bg-white/40 hover:bg-white/60'}`} />
+                        </button>
                     ))}
                 </div>
             </div>

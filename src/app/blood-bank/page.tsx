@@ -203,18 +203,17 @@ export default function BloodBankPage() {
                     >
                         <div className="flex flex-col items-center">
                             <div className="flex items-center gap-2 mb-0.5">
-                                <span className="text-xl md:text-2xl font-black text-white">85+</span>
-                                <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                {/* Static, verifiable figures — not presented as live counts */}
+                                <span className="text-xl md:text-2xl font-black text-white">250+</span>
                             </div>
-                            <span className="text-[9px] uppercase tracking-[0.2em] text-red-200 font-bold">Donors Online</span>
+                            <span className="text-[10px] uppercase tracking-[0.2em] text-red-100 font-bold">Registered Donors</span>
                         </div>
                         <div className="w-px h-8 bg-white/10" />
                         <div className="flex flex-col items-center">
                             <div className="flex items-center gap-2 mb-0.5">
-                                <span className="text-xl md:text-2xl font-black text-white">12</span>
-                                <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                                <span className="text-xl md:text-2xl font-black text-white">24/7</span>
                             </div>
-                            <span className="text-[9px] uppercase tracking-[0.2em] text-red-200 font-bold">Active Requests</span>
+                            <span className="text-[10px] uppercase tracking-[0.2em] text-red-100 font-bold">Request Support</span>
                         </div>
                     </motion.div>
                 </div>
@@ -454,7 +453,7 @@ function CertificateView({
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src="/pillora-logo-v2.svg" alt="Pillora Logo" style={{ width: '75px', height: '75px', objectFit: 'contain' }} crossOrigin="anonymous" />
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src="/pillora-text.png" alt="Pillora" style={{ height: '50px', width: 'auto' }} crossOrigin="anonymous" />
+                                <img src="/pillora-text-sm.png" alt="Pillora" style={{ height: '50px', width: 'auto' }} crossOrigin="anonymous" />
                             </div>
                         </div>
 
@@ -807,11 +806,16 @@ function DonateForm() {
                 </div>
                 <div>
                     <label className="text-sm font-bold text-gray-700 block mb-1.5 ml-1">Gender</label>
-                    <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none">
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Other</option>
-                    </select>
+                    <div className="relative">
+                        <select name="gender" value={formData.gender} onChange={handleChange} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none appearance-none">
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Other</option>
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label className="text-sm font-bold text-gray-700 block mb-1.5 ml-1">Phone Number</label>

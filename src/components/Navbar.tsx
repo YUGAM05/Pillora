@@ -67,16 +67,18 @@ export default function Navbar() {
                     {/* 1. Logo */}
                     <Link href="/" className="flex-shrink-0 flex items-center group">
                         <Image
-                            src="/logo.png"
+                            src="/logo-sm.png"
                             alt="Pillora"
+                            priority
                             width={72}
                             height={72}
                             className="w-14 h-14 xl:w-16 xl:h-16 object-contain object-right"
                             unoptimized
                         />
                         <Image
-                            src="/pillora-text.png"
+                            src="/pillora-text-sm.png"
                             alt="Pillora"
+                            priority
                             width={240}
                             height={80}
                             className="block h-14 sm:h-16 xl:h-[4.5rem] w-auto object-contain object-left -ml-1 sm:-ml-2 xl:-ml-3"
@@ -93,8 +95,7 @@ export default function Navbar() {
                                 <Link
                                     key={link.href}
                                     href={link.href}
-                                    className={`text-[13px] xl:text-sm font-semibold transition-colors flex items-center gap-1 whitespace-nowrap ${link.hideOnLowRes ? 'hidden min-[1250px]:flex' : 'flex'
-                                        } ${pathname === link.href ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'
+                                    className={`text-[13px] xl:text-sm font-semibold transition-colors flex items-center gap-1 whitespace-nowrap flex ${pathname === link.href ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'
                                         }`}
                                 >
                                     {link.isSpecial && pathname === link.href && (
@@ -160,12 +161,26 @@ export default function Navbar() {
                     {/* Mobile Menu Button */}
                     <div className="lg:hidden flex items-center gap-4">
                         {/* Mobile Menu Button Removed Cart */}
-                        <button onClick={() => setIsOpen(!isOpen)} className="text-gray-600 hover:text-gray-900 p-2">
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="text-gray-600 hover:text-gray-900 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                            aria-label={isOpen ? "Close menu" : "Open menu"}
+                            aria-expanded={isOpen}
+                        >
                             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
                     </div>
                 </div>
             </div>
+
+            {/* Dimmed backdrop behind the mobile menu; tap to close */}
+            {isOpen && (
+                <div
+                    className="fixed inset-x-0 top-20 bottom-0 bg-black/30 lg:hidden -z-10"
+                    onClick={() => setIsOpen(false)}
+                    aria-hidden="true"
+                />
+            )}
 
             {/* Mobile Menu Overlay */}
             {isOpen && (

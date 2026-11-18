@@ -2,10 +2,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { 
     Calendar, 
-    Loader2, 
     Play, 
     ExternalLink, 
     Video, 
@@ -57,10 +56,7 @@ export default function HealthHubPage() {
     useEffect(() => {
         const fetchTips = async () => {
             try {
-                const response = await axios.get(
-                    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/health-hub`,
-                    { timeout: 3500 }
-                );
+                const response = await api.get('/health-hub', { timeout: 3500 });
                 if (Array.isArray(response.data)) {
                     setDynamicTips(response.data);
                 }
@@ -144,16 +140,8 @@ export default function HealthHubPage() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-                <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-                <p className="text-slate-600 text-sm font-semibold tracking-wide animate-pulse">
-                    Loading verified health guidance...
-                </p>
-            </div>
-        );
-    }
+    // No full-page spinner: the curated library is bundled with the page and
+    // shows instantly; articles from the database are merged in when they arrive.
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-50/40 via-white to-slate-50 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
