@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import api from '@/lib/api';
+import { trackEvent } from '@/lib/analytics';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users,
@@ -104,6 +105,8 @@ export default function PartnersPage() {
             const response = await api.post('/partners/submit', data);
             
             if (response.data.success) {
+                // GA4 conversion (no personal data is sent)
+                trackEvent('partner_click', { action: 'inquiry_submitted' });
                 setFormSubmitted(true);
                 setTimeout(() => {
                     setActiveForm(null);

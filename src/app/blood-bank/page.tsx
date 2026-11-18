@@ -27,6 +27,7 @@ import {
 import NextImage from "next/image";
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/api';
+import { trackEvent } from '@/lib/analytics';
 import { getUser } from '@/lib/tokenStorage';
 import { socket } from '@/lib/socket';
 import { useRouter } from 'next/navigation';
@@ -699,6 +700,8 @@ function DonateForm() {
         setLoading(true);
         try {
             await api.post('/blood-bank/donors', { ...formData, location: [0, 0] });
+            // GA4 conversion (no personal or health data is sent)
+            trackEvent('donor_signup');
             const now = new Date();
             const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             const day = now.getDate();
@@ -1119,6 +1122,8 @@ function RequestForm() {
             });
             clearTimeout(timeoutId);
             console.log('[BloodRequest] Success:', response.data);
+            // GA4 conversion (no personal or health data is sent)
+            trackEvent('blood_request');
 
             setKycStatus(response.data.aiVerificationStatus || 'Pending');
             setKycRemarks(response.data.aiVerificationRemarks || '');
