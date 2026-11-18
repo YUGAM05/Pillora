@@ -1,7 +1,7 @@
 import type { HealthArticle } from '@/data/healthHubData';
 import {
+    AGE_GUIDANCE,
     ELIGIBILITY_POINTS,
-    PILLORA_DONOR_REGISTRATION_RULE,
     RED_CELL_COMPATIBILITY,
     SOURCES,
 } from '@/content/bloodConnect';
@@ -52,14 +52,17 @@ export const BLOOD_DONATION_DRAFTS: HealthArticle[] = [
                 paragraphs: [
                     'Blood donation in India follows the national donor selection guidelines of the National Blood Transfusion Council (NBTC). The government’s eRaktKosh portal summarises the main points for donors:',
                 ],
-                bulletPoints: ELIGIBILITY_POINTS.slice(0, 3),
+                bulletPoints: [
+                    `Age (national guidance, eRaktKosh): ${AGE_GUIDANCE.national.text}`,
+                    ...ELIGIBILITY_POINTS.slice(0, 2),
+                ],
             },
             {
                 heading: 'Reasons you may need to wait',
                 paragraphs: [
                     'Some situations mean you should wait before donating, to protect both you and the patient. The blood centre will ask about them before you donate:',
                 ],
-                bulletPoints: ELIGIBILITY_POINTS.slice(3, 6),
+                bulletPoints: ELIGIBILITY_POINTS.slice(2, 5),
             },
             {
                 heading: 'Who makes the final decision?',
@@ -76,7 +79,7 @@ export const BLOOD_DONATION_DRAFTS: HealthArticle[] = [
             {
                 heading: 'Registering as a donor on Pillora',
                 paragraphs: [
-                    `${PILLORA_DONOR_REGISTRATION_RULE} Registering means people who need your blood group in your area can contact you; you still donate at a hospital or licensed blood bank, which checks your eligibility first.`,
+                    `Age (Pillora’s own limit): ${AGE_GUIDANCE.pillora.text} You also need to be signed in. Registering means people who need your blood group in your area can contact you; you still donate at a hospital or licensed blood bank, which checks your eligibility first.`,
                 ],
                 callout:
                     'In an emergency, also contact the nearest hospital or licensed blood bank, or call 108. Pillora is not a blood bank.',
@@ -85,7 +88,7 @@ export const BLOOD_DONATION_DRAFTS: HealthArticle[] = [
         faqs: [
             {
                 question: 'What is the minimum age to donate blood in India?',
-                answer: 'The eRaktKosh guidance sets the minimum age for whole blood donation at 18 years. The upper age limit depends on the type of donation; the blood centre will confirm it.',
+                answer: 'National guidance (eRaktKosh): the minimum age for whole blood donation is 18 years, and the upper age limit depends on the type of donation; the blood centre will confirm it. Separately, Pillora’s own limit for registering as a donor is 18 to 60.',
             },
             {
                 question: 'How often can I donate blood?',

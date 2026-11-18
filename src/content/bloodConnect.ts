@@ -50,8 +50,27 @@ export const EMERGENCY_NOTE =
  * separate donation intervals for men and women, which could not be
  * confirmed from the primary NBTC document during drafting.
  */
+/**
+ * Donor age: Pillora's own limit and the national guidance are stated
+ * SEPARATELY, each with its source (owner decision, 19 Nov 2026).
+ * TODO(reviewer): a doctor should confirm the national upper age limit against
+ * the current NBTC guideline (eRaktKosh says it depends on the donation type;
+ * its questionnaire uses 18–65; older NACO material says 18–60).
+ */
+export const AGE_GUIDANCE = {
+    national: {
+        label: 'National guidance',
+        text: 'The minimum age for whole blood donation is 18. The maximum age depends on the type of donation; the blood centre will confirm it.',
+        source: { title: 'eRaktKosh FAQ (MoHFW)', url: 'https://eraktkosh.mohfw.gov.in/BLDAHIMS/bloodbank/eraktkoshfaq.cnt' },
+    },
+    pillora: {
+        label: 'Pillora’s own limit',
+        text: 'Pillora accepts donor registrations from age 18 to 60.',
+        source: { title: 'Pillora donor registration rule (checked when you register as a donor)' },
+    },
+} as const;
+
 export const ELIGIBILITY_POINTS: string[] = [
-    'You must be at least 18 years old. The upper age limit depends on the type of donation; the blood centre will confirm it.',
     'You should weigh at least 45 kg.',
     'Leave three to four months between whole blood donations.',
     'Do not donate if you have a fever or an infection, or are under the influence of alcohol.',
@@ -62,7 +81,7 @@ export const ELIGIBILITY_POINTS: string[] = [
 
 /** Pillora's own rule, enforced by the backend when you register as a donor. */
 export const PILLORA_DONOR_REGISTRATION_RULE =
-    'To register as a donor on Pillora you must be signed in and aged 18 to 60.';
+    'To register as a donor on Pillora you must be signed in and aged 18 to 60 (Pillora’s own limit).';
 
 /**
  * Red cell compatibility: which donor blood groups a patient can usually

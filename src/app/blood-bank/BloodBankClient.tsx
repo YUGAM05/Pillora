@@ -306,7 +306,7 @@ function BloodConnectInfoSidebar() {
                     <ul className="space-y-3">
                         <li className="flex gap-3 text-sm text-gray-600">
                             <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
-                            <span>Age must be between <strong>18-60 years</strong>.</span>
+                            <span>Pillora donor registration: age <strong>18–60 years</strong> (Pillora’s own limit). National guidance (eRaktKosh): minimum age <strong>18</strong>; the maximum depends on the type of donation.</span>
                         </li>
                         <li className="flex gap-3 text-sm text-gray-600">
                             <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import {
+    AGE_GUIDANCE,
     BLOOD_CONNECT_FAQS,
     DONOR_STEPS,
     ELIGIBILITY_POINTS,
     EMERGENCY_NOTE,
-    PILLORA_DONOR_REGISTRATION_RULE,
     RED_CELL_COMPATIBILITY,
     REQUEST_STEPS,
     SOURCES,
@@ -112,6 +112,20 @@ export default function BloodConnectGuide() {
                         Summary of the official guidance on the government&apos;s eRaktKosh portal. Donor selection in India follows the
                         National Blood Transfusion Council (NBTC) guidelines.
                     </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[AGE_GUIDANCE.national, AGE_GUIDANCE.pillora].map((g) => (
+                            <div key={g.label} className="bg-white border border-red-100 rounded-2xl p-4">
+                                <p className="text-xs font-bold text-red-600 uppercase tracking-wide">Age: {g.label}</p>
+                                <p className="text-sm text-gray-700 mt-1">{g.text}</p>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Source:{" "}
+                                    {"url" in g.source ? (
+                                        <a href={g.source.url} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline">{g.source.title}</a>
+                                    ) : g.source.title}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
                     <ul className="space-y-2">
                         {ELIGIBILITY_POINTS.map((p) => (
                             <li key={p} className="flex gap-3 text-sm text-gray-700">
@@ -120,7 +134,6 @@ export default function BloodConnectGuide() {
                             </li>
                         ))}
                     </ul>
-                    <p className="text-sm text-gray-600">{PILLORA_DONOR_REGISTRATION_RULE}</p>
                 </div>
 
                 <div id="compatibility" className="space-y-4 scroll-mt-24">
