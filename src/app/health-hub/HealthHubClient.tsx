@@ -190,7 +190,7 @@ export default function HealthHubPage({ initialTips = null }: { initialTips?: Dy
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1 shrink-0 mr-1">
                             <Filter className="w-3.5 h-3.5 text-gray-400" /> Topic:
                         </span>
-                        {HEALTH_CATEGORIES.map((cat) => (
+                        {HEALTH_CATEGORIES.filter((cat) => cat === 'All' || combinedArticles.some((a) => a.category === cat)).map((cat) => (
                             <button
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}

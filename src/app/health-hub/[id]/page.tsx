@@ -7,7 +7,7 @@ import {
     type HealthArticle,
 } from "@/data/healthHubData";
 import { serverGet } from "@/lib/serverApi";
-import { pageMetadata } from "@/lib/seo";
+import { noIndexMetadata, pageMetadata } from "@/lib/seo";
 import { JsonLd, articleJsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/structuredData";
 
 // Server wrapper: curated articles are pre-rendered at build time (bundled data);
@@ -29,14 +29,10 @@ async function getArticle(id: string): Promise<HealthArticle | null> {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
     const article = await getArticle(params.id);
-    if (!article) {
-        return pageMetadata({
-            title: "Health Hub Article | Pillora",
-            description: "Health articles and preventive care guidance from Pillora.",
-            path: `/health-hub/${params.id}`,
-            type: "article",
-        });
-    }
+    // Unknown id, unavailable API or a hidden draft: never indexable.
+    if (!article) return noIndexMetadata("Health Hub article");
+    // Drafts are never indexable, even in a draft-preview build.
+    if (article.draft) return noIndexMetadata(`Draft: ${article.title}`);
     return pageMetadata({
         title: `${article.title} | Pillora`,
         description: article.description,

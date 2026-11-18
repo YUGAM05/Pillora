@@ -1,3 +1,5 @@
+import { BLOOD_DONATION_DRAFTS } from '@/content/bloodDonationArticles';
+
 export interface AuthorInfo {
     name: string;
     role: string;
@@ -35,6 +37,12 @@ export interface HealthArticle {
     sections: ArticleSection[];
     faqs?: FAQItem[];
     aliases?: string[];
+    /** Draft articles are hidden everywhere unless NEXT_PUBLIC_SHOW_DRAFTS=true. */
+    draft?: boolean;
+    /** true until a named doctor has reviewed it: the page never claims a review. */
+    reviewPending?: boolean;
+    /** Official sources shown at the end of the article. */
+    sources?: { title: string; url?: string }[];
 }
 
 export const HEALTH_CATEGORIES = [
@@ -46,10 +54,15 @@ export const HEALTH_CATEGORIES = [
     'Diabetes & Chronic',
     'Preventive Wellness',
     'Emergency & First Aid',
-    'Sleep & Recovery'
+    'Sleep & Recovery',
+    'Blood Donation'
 ] as const;
 
-export const HEALTH_HUB_ARTICLES: HealthArticle[] = [
+/** Drafts are visible only in local review builds (NEXT_PUBLIC_SHOW_DRAFTS=true). */
+export const SHOW_DRAFTS = process.env.NEXT_PUBLIC_SHOW_DRAFTS === 'true';
+
+/** Every article, including drafts. Use HEALTH_HUB_ARTICLES for anything public. */
+export const ALL_HEALTH_HUB_ARTICLES: HealthArticle[] = [
     {
         _id: 'hydration-science-metabolism',
         slug: 'hydration-science-metabolism',
@@ -543,8 +556,12 @@ export const HEALTH_HUB_ARTICLES: HealthArticle[] = [
                 answer: 'While weekend catch-up sleep provides temporary relief, it does not fully reverse metabolic dysregulation and often induces "social jetlag," disrupting Sunday night sleep quality.'
             }
         ]
-    }
+    },
+    ...BLOOD_DONATION_DRAFTS
 ];
+
+/** Public articles: drafts are excluded unless NEXT_PUBLIC_SHOW_DRAFTS=true. */
+export const HEALTH_HUB_ARTICLES: HealthArticle[] = ALL_HEALTH_HUB_ARTICLES.filter((a) => SHOW_DRAFTS || !a.draft);
 
 export function getAllHealthArticles(): HealthArticle[] {
     return HEALTH_HUB_ARTICLES;

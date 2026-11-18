@@ -255,10 +255,13 @@ export default function HealthTipDetailPage({ initialArticle = null }: { initial
                                         <h4 className="font-bold text-gray-900 text-sm sm:text-base">
                                             {article.author.name}
                                         </h4>
-                                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                        {!article.reviewPending && <ShieldCheck className="w-4 h-4 text-emerald-600" />}
                                     </div>
                                     <p className="text-xs text-gray-500 font-medium">
-                                        {article.author.role} • Medically Verified
+                                        {/* Articles with reviewPending never claim a medical review */}
+                                        {article.reviewPending
+                                            ? <>{article.author.role} • Medical review pending</>
+                                            : <>{article.author.role} • Medically Verified</>}
                                     </p>
                                 </div>
                             </div>
@@ -396,7 +399,29 @@ export default function HealthTipDetailPage({ initialArticle = null }: { initial
                             </div>
                         )}
 
+                        {/* Sources (articles that cite official guidance) */}
+                        {article.sources && article.sources.length > 0 && (
+                            <div className="pt-6 border-t border-gray-100">
+                                <h2 className="text-base font-bold text-gray-900 mb-2">Sources</h2>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                                    {article.sources.map((s) => (
+                                        <li key={s.title}>
+                                            {s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{s.title}</a> : s.title}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
                         {/* Medical Advisory Box */}
+                        {article.reviewPending ? (
+                            <div className="bg-amber-50 rounded-2xl p-5 border border-amber-200 text-xs text-amber-900 leading-relaxed space-y-1">
+                                <p className="font-bold uppercase tracking-wider">Medical review pending</p>
+                                <p>
+                                    This article summarises official guidance listed in the sources above. It has not yet been reviewed by a doctor and does not replace advice from a doctor or your blood centre. In an emergency, contact the nearest hospital or licensed blood bank, or call 108.
+                                </p>
+                            </div>
+                        ) : (
                         <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-xs text-slate-500 leading-relaxed space-y-1">
                             <p className="font-bold text-slate-700 uppercase tracking-wider">
                                 Medical Advisory & Clinical Review
@@ -405,6 +430,7 @@ export default function HealthTipDetailPage({ initialArticle = null }: { initial
                                 This article is published by Pillora’s Medical Communications Board in consultation with verified clinicians. It does not replace individualized clinical diagnosis. If you are experiencing concerning symptoms, consult a doctor or emergency services immediately.
                             </p>
                         </div>
+                        )}
                     </div>
                 </article>
 
