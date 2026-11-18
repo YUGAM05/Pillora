@@ -48,6 +48,7 @@ export default function Footer() {
                             <li><Link href="/careers" className="hover:text-blue-600 transition-colors">Careers</Link></li>
                             <li><Link href="/blog" className="hover:text-blue-600 transition-colors">Blog</Link></li>
                             <li><Link href="/partners" className="hover:text-blue-600 transition-colors">Partner with us</Link></li>
+                            <li><a href="https://www.pillorahospital.in" className="hover:text-blue-600 transition-colors">Appointment software for hospitals &amp; clinics</a></li>
                         </ul>
                     </div>
 
@@ -57,6 +58,7 @@ export default function Footer() {
                         <ul className="space-y-3 text-sm text-gray-500">
                             <li><Link href="/blood-bank" className="hover:text-blue-600 transition-colors">Blood Connect</Link></li>
                             <li><Link href="/hospitals" className="hover:text-blue-600 transition-colors">Hospitals</Link></li>
+                            <li><Link href="/blood-donors" className="hover:text-blue-600 transition-colors">Blood donors by city</Link></li>
                         </ul>
                     </div>
 

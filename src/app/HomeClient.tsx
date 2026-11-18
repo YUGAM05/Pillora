@@ -13,7 +13,7 @@ interface FeatureItemProps {
     desc: string;
 }
 
-export default function Home() {
+export default function Home({ children }: { children?: React.ReactNode }) {
     const router = useRouter();
 
     // Removed automatic redirect to dashboard for logged-in users
@@ -39,6 +39,9 @@ export default function Home() {
                     <FeatureItem icon={<Landmark className="w-6 h-6 text-orange-500" />} title="Govt. Scheme Eligible" desc="Ayushman Bharat & more covered" />
                 </div>
             </section>
+
+            {/* Server-rendered section passed from page.tsx (crawlable links and copy) */}
+            {children}
 
             {/* 3. Health Hub (also covers the daily tips, so they are not repeated) */}
             <HealthHubSection />

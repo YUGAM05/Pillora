@@ -23,7 +23,7 @@ export const organizationJsonLd = () => ({
     url: SITE.url,
     logo: absoluteUrl(SITE.logo),
     description:
-        'Pillora is a healthcare technology platform in India that helps patients and families find verified blood donors, request blood, and look up hospital information, doctor availability, consultation fees and government health schemes.',
+        'Pillora is a healthcare technology platform in India that helps patients and families find registered blood donors, request blood, and look up hospital information, doctor availability, consultation fees and government health schemes.',
     sameAs: [...SITE.sameAs, SITE.hospitalSiteUrl],
     contactPoint: [
         {

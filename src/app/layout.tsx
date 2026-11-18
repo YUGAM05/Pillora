@@ -24,10 +24,10 @@ export const metadata: Metadata = {
     // purpose — a canonical set in the root layout is inherited by every page
     // and pointed them all at the homepage. Each page sets its own instead.
     title: {
-        default: "Find Verified Blood Donors in India | Pillora",
+        default: "Find Blood Donors Near You in India | Pillora",
         template: "%s | Pillora"
     },
-    description: "Request blood, find verified donors near you, and check hospital information, doctor fees and government health schemes in India on Pillora.",
+    description: "Request blood, find registered donors near you, and check hospital information, doctor fees and government health schemes in India on Pillora.",
     openGraph: {
         siteName: SITE.name,
         locale: SITE.locale,
