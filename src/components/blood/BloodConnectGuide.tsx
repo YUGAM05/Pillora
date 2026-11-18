@@ -150,7 +150,7 @@ export default function BloodConnectGuide() {
                     <h3 className="text-xl font-bold text-gray-900">Safety</h3>
                     <ul className="space-y-2 text-sm text-gray-700">
                         <li className="flex gap-3"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0" aria-hidden="true" /><span>Donation is voluntary and unpaid. Buying or selling blood is illegal in India; never pay or accept money.</span></li>
-                        <li className="flex gap-3"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0" aria-hidden="true" /><span>When you request blood, donor contact details are shared only after your Aadhaar or PAN check.</span></li>
+                        <li className="flex gap-3"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0" aria-hidden="true" /><span>When you request blood, donor contact details are shared only after our team has checked your ID document.</span></li>
                         <li className="flex gap-3"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0" aria-hidden="true" /><span>Donate only at a hospital or licensed blood bank, which checks every donor before donation.</span></li>
                     </ul>
                 </div>

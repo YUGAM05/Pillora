@@ -62,7 +62,7 @@ export default function PartnersPage() {
         "Share your existing voluntary donor database with Pillora",
         "Consent-based opt-in invitation sent via SMS to each donor",
         "Confirmed donors added to Blood Connect with full details",
-        "Automatic matching and connection whenever a KYC-verified recipient needs blood"
+        "Matching with recipients whose ID has been checked by our team"
     ];
 
     const ngoBenefits = [

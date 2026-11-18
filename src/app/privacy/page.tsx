@@ -121,8 +121,8 @@ export default function PrivacyPolicyPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
-                                    <PurposeRow title="Blood Donor Matching" detail="Matching donors with verified recipients based on blood group and geographic proximity" />
-                                    <PurposeRow title="KYC Verification" detail="Verifying recipient identity through Aadhaar card before donor details are shared" />
+                                    <PurposeRow title="Blood Donor Matching" detail="Matching donors who agreed to be contacted with recipients whose ID has been approved, based on blood group and city" />
+                                    <PurposeRow title="KYC Verification" detail="Checking the recipient's ID document (Aadhaar card, PAN card or driving licence) before donor details are shared" />
                                     <PurposeRow title="SMS Notifications" detail="Sending automated confirmation messages upon KYC approval" />
                                     <PurposeRow title="Hospital Information" detail="Helping users search and compare hospitals by specialty, pricing, doctors, and schemes" />
                                     <PurposeRow title="Platform Security" detail="Preventing fraud, misuse, and unauthorized access" />
@@ -170,9 +170,10 @@ export default function PrivacyPolicyPage() {
                         </p>
                         <div className="space-y-4 mb-10">
                             {[
-                                "The recipient has completed and passed KYC verification",
+                                "The donor agreed to this when registering",
+                                "Our team has checked and approved the recipient&apos;s ID document",
                                 "The recipient&apos;s blood group requirement matches the donor&apos;s blood group",
-                                "The recipient is located in the donor&apos;s nearest area"
+                                "The request is in the donor&apos;s city (at most 5 donors are shared per request)"
                             ].map((item, i) => (
                                 <div key={i} className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-red-100">
                                     <CheckCircle2 className="w-5 h-5 text-red-600 flex-shrink-0" />
@@ -182,7 +183,7 @@ export default function PrivacyPolicyPage() {
                         </div>
                         <div className="flex items-start gap-4 p-6 bg-red-600 text-white rounded-[2rem] shadow-xl shadow-red-200 font-bold italic">
                             <AlertCircle className="w-6 h-6 flex-shrink-0" />
-                            <p>Under no circumstances is donor information shared without all three conditions being met. Donors may request removal at any time by contacting help@pillora.in</p>
+                            <p>Under no circumstances is donor information shared with a recipient without all of these conditions being met. Donors may request removal at any time by contacting help@pillora.in</p>
                         </div>
                     </motion.section>
 
@@ -206,7 +207,7 @@ export default function PrivacyPolicyPage() {
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
                                     <PurposeRow title="Matched Blood Donors" detail="Recipient&apos;s contact details shared with matched donor to facilitate arrangement" />
-                                    <PurposeRow title="Matched Blood Recipients" detail="Donor&apos;s name and phone number shared only after verified KYC match" />
+                                    <PurposeRow title="Matched Blood Recipients" detail="Name and phone number of up to 5 donors who agreed to be contacted, shared only after the recipient&apos;s ID is approved" />
                                     <PurposeRow title="Government Authorities" detail="Only if required under the DPDP Act 2023 for legal or public health emergencies" />
                                 </tbody>
                             </table>

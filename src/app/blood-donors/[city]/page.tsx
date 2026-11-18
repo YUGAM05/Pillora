@@ -30,7 +30,7 @@ const getCity = async (slug: string) => (await getCityDonorStats()).find((c) => 
 const cityFaqs = (city: string) => [
     {
         question: `How do I find a blood donor in ${city}?`,
-        answer: `Sign in to Pillora, open Blood Connect and submit a blood request with the patient's blood group, hospital and area in ${city}. After an Aadhaar or PAN check, Pillora looks for registered donors with the same blood group in your city and area and sends you their contact details.`,
+        answer: `Sign in to Pillora, open Blood Connect and submit a blood request with the patient's blood group, hospital and area in ${city}. After our team checks your ID, Pillora looks for registered donors with the same blood group in your city and area who agreed to be contacted, and sends you the contact details of up to 5 of them.`,
     },
     {
         question: "Is Pillora a blood bank?",

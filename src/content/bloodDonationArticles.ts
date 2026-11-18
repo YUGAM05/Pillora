@@ -141,7 +141,7 @@ export const BLOOD_DONATION_DRAFTS: HealthArticle[] = [
             {
                 heading: 'How Pillora matches donors',
                 paragraphs: [
-                    'When you request blood on Pillora, we look for registered donors with the same blood group in your city and area who have not donated in the last 90 days. The hospital decides whether blood from a compatible group can also be used.',
+                    'When you request blood on Pillora and our team has checked your ID, we look for registered donors with the same blood group in your city and area who agreed to be contacted and have not donated in the last 90 days, and send you the details of up to 5 of them. The hospital decides whether blood from a compatible group can also be used.',
                 ],
                 callout:
                     'In an emergency, also contact the nearest hospital or licensed blood bank, or call 108. Pillora is not a blood bank.',

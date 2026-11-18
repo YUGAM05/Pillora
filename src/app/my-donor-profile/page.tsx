@@ -128,7 +128,7 @@ export default function MyDonorProfilePage() {
                                         Safety & Privacy
                                     </h3>
                                     <p className="text-sm text-gray-600 mb-6">
-                                        When someone signed in to Pillora requests your blood group in your city, we may send them your name and phone number by email and WhatsApp so they can contact you. To change your availability or remove your details, email help@pillora.in.
+                                        When someone signed in to Pillora requests your blood group in your city and our team has checked their ID, we may send them your name and phone number by email and WhatsApp (up to 5 donors per request). To change your availability or remove your details, email help@pillora.in.
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-400">

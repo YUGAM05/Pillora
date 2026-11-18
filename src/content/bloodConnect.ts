@@ -107,21 +107,21 @@ export const REQUEST_STEPS: { title: string; text: string }[] = [
     },
     {
         title: 'Identity check',
-        text: 'Upload an Aadhaar card or PAN card. Each request is checked before donor details are shared, to protect donors from misuse.',
+        text: 'Upload an Aadhaar card, PAN card or driving licence. Our team checks each ID before any donor details are shared, to protect donors from misuse.',
     },
     {
         title: 'Matching registered donors',
-        text: 'Pillora looks for registered donors with the same blood group in your city and area who have not donated in the last 90 days.',
+        text: 'Pillora looks for registered donors with the same blood group in your city and area who agreed to be contacted and have not donated in the last 90 days.',
     },
     {
         title: 'Contact donors directly',
-        text: 'You receive the contact details of matching donors by WhatsApp or email and coordinate with them. The donation itself happens at a hospital or licensed blood bank.',
+        text: 'You receive the contact details of up to 5 matching donors by WhatsApp and email and coordinate with them. The donation itself happens at a hospital or licensed blood bank.',
     },
 ];
 
 export const DONOR_STEPS: { title: string; text: string }[] = [
     { title: 'Check you can donate', text: 'Read the eligibility points below. The blood centre makes the final decision.' },
-    { title: 'Register as a donor', text: 'Sign in and add your blood group, city, area and contact number. Your donor profile shows whether you are listed as available.' },
+    { title: 'Register as a donor', text: 'Sign in, add your blood group, city, area and contact number, and agree to be contacted. Your donor profile shows whether you are listed as available.' },
     { title: 'Get contacted', text: 'People who need your blood group in your area may contact you. Donation is always voluntary and unpaid.' },
 ];
 
@@ -134,7 +134,7 @@ export const BLOOD_CONNECT_FAQS: { question: string; answer: string }[] = [
     {
         question: 'Are donors on Pillora verified?',
         answer:
-            'Donors register themselves with their blood group, city and contact details; Pillora does not medically screen donors. Every donor is checked by the blood centre before donating. People requesting blood go through an Aadhaar or PAN check before donor details are shared.',
+            'Donors register themselves with their blood group, city and contact details; Pillora does not medically screen donors. Every donor is checked by the blood centre before donating. People requesting blood have their ID document checked by our team before donor details are shared.',
     },
     {
         question: 'Do I have to pay for blood or for a donor?',

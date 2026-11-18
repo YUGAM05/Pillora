@@ -95,7 +95,7 @@ export default function HelpCenterPage() {
         },
         {
             question: "When will my contact details be shared?",
-            answer: "Your name and phone number are only shared when a KYC-verified recipient in your nearest area needs blood that matches your blood group. Your details are never shared without a verified match."
+            answer: "Only if you agreed when registering. Your name and phone number may be shared with someone who requests your blood group in your city, after our team has checked their ID document. We share up to 5 donors per request."
         },
         {
             question: "Can I remove myself from the donor network?",
@@ -114,11 +114,11 @@ export default function HelpCenterPage() {
         },
         {
             question: "Why is KYC verification mandatory?",
-            answer: "KYC verification protects donors from fraud and misuse. Every recipient must verify their identity via Aadhaar card before any donor contact details are shared with them."
+            answer: "The ID check protects donors from fraud and misuse. Our team checks every recipient's ID document (Aadhaar card, PAN card or driving licence) before any donor contact details are shared with them."
         },
         {
-            question: "How does the Aadhaar verification work?",
-            answer: "Upload a clear photo of your Aadhaar card on the platform. Our AI-powered system verifies it automatically. Once approved, you will receive an SMS confirmation on your registered contact number."
+            question: "How does the ID check work?",
+            answer: "Upload a clear photo of your ID document with your request. Our team checks it, sometimes with the help of an automatic document check. Once it is approved, we send you the matching donors' details by email and WhatsApp."
         },
         {
             question: "Is my Aadhaar number stored safely?",
@@ -126,7 +126,7 @@ export default function HelpCenterPage() {
         },
         {
             question: "How long does it take to find a matching donor?",
-            answer: "Matching is automated and happens instantly once your KYC is verified. If a donor with your required blood group is available in your area, their details are shared with you immediately."
+            answer: "Our team reviews your ID after you submit the request. Once it is approved, matching runs straight away: if donors with your blood group who agreed to be contacted are available in your city, you receive the details of up to 5 of them by email and WhatsApp."
         },
         {
             question: "What if no donor is found in my area?",

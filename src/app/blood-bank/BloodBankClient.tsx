@@ -334,7 +334,7 @@ function BloodConnectInfoSidebar() {
                         </li>
                         <li className="flex gap-3 text-sm text-gray-600">
                             <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
-                            <span>We look for registered donors with the same blood group in your <strong>city and area</strong> and send you their contact details.</span>
+                            <span>Once our team has checked your ID, we look for registered donors with the same blood group in your <strong>city and area</strong> and send you the contact details of up to 5 of them.</span>
                         </li>
                     </ul>
                 </div>
@@ -640,6 +640,8 @@ function DonateForm() {
         name: '', age: '', gender: 'Male', bloodGroup: 'A+',
         phone: '', city: 'Ahmedabad', area: '', address: ''
     });
+    // Required: the donor agrees that their name and phone may be shared (backend records date and text version).
+    const [consentToShare, setConsentToShare] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const certRef = React.useRef<HTMLDivElement>(null);
 
@@ -678,6 +680,7 @@ function DonateForm() {
         }
         if (!formData.area.trim()) newErrors.area = 'Area is required';
         if (!formData.address.trim()) newErrors.address = 'Address is required';
+        if (!consentToShare) newErrors.consent = 'Please tick the box to agree before registering.';
         
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -699,7 +702,7 @@ function DonateForm() {
 
         setLoading(true);
         try {
-            await api.post('/blood-bank/donors', { ...formData, location: [0, 0] });
+            await api.post('/blood-bank/donors', { ...formData, consentToShare, location: [0, 0] });
             // GA4 conversion (no personal or health data is sent)
             trackEvent('donor_signup');
             const now = new Date();
@@ -877,17 +880,31 @@ function DonateForm() {
                 <div className="space-y-2">
                     <p className="text-sm text-red-900 font-bold leading-tight">Security & Transparency Notice</p>
                     <p className="text-xs text-red-700 leading-relaxed font-medium">
-                        Your data will be securely saved in our donor network. When someone in your nearest area needs blood, your <strong>name and phone number</strong> will be shared with them to facilitate immediate assistance.
+                        When someone signed in to Pillora requests your blood group in your city, and our team has checked their ID document, we may send them your <strong>name and phone number</strong> by email and WhatsApp so they can contact you. We share up to 5 donors per request.
                     </p>
                     <p className="text-xs text-red-700 leading-relaxed font-medium">
-                        To protect your privacy and prevent fraud, every requester is <strong>mandated to complete KYC verification</strong> (Aadhar Card or PAN Card) before your contact details are revealed.
+                        To change your details or stop being contacted, email help@pillora.in.
                     </p>
                 </div>
             </div>
 
+            <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                    type="checkbox"
+                    name="consentToShare"
+                    checked={consentToShare}
+                    onChange={(e) => { setConsentToShare(e.target.checked); if (e.target.checked) setErrors(prev => ({ ...prev, consent: '' })); }}
+                    className="mt-1 w-4 h-4 accent-red-600 shrink-0"
+                />
+                <span className="text-sm text-gray-700">
+                    I agree that Pillora may share my name and phone number with people who request my blood group in my city, after their ID has been checked.
+                </span>
+            </label>
+            {errors.consent && <p className="text-red-500 text-xs -mt-2 ml-7">{errors.consent}</p>}
+
             <button
                 type="submit"
-                disabled={loading || (formData.phone.length > 0 && (formData.phone.length !== 10 || !/^[6-9]\d{9}$/.test(formData.phone)))}
+                disabled={loading || !consentToShare || (formData.phone.length > 0 && (formData.phone.length !== 10 || !/^[6-9]\d{9}$/.test(formData.phone)))}
                 className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-gray-400 disabled:to-gray-500 disabled:shadow-none text-white font-bold py-4 rounded-xl shadow-lg shadow-red-200 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
                 {loading ? 'Processing...' : 'Register as Donor'} <Heart className="w-5 h-5 fill-white" />
@@ -1128,7 +1145,6 @@ function RequestForm() {
             setKycStatus(response.data.aiVerificationStatus || 'Pending');
             setKycRemarks(response.data.aiVerificationRemarks || '');
             setSuccess(true);
-            alert('check your mail for your request');
             console.log('check your mail for your request');
         } catch (error: any) {
             clearTimeout(timeoutId);
@@ -1161,9 +1177,9 @@ function RequestForm() {
                 >
                     <Siren className="w-12 h-12" />
                 </motion.div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Request Broadcasted</h2>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">Request received</h2>
                 <p className="text-gray-600 max-w-md mx-auto mb-8">
-                    Your request has been received. After your ID check, we will send you the contact details of matching registered donors by WhatsApp and email. Check your mail for your request.
+                    Our team will check your ID document. Once it is approved, we will send you the contact details of up to 5 matching registered donors by WhatsApp and email. In an emergency, also contact the nearest hospital or licensed blood bank, or call 108.
                 </p>
                 {kycStatus === 'Verified' && (
                     <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl mb-8 max-w-lg mx-auto flex items-start gap-4 text-left shadow-sm shadow-green-100/50">
@@ -1178,9 +1194,9 @@ function RequestForm() {
                     <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl mb-8 max-w-lg mx-auto flex items-start gap-4 text-left shadow-sm shadow-red-100/50">
                         <AlertOctagon className="w-8 h-8 text-red-600 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-bold text-lg">KYC Verification Rejected!</p>
-                            <p className="text-sm mt-1">AI Agent Remarks: &quot;{kycRemarks}&quot;</p>
-                            <p className="text-sm mt-2 font-semibold">Your request will not be shown to donors until the issues are fixed.</p>
+                            <p className="font-bold text-lg">ID check failed</p>
+                            <p className="text-sm mt-1">{kycRemarks}</p>
+                            <p className="text-sm mt-2 font-semibold">No donor details will be shared until the ID issue is fixed.</p>
                             <Link href="/my-blood-requests" className="mt-3 inline-block bg-white border border-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100 shadow-sm transition-colors">Fix KYC Issue</Link>
                         </div>
                     </div>
@@ -1189,9 +1205,9 @@ function RequestForm() {
                     <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-xl mb-8 max-w-lg mx-auto flex items-start gap-4 text-left shadow-sm shadow-yellow-100/50">
                         <Clock className="w-8 h-8 text-yellow-600 shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-bold text-lg">KYC Verification Pending</p>
+                            <p className="font-bold text-lg">ID check pending</p>
                             <p className="text-sm mt-1">{kycRemarks}</p>
-                            <p className="text-sm mt-1 opacity-80">Manual verification may be required.</p>
+                            <p className="text-sm mt-1 opacity-80">You can follow the status under My blood requests.</p>
                         </div>
                     </div>
                 )}
