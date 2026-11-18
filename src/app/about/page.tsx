@@ -230,7 +230,7 @@ export default function AboutPage() {
                             </div>
                             <h3 className="text-2xl font-black text-slate-900 mb-4">Appointment Booking</h3>
                             <p className="text-slate-600 leading-relaxed font-medium text-sm">
-                                Patients can book appointments with verified doctors across partner hospitals directly through Pillora. We verify doctor credentials, show available slots, and send reminders—reducing no-shows and saving time for both patients and hospitals.
+                                Patients can book appointments with doctors at partner hospitals directly through Pillora. Doctors, fees and available slots are listed by the Pillora team or by the hospital, and patients get WhatsApp reminders before confirmed appointments.
                             </p>
                         </div>
 
@@ -271,8 +271,8 @@ export default function AboutPage() {
                                 colorClass: "text-rose-500 bg-rose-50 border-rose-100"
                             },
                             {
-                                title: "Verified Networks",
-                                desc: "Only verified doctors and registered donor profiles.",
+                                title: "Partner Hospitals",
+                                desc: "Hospitals are added by the Pillora team; donors register themselves.",
                                 icon: ShieldCheck,
                                 colorClass: "text-emerald-500 bg-emerald-50 border-emerald-100"
                             },
@@ -394,7 +394,7 @@ export default function AboutPage() {
                     <div className="relative max-w-3xl mx-auto before:absolute before:inset-y-0 before:left-1/2 before:w-0.5 before:bg-slate-200">
                         {[
                             { year: "2026", text: "Pillora founded; launched emergency blood coordination and hospital directory database in Ahmedabad, Gujarat." },
-                            { year: "2026+", text: "Verified doctor scheduling and scheme mapping added; optimizing core services." },
+                            { year: "2026+", text: "Doctor appointment booking and government scheme information added; optimizing core services." },
                             { year: "Aim", text: "Consolidating all features to serve as the ultimate one-stop healthcare coordination solution." }
                         ].map((item, index) => (
                             <div key={index} className={`relative flex items-center justify-between mb-8 ${index % 2 === 0 ? 'flex-row-reverse' : ''}`}>

@@ -128,7 +128,7 @@ export default function MyDonorProfilePage() {
                                         Safety & Privacy
                                     </h3>
                                     <p className="text-sm text-gray-600 mb-6">
-                                        Your details are only shared with verified requesters in case of emergency. You can change your availability at any time.
+                                        When someone signed in to Pillora requests your blood group in your city, we may send them your name and phone number by email and WhatsApp so they can contact you. To change your availability or remove your details, email help@pillora.in.
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-400">

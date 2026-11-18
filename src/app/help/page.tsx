@@ -140,8 +140,8 @@ export default function HelpCenterPage() {
             answer: "Go to the Hospitals section and search by city, area, specialty, or doctor name. You can compare hospitals based on doctors, pricing, facilities, and government schemes accepted."
         },
         {
-            question: "Is the hospital information on Pillora verified?",
-            answer: "Yes. All hospital data is verified before being listed on the platform and updated regularly in coordination with our hospital partners."
+            question: "Where does the hospital information on Pillora come from?",
+            answer: "Hospitals are added by the Pillora team. Doctors, fees and timings are entered by the Pillora team or by the hospital from its own dashboard. Details can change, so please confirm fees and timings with the hospital before your visit."
         },
         {
             question: "What information is available for each hospital?",

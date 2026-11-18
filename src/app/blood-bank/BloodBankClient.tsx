@@ -334,7 +334,7 @@ function BloodConnectInfoSidebar() {
                         </li>
                         <li className="flex gap-3 text-sm text-gray-600">
                             <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
-                            <span>Our automated system reaches out to donors within <strong>5km radius</strong>.</span>
+                            <span>We look for registered donors with the same blood group in your <strong>city and area</strong> and send you their contact details.</span>
                         </li>
                     </ul>
                 </div>
