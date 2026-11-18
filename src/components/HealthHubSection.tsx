@@ -117,7 +117,7 @@ export default function HealthHubSection() {
                                     <div className="flex items-center justify-between text-xs font-semibold text-gray-400 mb-3">
                                         <div className="flex items-center gap-1.5 text-blue-600">
                                             <Calendar className="w-3.5 h-3.5" />
-                                            {new Date(tip.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            {new Date(tip.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', year: 'numeric' })}
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <Clock className="w-3.5 h-3.5" />

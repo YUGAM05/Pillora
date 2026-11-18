@@ -565,3 +565,38 @@ export function getRelatedHealthArticles(currentId: string, category: string, li
         .filter((a) => a._id !== currentId && (category === 'All' || a.category === category))
         .slice(0, limit);
 }
+
+/**
+ * Maps a Health Hub tip from the backend (/api/health-hub/:id) to the
+ * HealthArticle shape. Shared by the server wrapper and the client page.
+ */
+export function mapApiHealthTip(d: any): HealthArticle {
+    return {
+        _id: d._id,
+        slug: d._id,
+        title: d.title,
+        description: d.description,
+        category: d.category || 'Clinical Guidance',
+        readTime: d.readTime || '4 min read',
+        date: d.date || new Date().toISOString(),
+        author: d.author || {
+            name: 'Pillora Health Team',
+            role: 'Medical Review Board',
+            avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&auto=format&fit=crop&q=80'
+        },
+        mediaType: d.mediaType || 'image',
+        imageUrl: d.imageUrl,
+        videoUrl: d.videoUrl,
+        linkUrl: d.linkUrl,
+        tags: d.tags || ['Healthcare', 'Wellness'],
+        keyTakeaways: [
+            'Evidence-based wellness recommendation reviewed by Pillora clinical experts.'
+        ],
+        sections: [
+            {
+                heading: 'Article Content',
+                paragraphs: d.description ? d.description.split('\n').filter(Boolean) : []
+            }
+        ]
+    };
+}

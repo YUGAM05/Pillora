@@ -1,0 +1,1259 @@
+"use client";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import {
+    MapPin, Phone, Clock, CreditCard, Ambulance, ShieldCheck,
+    Star, ChevronLeft, ChevronRight, User, CheckCircle, XCircle,
+    Building, ArrowLeft, ExternalLink, Share2, AlertCircle, Calendar,
+    BedDouble, Building2
+} from 'lucide-react';
+import api from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+
+interface Doctor {
+    _id: string;
+    name: string;
+    specialization?: string;
+    daysAvailable?: string[];
+    timing?: string;
+    isSpecialtyGroup?: boolean;
+    department?: string;
+    maxAppointmentsPerSlot?: number;
+    doctorsCount?: number;
+    description?: string;
+}
+
+export interface Hospital {
+    _id: string;
+    slug: string;
+    name: string;
+    address: string;
+    mapLink?: string;
+    city: string;
+    image: string;
+    images?: string[];
+    isOpen24Hours: boolean;
+    consultationFee: number;
+    governmentSchemes: string[];
+    isOnlinePaymentAvailable: boolean;
+    ambulanceContact: string;
+    contactNumber?: string;
+    phoneNumbers?: string[];
+    description: string;
+    rating: number;
+    doctors?: Doctor[];
+}
+
+/** True for a real value; false for empty or placeholder text like "N/A", "-", "na", "none". */
+function isRealValue(v: unknown): v is string {
+    if (typeof v !== 'string') return false;
+    const t = v.trim().toLowerCase();
+    return t !== '' && !['n/a', 'na', '-', '—', 'none', 'null', 'undefined', '0'].includes(t);
+}
+
+function stripHtml(str: string): string {
+    if (!str) return '';
+    return str
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+interface ParsedHospitalDetails {
+    facts: {
+        hospitalName?: string;
+        type?: string;
+        location?: string;
+        established?: string;
+        bedCapacity?: string;
+    };
+    description: string;
+}
+
+function parseHospitalDescription(rawDesc: string): ParsedHospitalDetails {
+    if (!rawDesc || typeof rawDesc !== 'string') {
+        return { facts: {}, description: '' };
+    }
+
+    const labelDefs = [
+        { key: 'hospitalName', label: 'Hospital Name', pattern: /Hospital\s+Name/i },
+        { key: 'type', label: 'Type', pattern: /Type/i },
+        { key: 'location', label: 'Location', pattern: /Location/i },
+        { key: 'established', label: 'Established', pattern: /Established/i },
+        { key: 'bedCapacity', label: 'Bed Capacity', pattern: /Bed\s+Capacity/i },
+    ];
+
+    const globalLabelRegex = /(?:<p[^>]*>|<div[^>]*>|<span[^>]*>|<b>|<strong>|<br\s*\/?>|\s)*(Hospital\s+Name|Bed\s+Capacity|Established|Location|Type)(?:<\/b>|<\/strong>|<\/span>|<\/p>|<\/div>|\s)*:\s*/gi;
+
+    let match: RegExpExecArray | null;
+    const matches: { key: string; labelName: string; index: number; valueStartIndex: number }[] = [];
+
+    while ((match = globalLabelRegex.exec(rawDesc)) !== null) {
+        const matchedText = match[0];
+        const matchedLabelName = match[1];
+        
+        const def = labelDefs.find(d => d.pattern.test(matchedLabelName));
+        if (def) {
+            matches.push({
+                key: def.key,
+                labelName: def.label,
+                index: match.index,
+                valueStartIndex: match.index + matchedText.length
+            });
+        }
+    }
+
+    if (matches.length === 0) {
+        return {
+            facts: {},
+            description: rawDesc.trim()
+        };
+    }
+
+    matches.sort((a, b) => a.index - b.index);
+
+    const facts: Record<string, string> = {};
+
+    for (let i = 0; i < matches.length - 1; i++) {
+        const currentMatch = matches[i];
+        const nextMatch = matches[i + 1];
+        
+        const rawValueSegment = rawDesc.substring(currentMatch.valueStartIndex, nextMatch.index);
+        const cleanVal = stripHtml(rawValueSegment);
+        if (cleanVal) {
+            facts[currentMatch.key] = cleanVal;
+        }
+    }
+
+    const lastMatch = matches[matches.length - 1];
+    const rawRestSegment = rawDesc.substring(lastMatch.valueStartIndex);
+
+    let lastFactValue = '';
+    let remainingDesc = '';
+
+    const blockBoundaryMatch = /(<\/p>|<p[^>]*>|<\/div>|<div[^>]*>|<br\s*\/?>|\r?\n){1,}/i.exec(rawRestSegment);
+
+    if (blockBoundaryMatch) {
+        const boundaryIndex = blockBoundaryMatch.index;
+        const boundaryTag = blockBoundaryMatch[0];
+        lastFactValue = stripHtml(rawRestSegment.substring(0, boundaryIndex));
+
+        if (/^<p[^>]*>/i.test(boundaryTag) || /^<div[^>]*>/i.test(boundaryTag)) {
+            remainingDesc = rawRestSegment.substring(boundaryIndex).trim();
+        } else {
+            remainingDesc = rawRestSegment.substring(boundaryIndex + boundaryTag.length).trim();
+        }
+    } else {
+        const sentenceBoundary = /\.\s+(?=[A-Z0-9<])/.exec(rawRestSegment);
+        if (sentenceBoundary) {
+            const boundaryIndex = sentenceBoundary.index;
+            lastFactValue = stripHtml(rawRestSegment.substring(0, boundaryIndex));
+            remainingDesc = rawRestSegment.substring(boundaryIndex + sentenceBoundary[0].length).trim();
+        } else {
+            const cleanRest = stripHtml(rawRestSegment);
+            if (cleanRest.length <= 50) {
+                lastFactValue = cleanRest;
+                remainingDesc = '';
+            } else {
+                const numUnitMatch = /^(\d+\+?\s*(?:beds?|years?)?|[A-Za-z0-9\-]+(?:\s+[A-Za-z0-9\-]+){0,2})/i.exec(cleanRest);
+                if (numUnitMatch && numUnitMatch[0].length < cleanRest.length) {
+                    lastFactValue = numUnitMatch[0];
+                    remainingDesc = cleanRest.substring(numUnitMatch[0].length).trim();
+                } else {
+                    lastFactValue = cleanRest;
+                    remainingDesc = '';
+                }
+            }
+        }
+    }
+
+    if (lastFactValue) {
+        facts[lastMatch.key] = lastFactValue;
+    }
+
+    remainingDesc = remainingDesc
+        .replace(/^(<\/(p|div|span|b|strong)>|<br\s*\/?>|\s|&nbsp;|<p><\/p>)+/gi, '')
+        .replace(/(<br\s*\/?>|\s|&nbsp;|<p><\/p>)+$/gi, '');
+
+    return {
+        facts: {
+            hospitalName: facts.hospitalName,
+            type: facts.type,
+            location: facts.location,
+            established: facts.established,
+            bedCapacity: facts.bedCapacity,
+        },
+        description: remainingDesc
+    };
+}
+
+// ─── Slideshow ─────────────────────────────────────────────────────────────────
+function ImageSlideshow({ images, alt }: { images: string[]; alt: string }) {
+    const [idx, setIdx] = useState(0);
+    const fallback = '/premium-hospital.png';
+
+    const resolveSrc = (s?: string) => {
+        if (!s) return fallback;
+        if (s.startsWith('/uploads/')) return `http://localhost:5000${s}`;
+        if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) return s;
+        return fallback;
+    };
+
+    const prev = useCallback((e: React.MouseEvent) => { e.stopPropagation(); setIdx(i => (i - 1 + images.length) % images.length); }, [images.length]);
+    const next = useCallback((e: React.MouseEvent) => { e.stopPropagation(); setIdx(i => (i + 1) % images.length); }, [images.length]);
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+        const t = setInterval(() => setIdx(i => (i + 1) % images.length), 4000);
+        return () => clearInterval(t);
+    }, [images.length]);
+
+    return (
+        <div className="relative w-full h-full overflow-hidden bg-slate-50">
+            <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -30 }}
+                    transition={{ duration: 0.35 }}
+                    className="absolute inset-0"
+                >
+                    <Image
+                        src={resolveSrc(images[idx])}
+                        alt={`${alt} – image ${idx + 1}`}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                        priority
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
+                    />
+                </motion.div>
+            </AnimatePresence>
+
+            {images.length > 1 && (
+                <>
+                    <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 backdrop-blur-sm transition-colors z-10">
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2 backdrop-blur-sm transition-colors z-10">
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        {images.map((_, i) => (
+                            <button key={i} onClick={(e) => { e.stopPropagation(); setIdx(i); }}
+                                className={`h-2 rounded-full transition-all ${i === idx ? 'bg-white w-5' : 'bg-white/50 w-2'}`} />
+                        ))}
+                    </div>
+                    <div className="absolute bottom-3 left-3 bg-black/40 text-white text-xs px-2 py-0.5 rounded-full z-10 shadow-sm font-medium">
+                        {idx + 1}/{images.length}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+// ─── Stat Card ─────────────────────────────────────────────────────────────────
+function StatCard({ icon, label, value, color = 'blue', valueClass = 'font-bold text-slate-900 text-base' }: {
+    icon: React.ReactNode;
+    label: string;
+    value: React.ReactNode;
+    color?: 'blue' | 'rose' | 'emerald' | 'indigo' | 'amber';
+    valueClass?: string;
+}) {
+    const colors = {
+        blue: 'bg-blue-50/80 text-blue-600 border-blue-100/50',
+        rose: 'bg-rose-50/80 text-rose-650 border-rose-100/50',
+        emerald: 'bg-emerald-50/80 text-emerald-650 border-emerald-100/50',
+        indigo: 'bg-indigo-50/80 text-indigo-600 border-indigo-100/50',
+        amber: 'bg-amber-50/80 text-amber-600 border-amber-100/50',
+    };
+    return (
+        <div className="flex items-start gap-3.5 p-4 sm:p-5 bg-white border border-slate-100/60 shadow-[0_4px_20px_rgba(0,0,0,0.01)] rounded-[1.8rem] hover:shadow-[0_12px_30px_rgba(0,0,0,0.03)] hover:border-blue-100 transition-all duration-300">
+            <div className={`p-3 rounded-2xl shrink-0 shadow-sm border ${colors[color]}`}>{icon}</div>
+            <div className="min-w-0">
+                <p className="text-[9px] font-black text-slate-405 uppercase tracking-widest leading-none">{label}</p>
+                <div className={`mt-2.5 ${valueClass} leading-snug`}>{value}</div>
+            </div>
+        </div>
+    );
+}
+
+interface Slot {
+    _id: string;
+    startTime: string;
+    endTime: string;
+    status: 'available' | 'booked' | 'blocked' | 'cancelled';
+    booked_count?: number;
+    max_appointments?: number;
+    hold_count?: number;
+}
+
+function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any }) {
+    const router = useRouter();
+    const params = useParams();
+    // Today's date in India (YYYY-MM-DD). Computed in IST so the server-rendered
+    // HTML and the browser always agree (the server runs in UTC).
+    const getLocalDateString = () =>
+        new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    const today = getLocalDateString();
+    const [selectedDate, setSelectedDate] = useState(today);
+    const [slots, setSlots] = useState<Slot[]>([]);
+    const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [bookingLoading, setBookingLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+    const [tokenNumber, setTokenNumber] = useState<number | null>(null);
+
+    // Intake Form Details
+    const [patientName, setPatientName] = useState("");
+    const [patientPhone, setPatientPhone] = useState("");
+    const [patientEmail, setPatientEmail] = useState("");
+    const [patientAge, setPatientAge] = useState("");
+    const [showIntakeForm, setShowIntakeForm] = useState(false);
+
+    // Prefill profile details from token storage
+    useEffect(() => {
+        try {
+            const { getUser } = require("@/lib/tokenStorage");
+            const currentUser = getUser();
+            if (currentUser) {
+                setPatientName(currentUser.name || "");
+                setPatientEmail(currentUser.email || "");
+                setPatientPhone(currentUser.phone || "");
+            }
+        } catch (e) {
+            console.error("Failed to load user profile in DoctorBookingInline", e);
+        }
+    }, []);
+
+    const fetchSlots = useCallback(async (date: string) => {
+        setLoading(true);
+        setError("");
+        try {
+            const res = await api.get(`/hospital/dashboard/doctors/${doctor._id}/slots?date=${date}`);
+            setSlots(res.data);
+        } catch (err) {
+            setError("Failed to load slots for this date");
+        } finally {
+            setLoading(false);
+        }
+    }, [doctor._id]);
+
+    useEffect(() => {
+        if (selectedDate) fetchSlots(selectedDate);
+    }, [selectedDate, fetchSlots]);
+
+    // Handle release hold API call helper
+    const handleReleaseHold = useCallback(async (slotId: string) => {
+        try {
+            await api.post("/hospital/dashboard/slots/release-hold", { slotId });
+        } catch (err) {
+            console.error("Error releasing hold:", err);
+        }
+    }, []);
+
+    // Release hold on date change
+    useEffect(() => {
+        if (selectedSlot) {
+            handleReleaseHold(selectedSlot._id);
+            setSelectedSlot(null);
+            setTimeLeft(0);
+            setShowIntakeForm(false);
+        }
+    }, [selectedDate, handleReleaseHold]);
+
+    // Release hold on unmount
+    useEffect(() => {
+        return () => {
+            if (selectedSlot) {
+                handleReleaseHold(selectedSlot._id);
+            }
+        };
+    }, [selectedSlot, handleReleaseHold]);
+
+    // Hold Timer countdown hook
+    useEffect(() => {
+        if (timeLeft <= 0) {
+            if (selectedSlot) {
+                handleReleaseHold(selectedSlot._id);
+                setSelectedSlot(null);
+                setTimeLeft(0);
+                setShowIntakeForm(false);
+                setError("Your temporary slot reservation has expired. Please select a slot again.");
+            }
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            setTimeLeft(prev => prev - 1);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [timeLeft, selectedSlot, handleReleaseHold]);
+
+    // Real-time updates via Socket.io
+    useEffect(() => {
+        const { socket } = require("@/lib/socket");
+        socket.connect();
+
+        const onSlotBooked = (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId 
+                        ? { 
+                            ...s, 
+                            status: data.bookedCount >= data.maxAppointments ? 'booked' : 'available',
+                            booked_count: data.bookedCount,
+                            hold_count: data.holdCount,
+                            max_appointments: data.maxAppointments
+                          } 
+                        : s
+                ));
+                if (selectedSlot?._id === data.slotId && data.bookedCount >= data.maxAppointments) {
+                    setSelectedSlot(null);
+                    setTimeLeft(0);
+                    setShowIntakeForm(false);
+                    setError("This slot was just fully booked by another user.");
+                }
+            }
+        };
+
+        const onSlotHeld = (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId 
+                        ? { 
+                            ...s, 
+                            hold_count: data.holdCount,
+                            max_appointments: data.maxAppointments
+                          } 
+                        : s
+                ));
+            }
+        };
+
+        const onSlotHoldReleased = (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                setSlots(prev => prev.map(s => 
+                    s._id === data.slotId 
+                        ? { 
+                            ...s, 
+                            hold_count: data.holdCount,
+                            max_appointments: data.maxAppointments
+                          } 
+                        : s
+                ));
+            }
+        };
+
+        const onSlotsUpdated = (data: any) => {
+            if (data.doctorId === doctor._id && data.date === selectedDate) {
+                fetchSlots(selectedDate);
+            }
+        };
+
+        socket.on("slotBooked", onSlotBooked);
+        socket.on("slotHeld", onSlotHeld);
+        socket.on("slotHoldReleased", onSlotHoldReleased);
+        socket.on("slotsUpdated", onSlotsUpdated);
+
+        return () => {
+            socket.off("slotBooked", onSlotBooked);
+            socket.off("slotHeld", onSlotHeld);
+            socket.off("slotHoldReleased", onSlotHoldReleased);
+            socket.off("slotsUpdated", onSlotsUpdated);
+            socket.disconnect();
+        };
+    }, [doctor._id, selectedDate, selectedSlot, fetchSlots]);
+
+    const handleSelectSlot = async (slot: Slot) => {
+        setError("");
+        setLoading(true);
+        try {
+            const res = await api.post("/appointments/hold", {
+                doctorId: doctor._id,
+                slotStart: slot.startTime,
+                slotEnd: slot.endTime,
+                date: selectedDate
+            });
+            if (res.data.appointmentId) {
+                router.push(`/checkout/appointment/${res.data.appointmentId}`);
+            }
+        } catch (err: any) {
+            if (err.response?.status === 401) {
+                router.push(`/login?redirect=/hospitals/${params.slug}`);
+            } else {
+                setError(err.response?.data?.message || err.response?.data?.error || "Failed to hold slot and initiate checkout.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleBook = async () => {
+        if (!selectedSlot) return;
+        setBookingLoading(true);
+        setError("");
+        
+        // Generate a cryptographically strong client side unique booking request key
+        const bookingRequestId = typeof crypto !== 'undefined' && crypto.randomUUID 
+            ? crypto.randomUUID() 
+            : `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        try {
+            const res = await api.post("/hospital/dashboard/appointments", {
+                doctorId: doctor._id,
+                hospitalId: hospital._id,
+                slotId: selectedSlot._id,
+                slotTime: selectedSlot.startTime,
+                bookingRequestId,
+                patientName,
+                patientPhone,
+                patientEmail,
+                patientAge: Number(patientAge)
+            });
+            
+            if (res.data.success) {
+                setTokenNumber(res.data.appointment?.tokenNumber || null);
+                setSelectedSlot(null);
+                setTimeLeft(0);
+                setShowIntakeForm(false);
+                router.push(`/checkout/appointment/${res.data.appointment._id}`);
+            }
+        } catch (err: any) {
+            const code = err.response?.data?.code;
+            const msg = err.response?.data?.message;
+            
+            if (code === 'SLOT_FULL') {
+                setError("Sorry, this slot was just booked by someone else. Please choose another slot.");
+            } else if (code === 'SLOT_CANCELLED') {
+                setError("This slot has been cancelled by the hospital. Please choose another.");
+            } else if (code === 'DUPLICATE_SUBMISSION') {
+                setError("Your booking request is currently in flight. Please wait a moment.");
+            } else if (code === 'ALREADY_BOOKED') {
+                setError("You already have an appointment booked for this slot.");
+            } else {
+                setError(msg || "Booking failed. Please try again.");
+            }
+        } finally {
+            setBookingLoading(false);
+        }
+    };
+
+    if (success) {
+        return (
+            <motion.div 
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 p-6 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 border border-emerald-100/60 rounded-3xl text-center shadow-lg shadow-emerald-500/5 relative overflow-hidden"
+            >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl" />
+                <div className="w-14 h-14 bg-emerald-100/80 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-200 shadow-sm">
+                    <CheckCircle className="w-7 h-7 text-emerald-600 animate-bounce" />
+                </div>
+                <h4 className="text-base font-black text-slate-800 tracking-tight">Booking Confirmed!</h4>
+                {tokenNumber !== null && (
+                    <div className="my-4 inline-flex flex-col bg-white border border-emerald-250 text-emerald-800 rounded-2xl px-6 py-2 shadow-sm relative">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Queue Token Pass</span>
+                        <span className="font-black text-2xl text-emerald-600 mt-1">{tokenNumber}</span>
+                    </div>
+                )}
+                <p className="text-xs text-slate-500 font-bold max-w-xs mx-auto leading-relaxed mt-1">Your appointment with {doctor.isSpecialtyGroup ? "" : "Dr. "}{doctor.name} has been scheduled successfully for {patientName}.</p>
+                <button 
+                    onClick={() => {
+                        setSuccess(false);
+                        setTokenNumber(null);
+                        setSelectedSlot(null);
+                        fetchSlots(selectedDate);
+                    }} 
+                    className="mt-5 w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98] shadow-md shadow-emerald-600/10"
+                >
+                    Book Another Slot
+                </button>
+            </motion.div>
+        );
+    }
+
+    if (showIntakeForm) {
+        return (
+            <div className="mt-6 pt-6 border-t border-slate-100 space-y-4 animate-fade-in">
+                <div>
+                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-wide">Patient Details Form</h4>
+                    <p className="text-[10px] text-slate-400 font-bold">Please verify or fill the patient details below.</p>
+                </div>
+
+                {error && (
+                    <div className="p-3.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-[11px] font-bold flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+                    </div>
+                )}
+
+                <div className="space-y-3 bg-slate-50/50 p-4.5 rounded-2xl border border-slate-100 shadow-inner">
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Patient Name</label>
+                        <input
+                            type="text"
+                            required
+                            placeholder="Full Name"
+                            value={patientName}
+                            onChange={(e) => setPatientName(e.target.value)}
+                            className="w-full px-3.5 py-3 bg-white border border-slate-200 focus:border-blue-500 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-800 shadow-sm animate-fade-in"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Phone Number</label>
+                            <input
+                                type="tel"
+                                required
+                                placeholder="Phone Number"
+                                value={patientPhone}
+                                onChange={(e) => setPatientPhone(e.target.value)}
+                                className="w-full px-3.5 py-3 bg-white border border-slate-200 focus:border-blue-500 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-800 shadow-sm animate-fade-in"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Age</label>
+                            <input
+                                type="number"
+                                required
+                                min="1"
+                                max="120"
+                                placeholder="Age"
+                                value={patientAge}
+                                onChange={(e) => setPatientAge(e.target.value)}
+                                className="w-full px-3.5 py-3 bg-white border border-slate-200 focus:border-blue-500 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-800 shadow-sm animate-fade-in"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Email Address</label>
+                        <input
+                            type="email"
+                            required
+                            placeholder="Email Address"
+                            value={patientEmail}
+                            onChange={(e) => setPatientEmail(e.target.value)}
+                            className="w-full px-3.5 py-3 bg-white border border-slate-200 focus:border-blue-500 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-blue-600/5 transition-all text-slate-800 shadow-sm animate-fade-in"
+                        />
+                    </div>
+                </div>
+
+                {selectedSlot && timeLeft > 0 && (
+                    <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between gap-3 shadow-sm animate-pulse">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-850">
+                            <Clock className="w-3.5 h-3.5 text-amber-600 animate-spin" style={{ animationDuration: '4s' }} />
+                            <span>Slot held safely for details completion</span>
+                        </div>
+                        <span className="text-[10px] font-black bg-amber-500 text-white px-2.5 py-0.5 rounded-lg">
+                            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                        </span>
+                    </div>
+                )}
+
+                <div className="flex gap-3 pt-1">
+                    <button
+                        type="button"
+                        onClick={() => setShowIntakeForm(false)}
+                        className="flex-1 py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-[0.98]"
+                    >
+                        Back
+                    </button>
+                    <button
+                        disabled={!patientName || !patientPhone || !patientEmail || !patientAge || bookingLoading}
+                        onClick={handleBook}
+                        className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 hover:shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
+                    >
+                        {bookingLoading ? (
+                            <motion.div 
+                                animate={{ rotate: 360 }} 
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" 
+                            />
+                        ) : "Confirm Booking"}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const currentTimeWithBuffer = new Date(new Date().getTime() + 15 * 60000);
+    const validSlots = slots.filter(slot => {
+        if (selectedDate === today) {
+            return new Date(slot.startTime) >= currentTimeWithBuffer;
+        }
+        return true;
+    });
+
+    return (
+        <div className="mt-5 pt-5 border-t border-slate-100 space-y-4">
+            {error && (
+                <div className="p-3.5 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-[11px] font-bold flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div className="sm:col-span-2 space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Choose Appointment Date</label>
+                    <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 animate-pulse" />
+                        <input
+                            type="date"
+                            min={today}
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-xl font-bold text-xs focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all shadow-sm text-slate-800 cursor-pointer"
+                        />
+                    </div>
+                </div>
+                
+                <div className="flex gap-4 pb-2 sm:justify-end">
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" />
+                        <span className="text-[8px] font-black text-slate-450 uppercase">Available</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" />
+                        <span className="text-[8px] font-black text-slate-450 uppercase">Held</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-200 shadow-sm" />
+                        <span className="text-[8px] font-black text-slate-450 uppercase">Booked</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-3.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-0.5">Select Time Slot</label>
+
+                {loading ? (
+                    <div className="flex items-center justify-center py-6">
+                        <motion.div 
+                            animate={{ rotate: 360 }} 
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-6 h-6 border-2 border-blue-50 border-t-blue-600 rounded-full" 
+                        />
+                    </div>
+                ) : validSlots.length === 0 ? (
+                    <div className="text-center py-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                        <p className="text-slate-400 font-bold italic text-xs">No slots available for this date.</p>
+                        <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest mt-1">Please try another date</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
+                        {validSlots.map((slot) => {
+                            const isSelected = selectedSlot?._id === slot._id;
+                            
+                            const maxAppts = slot.max_appointments || 1;
+                            const bookedCount = slot.booked_count || 0;
+                            const holdCount = slot.hold_count || 0;
+                            const slotsLeft = maxAppts - (bookedCount + holdCount);
+
+                            const isBooked = bookedCount >= maxAppts;
+                            const isHeldByOthers = slotsLeft <= 0 && !isBooked; 
+                            const isDisabled = isBooked || (isHeldByOthers && !isSelected);
+
+                            return (
+                                <div key={slot._id} className="relative group">
+                                    <button
+                                        disabled={isDisabled}
+                                        onClick={() => handleSelectSlot(slot)}
+                                        className={`
+                                            w-full relative py-3 rounded-xl text-[10px] font-black transition-all duration-300
+                                            flex flex-col items-center justify-center border
+                                            ${isSelected 
+                                                ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-400/20 scale-105 z-10' 
+                                                : isBooked
+                                                    ? 'bg-slate-50 border-slate-100/60 text-slate-300 cursor-not-allowed opacity-60'
+                                                    : isHeldByOthers
+                                                        ? 'bg-amber-50/20 border-amber-100/50 text-amber-500 cursor-not-allowed opacity-75'
+                                                        : 'bg-white border-emerald-100 text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50 hover:shadow-[0_4px_12px_rgba(16,185,129,0.06)] hover:-translate-y-0.5'
+                                            }
+                                        `}
+                                    >
+                                        <span className="font-extrabold leading-none">
+                                            {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        </span>
+                                        <span className="text-[7.5px] opacity-60 mt-0.5 leading-none">
+                                            {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                        </span>
+
+                                        {/* Real-time remaining seats/holds indication */}
+                                        {!isBooked && !isSelected && isHeldByOthers && (
+                                            <span className="text-[6.5px] font-black mt-1 uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                                                Held
+                                            </span>
+                                        )}
+
+                                        {isBooked && (
+                                            <span className="text-[6.5px] font-black mt-1 uppercase tracking-wide bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">
+                                                Full
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {selectedSlot && timeLeft > 0 && (
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-between gap-3 shadow-sm animate-pulse">
+                    <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                        <p className="text-xs font-bold text-amber-800">
+                            Slot temporarily reserved for you!
+                        </p>
+                    </div>
+                    <span className="text-xs font-black text-white bg-amber-500 px-3 py-1 rounded-lg font-mono">
+                        {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
+                    </span>
+                </div>
+            )}
+
+            <button
+                disabled={!selectedSlot || bookingLoading}
+                onClick={() => setShowIntakeForm(true)}
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 hover:shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+                Confirm Booking
+            </button>
+        </div>
+    );
+}
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
+export default function HospitalDetailPage({ initialHospital = null }: { initialHospital?: Hospital | null }) {
+    const params = useParams();
+    const router = useRouter();
+    // initialHospital is rendered on the server for SEO. If the server fetch failed it
+    // is null and the original client-side fetch below runs exactly as before.
+    const [hospital, setHospital] = useState<Hospital | null>(initialHospital);
+    const [loading, setLoading] = useState(!initialHospital);
+
+    const fallbackImage = '/premium-hospital.png';
+
+    const resolveSrc = (s?: string) => {
+        if (!s) return fallbackImage;
+        if (s.startsWith('/uploads/')) return `http://localhost:5000${s}`;
+        if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) return s;
+        return fallbackImage;
+    };
+
+    const getImages = (h: Hospital): string[] => {
+        if (h.images && h.images.length > 0) return h.images.map(resolveSrc);
+        if (h.image) return [resolveSrc(h.image)];
+        return [fallbackImage];
+    };
+
+    const phoneList = (h: Hospital) => {
+        const list = [];
+        if (h.contactNumber) list.push(h.contactNumber);
+        if (h.phoneNumbers && h.phoneNumbers.length > 0) {
+            list.push(...h.phoneNumbers);
+        }
+        return Array.from(new Set(list)).filter(isRealValue);
+    };
+
+    const getMapUrl = (h: Hospital) =>
+        h.mapLink || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${h.address}, ${h.city}`)}`;
+
+    useEffect(() => {
+        const fetchHospital = async () => {
+            try {
+                const res = await api.get(`/hospitals/${params.slug}`);
+                setHospital(res.data);
+            } catch (err) {
+                console.error('Failed to fetch hospital', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (params.slug && !initialHospital) fetchHospital();
+    }, [params.slug, initialHospital]);
+    // (Page title/description now come from server metadata in page.tsx.)
+
+    const parsedDesc = React.useMemo(() => {
+        return parseHospitalDescription(hospital?.description || '');
+    }, [hospital?.description]);
+
+    // Loading skeleton
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 animate-pulse">
+                <div className="h-64 sm:h-80 bg-gray-200" />
+                <div className="max-w-5xl mx-auto px-4 py-8 space-y-4">
+                    <div className="h-8 bg-gray-200 rounded w-2/3" />
+                    <div className="h-4 bg-gray-100 rounded w-1/2" />
+                    <div className="grid grid-cols-2 gap-4 mt-6">
+                        {[1,2,3,4].map(i => <div key={i} className="h-20 bg-gray-200 rounded-xl" />)}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!hospital) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+                <Building className="w-16 h-16 text-gray-300 mb-4" />
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Hospital not found</h2>
+                <p className="text-gray-500 mb-6 text-sm">This hospital may have been removed or doesn&apos;t exist.</p>
+                <button onClick={() => router.push('/hospitals')} className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium">
+                    Back to Hospitals
+                </button>
+            </div>
+        );
+    }
+
+    const imgs = getImages(hospital);
+    const phones = phoneList(hospital);
+
+    const factConfig = [
+        { key: 'hospitalName', label: 'Hospital Name', icon: Building2 },
+        { key: 'type', label: 'Type', icon: Building },
+        { key: 'location', label: 'Location', icon: MapPin },
+        { key: 'established', label: 'Established', icon: Calendar },
+        { key: 'bedCapacity', label: 'Bed Capacity', icon: BedDouble },
+    ];
+
+    const activeFacts = factConfig
+        .map(cfg => ({
+            ...cfg,
+            value: parsedDesc.facts[cfg.key as keyof typeof parsedDesc.facts]
+        }))
+        .filter((item): item is typeof item & { value: string } => Boolean(item.value));
+
+    return (
+        <div className="min-h-screen bg-[#F8FAFC] pb-20">
+
+            {/* ── Hero Image — fixed height, no text overlay ── */}
+            <div className="relative w-full h-56 sm:h-72 md:h-80 lg:h-96 bg-slate-100 overflow-hidden shadow-inner">
+                <ImageSlideshow images={imgs} alt={hospital.name} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-black/20 pointer-events-none z-10" />
+
+                {/* Back button */}
+                <button
+                    onClick={() => router.push('/hospitals')}
+                    className="absolute top-4 left-4 z-20 bg-white/90 hover:bg-white text-slate-800 shadow-md backdrop-blur-md border border-slate-200/60 px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all text-xs font-black uppercase tracking-wider active:scale-95"
+                >
+                    <ArrowLeft className="w-4 h-4 text-slate-700" />
+                    <span className="hidden sm:inline">Back</span>
+                </button>
+
+                {/* Rating + 24/7 badges */}
+                <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
+                    <span className="bg-white/95 backdrop-blur-md text-slate-800 px-3.5 py-2 rounded-xl text-xs font-black shadow flex items-center gap-1.5 border border-white/40">
+                        <Star className="w-4 h-4 fill-amber-500 text-amber-500 animate-pulse" /> {hospital.rating}
+                    </span>
+                    {hospital.isOpen24Hours && (
+                        <span className="bg-emerald-500/95 backdrop-blur-md text-white px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-emerald-400/30">
+                            <Clock className="w-3.5 h-3.5" /> Open 24/7
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Hospital Name + Address — clearly below image, white background ── */}
+            <div className="bg-white border-b border-slate-100/80 shadow-sm relative z-10">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 leading-tight tracking-tight">
+                            {hospital.name}
+                        </h1>
+                        <button
+                            onClick={() => {
+                                const url = `https://www.pillora.in/hospitals/${hospital.slug}`;
+                                if (navigator.share) {
+                                    navigator.share({ title: hospital.name, url });
+                                } else {
+                                    navigator.clipboard.writeText(url);
+                                    alert('Link copied to clipboard!');
+                                }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-750 hover:bg-blue-600 hover:text-white border border-blue-100/50 rounded-xl transition-all duration-200 shrink-0 font-bold text-xs sm:text-sm shadow-sm active:scale-95"
+                        >
+                            <Share2 className="w-4 h-4" />
+                            <span>Share</span>
+                        </button>
+                    </div>
+                    <a
+                        href={getMapUrl(hospital)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-start gap-1.5 text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:underline underline-offset-2 transition-colors font-extrabold group/map"
+                        title="Open in Google Maps"
+                    >
+                        <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />
+                        <span>{hospital.address}, {hospital.city}</span>
+                        <ExternalLink className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-0 group-hover/map:opacity-100 transition-opacity" />
+                    </a>
+                </div>
+            </div>
+
+            {/* ── Main Content ── */}
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+
+                    {/* ──── Left: Main Info ──── */}
+                    <div className="lg:col-span-2 space-y-6">
+
+                        {/* Quick Stats */}
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                            <StatCard
+                                icon={<CreditCard className="w-5 h-5" />}
+                                label="Consultation Fee"
+                                color="blue"
+                                value={`₹${hospital.consultationFee}`}
+                                valueClass="font-black text-slate-900 text-lg"
+                            />
+                            <StatCard
+                                icon={<Ambulance className="w-5 h-5" />}
+                                label="Hospital Contact No"
+                                color="rose"
+                                value={
+                                    isRealValue(hospital.ambulanceContact)
+                                        ? <a href={`tel:${hospital.ambulanceContact}`} className="hover:underline">{hospital.ambulanceContact}</a>
+                                        : <span className="text-slate-400 text-sm font-bold">Not provided</span>
+                                }
+                                valueClass="font-black text-rose-600 text-base"
+                            />
+                            <StatCard
+                                icon={<Clock className="w-5 h-5" />}
+                                label="Open 24/7"
+                                color="emerald"
+                                value={
+                                    hospital.isOpen24Hours
+                                        ? <span className="flex items-center gap-1.5 text-emerald-600 font-black"><CheckCircle className="w-4 h-4 text-emerald-500" /> Yes</span>
+                                        : <span className="flex items-center gap-1.5 text-rose-500 font-black"><XCircle className="w-4 h-4 text-rose-500" /> No</span>
+                                }
+                            />
+                            <StatCard
+                                icon={<CreditCard className="w-5 h-5" />}
+                                label="Online Payment"
+                                color="indigo"
+                                value={
+                                    hospital.isOnlinePaymentAvailable
+                                        ? <span className="flex items-center gap-1.5 text-blue-600 font-black"><CheckCircle className="w-4 h-4 text-blue-500" /> Available</span>
+                                        : <span className="flex items-center gap-1.5 text-rose-500 font-black"><XCircle className="w-4 h-4 text-rose-500" /> Not Available</span>
+                                }
+                            />
+                        </div>
+
+                        {/* Contact Card — only when the hospital has listed numbers */}
+                        {phones.length > 0 && (
+                        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
+                            <h3 className="text-base sm:text-lg font-black text-slate-900 mb-5 pb-3 border-b border-slate-50 flex items-center gap-2">
+                                <span className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Phone className="w-4 h-4" /></span>
+                                Contact Details
+                            </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {phones.map((ph, i) => (
+                                        <a href={`tel:${ph}`} key={i}
+                                            className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/70 hover:bg-blue-50/70 border border-slate-100 hover:border-blue-200/60 transition-all duration-200 group shadow-sm">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors shrink-0 border border-blue-100/50">
+                                                    <Phone className="w-4 h-4 text-blue-600 group-hover:text-white transition-colors" />
+                                                </div>
+                                                <span className="font-extrabold text-slate-800 group-hover:text-blue-700 text-sm">{ph}</span>
+                                            </div>
+                                            {i === 0 && <span className="text-[9px] font-black bg-blue-50 text-blue-700 border border-blue-100/50 px-2.5 py-0.5 rounded-full uppercase">Primary</span>}
+                                        </a>
+                                    ))}
+                                </div>
+                        </div>
+                        )}
+
+                        {/* Doctors */}
+                        {hospital.doctors && hospital.doctors.length > 0 && (
+                            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
+                                <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-50">
+                                    <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                                        <span className="p-2 bg-blue-50 text-blue-600 rounded-xl"><User className="w-4 h-4" /></span>
+                                        Available Doctors
+                                    </h3>
+                                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs sm:text-sm font-black border border-blue-100/50 shadow-sm">
+                                        {hospital.doctors.length} Doctor{hospital.doctors.length > 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                                <div className="space-y-6">
+                                    {hospital.doctors.map((doc, i) => (
+                                        <div key={i} className="bg-white hover:bg-slate-50/40 border border-slate-100/80 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/50">
+                                                    <User className="w-4 h-4" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="font-black text-slate-900 text-sm sm:text-base">{doc.isSpecialtyGroup ? "" : "Dr. "}{doc.name}</p>
+                                                        {doc.isSpecialtyGroup && (
+                                                            <span className="text-[9px] font-black bg-blue-50 text-blue-800 border border-blue-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                                                                Specialty Group
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {doc.specialization && (
+                                                        <span className="text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-100/50 rounded-full px-2.5 py-0.5 inline-block mt-1 uppercase tracking-wide">
+                                                            {doc.specialization}
+                                                        </span>
+                                                    )}
+                                                    {doc.isSpecialtyGroup && doc.department && (
+                                                        <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wide">{doc.department}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap gap-3 text-xs text-slate-600 mb-4">
+                                                {doc.timing && (
+                                                    <span className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-100 font-bold shadow-sm">
+                                                        <Clock className="w-3.5 h-3.5 text-blue-500" /> {doc.timing}
+                                                    </span>
+                                                )}
+                                                {doc.daysAvailable && doc.daysAvailable.length > 0 && doc.daysAvailable.map(d => (
+                                                    <span key={d} className="bg-emerald-50 text-emerald-800 border border-emerald-100 px-2.5 py-1 rounded-xl font-black text-[9px] uppercase tracking-wider">
+                                                        {d.slice(0, 3)}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            {doc.isSpecialtyGroup && (
+                                                <div className="mb-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/60 flex items-start gap-3">
+                                                    <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Specialty Pool Protocol</p>
+                                                        <p className="text-xs text-slate-500 font-bold mt-1">Doctor will be assigned on the day of visit based on the group pool ({doc.doctorsCount || 1} doctors available).</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <DoctorBookingInline doctor={doc} hospital={hospital} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Description / About Section */}
+                        {(activeFacts.length > 0 || parsedDesc.description) && (
+                            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100">
+                                {/* Section header */}
+                                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                                    <div className="p-2.5 bg-blue-50 rounded-xl shrink-0">
+                                        <Building className="w-4.5 h-4.5 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">About the Hospital</h3>
+                                        <p className="text-xs text-slate-400 mt-0.5 font-bold">Details provided by the hospital</p>
+                                    </div>
+                                </div>
+
+                                {/* Key Facts Grid */}
+                                {activeFacts.length > 0 && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+                                        {activeFacts.map((item) => {
+                                            const IconComp = item.icon;
+                                            return (
+                                                <div
+                                                    key={item.key}
+                                                    className="flex items-start gap-3 p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-100 transition-all hover:bg-slate-50"
+                                                >
+                                                    <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shrink-0 mt-0.5 border border-blue-100/60">
+                                                        <IconComp className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <span className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-widest block">
+                                                            {item.label}
+                                                        </span>
+                                                        <span className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5 block break-words leading-snug">
+                                                            {item.value}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {/* Visual Divider */}
+                                {activeFacts.length > 0 && parsedDesc.description && (
+                                    <div className="my-6 border-t border-slate-100" />
+                                )}
+
+                                {/* Free-text Description Block */}
+                                {parsedDesc.description && (
+                                    <div className="max-w-[70ch]">
+                                        <style>{`
+                                            .hosp-desc { font-size: 14px; line-height: 1.75; color: #475569; font-weight: 400; }
+                                            @media (min-width: 640px) { .hosp-desc { font-size: 15px; } }
+                                            .hosp-desc b, .hosp-desc strong { font-weight: 700; color: #0f172a; }
+                                            .hosp-desc i, .hosp-desc em { font-style: italic; color: #64748b; }
+                                            .hosp-desc u { text-decoration: underline; text-underline-offset: 3px; }
+                                            .hosp-desc p { margin-bottom: 12px; }
+                                            .hosp-desc p:last-child { margin-bottom: 0; }
+                                            .hosp-desc br { display: block; margin-bottom: 4px; content: ''; }
+                                            .hosp-desc ul { list-style: disc; padding-left: 20px; margin-bottom: 12px; }
+                                            .hosp-desc ol { list-style: decimal; padding-left: 20px; margin-bottom: 12px; }
+                                            .hosp-desc li { margin-bottom: 4px; color: #475569; }
+                                            .hosp-desc h1, .hosp-desc h2 { font-weight: 800; color: #0f172a; margin: 16px 0 8px; }
+                                            .hosp-desc h1 { font-size: 18px; } 
+                                            .hosp-desc h2 { font-size: 16px; }
+                                        `}</style>
+                                        <div
+                                            className="hosp-desc"
+                                            dangerouslySetInnerHTML={{ __html: parsedDesc.description }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ──── Right: Sidebar ──── */}
+                    <div className="space-y-4 lg:sticky lg:top-24 self-start">
+
+                        {/* Clickable Map Link */}
+                        <a
+                            href={getMapUrl(hospital)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3.5 p-4 sm:p-5 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] transition-all duration-300 shadow-lg shadow-blue-100 hover:-translate-y-0.5 active:scale-95 group"
+                        >
+                            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 border border-white/10 shadow-sm">
+                                <MapPin className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-black text-sm">View on Maps</p>
+                                <p className="text-blue-100 text-xs truncate font-bold mt-0.5">{hospital.address}, {hospital.city}</p>
+                            </div>
+                            <ExternalLink className="w-4 h-4 opacity-70 shrink-0" />
+                        </a>
+
+                        {/* Government Schemes */}
+                        {hospital.governmentSchemes?.length > 0 && (
+                            <div className="bg-white rounded-[2rem] p-5 sm:p-6 shadow-sm border border-slate-100">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 flex items-center gap-1.5">
+                                    <ShieldCheck className="w-4 h-4 text-blue-500" /> Accepted Schemes
+                                </p>
+                                <div className="flex flex-col gap-2.5">
+                                    {hospital.governmentSchemes.map((s, i) => (
+                                        <div key={i} className="flex items-center gap-2.5 p-3 bg-blue-50/70 text-blue-800 rounded-2xl border border-blue-100/50">
+                                            <ShieldCheck className="w-4 h-4 text-blue-500 shrink-0" />
+                                            <span className="text-xs sm:text-sm font-bold leading-snug">{s}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
