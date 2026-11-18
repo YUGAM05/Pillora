@@ -23,6 +23,13 @@ import api from '@/lib/api';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
+/**
+ * The post title is the page's only <h1>. Any <h1> written inside a post body
+ * (in admin) is rendered as <h2> so a page can never have duplicate H1s.
+ */
+const demoteBodyH1 = (html: string): string =>
+    (html || '').replace(/<h1(\s[^>]*)?>/gi, (_m, attrs = '') => `<h2${attrs}>`).replace(/<\/h1\s*>/gi, '</h2>');
+
 export interface Blog {
     _id: string;
     title: string;
@@ -229,7 +236,7 @@ export default function BlogPostDetail({ initialBlog = null }: { initialBlog?: B
                     </p>
 
                     <div style={{ padding: 0, margin: 0 }}>
-                        <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+                        <div dangerouslySetInnerHTML={{ __html: demoteBodyH1(blog.content) }} />
                     </div>
                 </motion.div>
 
