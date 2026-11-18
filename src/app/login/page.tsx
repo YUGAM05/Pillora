@@ -25,6 +25,7 @@ export default function LoginPage() {
     const [mfaSetup, setMfaSetup] = useState(false);
     const [mfaCode, setMfaCode] = useState("");
     const [mfaUserId, setMfaUserId] = useState("");
+    const [mfaToken, setMfaToken] = useState("");
     const [qrCode, setQrCode] = useState("");
 
     // Phone WhatsApp OTP State
@@ -68,13 +69,13 @@ export default function LoginPage() {
             const data = res.data;
 
             if (data.mfaRequired) {
-                setMfaUserId(data.userId);
+                setMfaUserId(data.userId); setMfaToken(data.mfaToken || "");
                 setMfaStep(true);
                 return;
             }
 
             if (data.mfaSetupRequired) {
-                setMfaUserId(data.userId);
+                setMfaUserId(data.userId); setMfaToken(data.mfaToken || "");
                 setQrCode(data.qrCode);
                 setMfaSetup(true);
                 setMfaStep(true);
@@ -124,7 +125,7 @@ export default function LoginPage() {
         setError("");
         try {
             const res = await api.post('/auth/verify-mfa', {
-                userId: mfaUserId,
+                mfaToken,
                 token: mfaCode,
             });
             const data = res.data;
