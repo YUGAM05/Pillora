@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { MIN_DONORS_FOR_CITY_PAGE, getCityDonorStats, qualifies } from "@/lib/donorStats";
+import { MIN_DONORS_FOR_CITY_PAGE, getCityDonorStats, meetsThreshold, qualifies } from "@/lib/donorStats";
 import { noIndexMetadata, pageMetadata } from "@/lib/seo";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/structuredData";
 import { EmergencyNote } from "@/components/blood/BloodConnectGuide";
@@ -19,8 +19,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BloodDonorsIndexPage() {
-    // Only cities that meet the threshold are listed (aggregate counts only).
-    const cities = (await getCityDonorStats()).filter(qualifies);
+    // Cities with enough registered donors are listed (aggregate counts only).
+    // Indexing additionally needs the owner to confirm the data (see generateMetadata).
+    const cities = (await getCityDonorStats()).filter(meetsThreshold);
     return (
         <main className="bg-white">
             <JsonLd data={breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Blood donors by city", path: "/blood-donors" }])} />

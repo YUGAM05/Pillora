@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Droplet, HeartHandshake, Users } from "lucide-react";
-import { BLOOD_GROUP_ORDER, MIN_DONORS_FOR_CITY_PAGE, getCityDonorStats, qualifies } from "@/lib/donorStats";
+import { BLOOD_GROUP_ORDER, CITY_COUNTS_CONFIRMED, MIN_DONORS_FOR_CITY_PAGE, getCityDonorStats, meetsThreshold, qualifies } from "@/lib/donorStats";
 import { REQUEST_STEPS, SOURCES } from "@/content/bloodConnect";
 import { noIndexMetadata, pageMetadata } from "@/lib/seo";
 import { JsonLd, breadcrumbJsonLd, faqJsonLd } from "@/lib/structuredData";
@@ -56,7 +56,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function CityDonorsPage({ params }: Params) {
     const c = await getCity(params.city);
     if (!c) notFound();
-    const indexable = qualifies(c);
+    const indexable = qualifies(c); // threshold met AND donor data confirmed by the owner
+    const listed = meetsThreshold(c); // enough donors to show availability and the group breakdown
     const path = `/blood-donors/${c.slug}`;
     const updated = c.updatedAt
         ? new Date(c.updatedAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "long", year: "numeric" })
@@ -89,7 +90,7 @@ export default async function CityDonorsPage({ params }: Params) {
                     <p className="inline-flex px-3 py-1 rounded-full bg-white/15 text-xs font-bold uppercase tracking-widest">Blood Connect</p>
                     <h1 className="text-3xl md:text-5xl font-black mt-4 tracking-tight">Blood donors in {c.city}</h1>
                     <p className="text-red-50 mt-4 max-w-2xl text-lg leading-relaxed">
-                        {indexable
+                        {listed
                             ? `${c.donors} registered voluntary donors in ${c.city} are listed on Pillora. Request blood and we will match you with registered donors of the same blood group in your area.`
                             : `Pillora has only a few registered donors in ${c.city} so far. You can still request blood, and every new donor who registers here helps.`}
                     </p>
@@ -112,7 +113,7 @@ export default async function CityDonorsPage({ params }: Params) {
                         <p className="text-3xl font-black text-gray-900 mt-2">{c.donors}</p>
                         <p className="text-sm text-gray-600">registered donors</p>
                     </div>
-                    {indexable && (
+                    {listed && (
                         <div className="rounded-2xl border border-red-100 p-5 bg-red-50/40">
                             <HeartHandshake className="w-6 h-6 text-red-600" aria-hidden="true" />
                             <p className="text-3xl font-black text-gray-900 mt-2">{c.available}</p>
@@ -131,7 +132,7 @@ export default async function CityDonorsPage({ params }: Params) {
                     Donors register themselves; Pillora does not medically screen donors. The blood centre checks every donor before donation.
                 </p>
 
-                {indexable && c.byBloodGroup && (
+                {listed && c.byBloodGroup && (
                     <div className="mt-8">
                         <h3 className="text-lg font-bold text-gray-900">Registered donors by blood group</h3>
                         <div className="overflow-x-auto mt-3 rounded-2xl border border-red-100">
@@ -192,7 +193,9 @@ export default async function CityDonorsPage({ params }: Params) {
                 <SourceList sources={[SOURCES.eraktkosh, SOURCES.eraktkoshFaq, SOURCES.nbtcGuidelines]} />
                 {!indexable && (
                     <p className="text-xs text-gray-400 mt-4">
-                        City pages are listed in search once a city has at least {MIN_DONORS_FOR_CITY_PAGE} registered donors.
+                        {CITY_COUNTS_CONFIRMED
+                            ? `City pages are listed in search once a city has at least ${MIN_DONORS_FOR_CITY_PAGE} registered donors.`
+                            : "Donor counts are shown as recorded and are being reviewed."}
                     </p>
                 )}
             </section>
