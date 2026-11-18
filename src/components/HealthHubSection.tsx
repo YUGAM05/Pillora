@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import { Calendar, ArrowRight, Activity, Clock, ShieldCheck } from 'lucide-react';
+import { UNVERIFIED_CLAIMS } from "@/content/claims";
 import Image from 'next/image';
 import { HEALTH_HUB_ARTICLES, HealthArticle } from '@/data/healthHubData';
 
@@ -62,7 +63,7 @@ export default function HealthHubSection() {
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">
-                            <ShieldCheck className="w-4 h-4" /> Doctor-Verified Insights
+                            <ShieldCheck className="w-4 h-4" /> {UNVERIFIED_CLAIMS.doctorVerifiedBadge}
                         </div>
                         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Health Hub</h2>
                         <p className="mt-1 text-sm sm:text-base text-gray-600">

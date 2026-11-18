@@ -1,6 +1,7 @@
 {
   "env": {
     "NEXT_PUBLIC_API_URL": "https://apex-backend-theta.vercel.app/api",
-    "NEXT_PUBLIC_BACKEND_URL": "https://apex-backend-theta.vercel.app"
+    "NEXT_PUBLIC_BACKEND_URL": "https://apex-backend-theta.vercel.app",
+    "NEXT_PUBLIC_GA4_ID": "G-GV9EXYK4WE"
   }
 }

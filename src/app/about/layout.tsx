@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+import { UNVERIFIED_CLAIMS } from "@/content/claims";
 
-export const metadata: Metadata = {
-  title: { absolute: 'About Pillora | Health-Tech Platform India' },
-  description: 'Learn about Pillora, India\'s leading health-tech platform dedicated to fast blood donor matching and transparent hospital information and charges.',
-  alternates: {
-    canonical: 'https://www.pillora.in/about',
-  },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "About Pillora | Healthcare Coordination in India",
+    description: UNVERIFIED_CLAIMS.aboutMetaDescription,
+    path: "/about",
+});
 
 export default function AboutLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+    return <>{children}</>;
 }

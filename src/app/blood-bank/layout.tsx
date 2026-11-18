@@ -1,13 +1,12 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: { absolute: 'Find Blood Donor India | Pillora Blood Bank' },
-  description: 'Join Pillora\'s blood connect network to find a blood donor in India instantly. Register as a donor today and help save lives in emergency situations.',
-  alternates: {
-    canonical: 'https://www.pillora.in/blood-bank',
-  },
-};
+export const metadata: Metadata = pageMetadata({
+    title: "Find Blood Donors & Request Blood in India | Pillora",
+    description: "Register as a blood donor or request blood in an emergency. Pillora matches requests with verified donors by blood group and area in India.",
+    path: "/blood-bank",
+});
 
 export default function BloodBankLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+    return <>{children}</>;
 }

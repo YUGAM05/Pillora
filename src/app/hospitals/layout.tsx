@@ -1,13 +1,14 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: { absolute: 'Hospital Information & Charges | Pillora' },
-  description: 'Get complete hospital information, verify hospital charges, and check your eligibility for government health schemes in India with Pillora.',
-  alternates: {
-    canonical: 'https://www.pillora.in/hospitals',
-  },
-};
+// Applies to /hospitals. /hospitals/[slug] sets its own metadata (generateMetadata).
+export const metadata: Metadata = pageMetadata({
+    title: "Hospitals, Doctors & Consultation Fees | Pillora",
+    description:
+        "Find hospitals and clinics, see doctors, timings and consultation fees, check government scheme acceptance, and book appointments online with Pillora.",
+    path: "/hospitals",
+});
 
 export default function HospitalsLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+    return <>{children}</>;
 }

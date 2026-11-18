@@ -9,31 +9,36 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import { SITE } from "@/lib/seo";
+import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/structuredData";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// GA4 + Search Console come from env vars (set per site in Vercel), never hard-coded.
+const GA4_ID = process.env.NEXT_PUBLIC_GA4_ID;
+const GSC_TOKEN = process.env.NEXT_PUBLIC_GSC_VERIFICATION;
+
 export const metadata: Metadata = {
+    metadataBase: new URL(SITE.url),
+    // Default for pages without their own metadata. NOTE: no canonical here on
+    // purpose — a canonical set in the root layout is inherited by every page
+    // and pointed them all at the homepage. Each page sets its own instead.
     title: {
-        default: "Pillora | Blood Donors & Hospital Information India",
+        default: "Find Verified Blood Donors in India | Pillora",
         template: "%s | Pillora"
     },
-    description: "Find verified blood donors in India, check hospital charges, and explore government health schemes. Pillora is your complete health-tech platform.",
-    keywords: ["blood donor", "hospital information", "find blood donor India", "hospital charges", "government health schemes India"],
-    alternates: {
-        canonical: "https://www.pillora.in"
-    },
+    description: "Request blood, find verified donors near you, and check hospital information, doctor fees and government health schemes in India on Pillora.",
     openGraph: {
-        title: "Pillora | Blood Donors & Hospital Information India",
-        description: "Find verified blood donors in India, check hospital charges, and explore government health schemes. Pillora is your complete health-tech platform.",
-        url: "https://www.pillora.in",
-        siteName: "Pillora",
+        siteName: SITE.name,
+        locale: SITE.locale,
         type: "website",
+        images: [{ url: SITE.ogImage, width: 1200, height: 630, alt: "Pillora" }],
     },
     twitter: {
         card: "summary_large_image",
-        title: "Pillora | Blood Donors & Hospital Information India",
-        description: "Find verified blood donors in India, check hospital charges, and explore government health schemes.",
+        images: [SITE.ogImage],
     },
+    ...(GSC_TOKEN ? { verification: { google: GSC_TOKEN } } : {}),
     icons: {
         icon: [
             { url: "/favicon.ico" },
@@ -57,27 +62,10 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const jsonLd = {
-        "@context": "https://schema.org",
-        "@type": "MedicalOrganization",
-        "name": "Pillora",
-        "description": "Blood Connect and Hospital Info provider in Ahmedabad.",
-        "url": "https://www.pillora.in",
-        "address": {
-            "@type": "PostalAddress",
-            "addressLocality": "Ahmedabad",
-            "addressRegion": "Gujarat",
-            "addressCountry": "IN"
-        }
-    };
-
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                />
+                <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
             </head>
             <body className={inter.className}>
                 <ThemeProvider
@@ -95,19 +83,22 @@ export default function RootLayout({
                 </ThemeProvider>
                 <Analytics />
                 <SpeedInsights />
-                <Script
-                    src="https://www.googletagmanager.com/gtag/js?id=G-GV9EXYK4WE"
-                    strategy="afterInteractive"
-                />
-                <Script id="google-analytics" strategy="afterInteractive">
-                    {`
-                        window.dataLayer = window.dataLayer || [];
-                        function gtag(){dataLayer.push(arguments);}
-                        gtag('js', new Date());
-
-                        gtag('config', 'G-GV9EXYK4WE');
-                    `}
-                </Script>
+                {GA4_ID && (
+                    <>
+                        <Script
+                            src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}
+                            strategy="afterInteractive"
+                        />
+                        <Script id="google-analytics" strategy="afterInteractive">
+                            {`
+                                window.dataLayer = window.dataLayer || [];
+                                function gtag(){dataLayer.push(arguments);}
+                                gtag('js', new Date());
+                                gtag('config', '${GA4_ID}');
+                            `}
+                        </Script>
+                    </>
+                )}
             </body>
         </html>
     );
