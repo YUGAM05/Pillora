@@ -1,4 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
+const fs = require('fs');
+const path = require('path');
 
 // Private / utility routes: noindex on the page AND excluded from the sitemap.
 // Keep in sync with PRIVATE_ROUTE_PATTERNS in src/lib/seo.ts.
@@ -10,12 +12,35 @@ const PRIVATE = [
   '/api/*',
 ];
 
+/**
+ * Keep the sitemap consistent with each page's robots meta: any route whose
+ * built HTML says noindex (e.g. city pages below the donor threshold, hidden
+ * drafts) is left out automatically.
+ */
+const isNoindex = (route) => {
+  const file = path.join(__dirname, '.next', 'server', 'app', `${route === '/' ? 'index' : route.replace(/^\//, '')}.html`);
+  try {
+    return /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return false;
+  }
+};
+
 module.exports = {
   siteUrl: 'https://www.pillora.in',
   generateRobotsTxt: true,
   sitemapSize: 7000,
   // Dynamic sitemaps are route handlers; don't list them as pages.
   exclude: [...PRIVATE, '/blog-sitemap.xml', '/server-sitemap.xml'],
+  transform: async (config, route) => {
+    if (isNoindex(route)) return null;
+    return {
+      loc: route,
+      changefreq: config.changefreq,
+      priority: config.priority,
+      lastmod: config.autoLastmod ? new Date().toISOString() : undefined,
+    };
+  },
   robotsTxtOptions: {
     policies: [{ userAgent: '*', allow: '/', disallow: ['/api/'] }],
     additionalSitemaps: [
