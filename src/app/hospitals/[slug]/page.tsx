@@ -748,14 +748,19 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                         {validSlots.map((slot) => {
                             const isSelected = selectedSlot?._id === slot._id;
                             
-                            const maxAppts = slot.max_appointments || 1;
-                            const bookedCount = slot.booked_count || 0;
-                            const holdCount = slot.hold_count || 0;
-                            const slotsLeft = maxAppts - (bookedCount + holdCount);
+                            // A slot can take up to max_appointments patients. It stays selectable while
+                            // booked + held (other patients in checkout) is below that, and is only "Full"
+                            // when every place is booked.
+                            const maxAppts = Math.max(1, Number(slot.max_appointments) || 1);
+                            const bookedCount = Math.max(0, Number(slot.booked_count) || 0);
+                            const holdCount = Math.max(0, Number(slot.hold_count) || 0);
+                            const slotsLeft = Math.max(0, maxAppts - (bookedCount + holdCount));
 
-                            const isBooked = bookedCount >= maxAppts;
-                            const isHeldByOthers = slotsLeft <= 0 && !isBooked; 
+                            const isClosed = slot.status === 'cancelled' || slot.status === 'blocked';
+                            const isBooked = isClosed || bookedCount >= maxAppts;
+                            const isHeldByOthers = slotsLeft <= 0 && !isBooked;
                             const isDisabled = isBooked || (isHeldByOthers && !isSelected);
+                            const showPlacesLeft = maxAppts > 1 && !isBooked && !isHeldByOthers;
 
                             return (
                                 <div key={slot._id} className="relative group">
@@ -789,9 +794,15 @@ function DoctorBookingInline({ doctor, hospital }: { doctor: any; hospital: any 
                                             </span>
                                         )}
 
+                                        {showPlacesLeft && (
+                                            <span className={`text-[6.5px] font-black mt-1 tracking-wide px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-700'}`}>
+                                                {slotsLeft} of {maxAppts} left
+                                            </span>
+                                        )}
+
                                         {isBooked && (
                                             <span className="text-[6.5px] font-black mt-1 uppercase tracking-wide bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">
-                                                Full
+                                                {isClosed ? 'Closed' : 'Full'}
                                             </span>
                                         )}
                                     </button>
