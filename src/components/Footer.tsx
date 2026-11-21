@@ -17,7 +17,8 @@ export default function Footer() {
                                 width={72}
                                 height={72}
                                 className="w-14 h-14 xl:w-16 xl:h-16 object-contain object-right"
-                                unoptimized
+                                // Optimised by next/image (logo.png itself is 1.7 MB)
+                                sizes="64px"
                             />
                             <Image
                                 src="/pillora-text.png"
@@ -25,7 +26,7 @@ export default function Footer() {
                                 width={240}
                                 height={80}
                                 className="block h-10 sm:h-12 xl:h-[3.5rem] w-auto object-contain object-left mt-0.5 xl:mt-1"
-                                unoptimized
+                                sizes="(min-width: 1280px) 212px, 190px"
                             />
                         </div>
                         <p className="text-gray-500 text-sm leading-relaxed">

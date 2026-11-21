@@ -167,7 +167,7 @@ export default function HospitalsPage() {
         const t = setTimeout(async () => {
             if (searchTerm.trim().length < 2) { setSuggestions([]); return; }
             try {
-                const res = await api.get(`/hospitals/search?q=${searchTerm}`);
+                const res = await api.get("/hospitals/search", { params: { q: searchTerm.trim() } });
                 setSuggestions(res.data);
             } catch { /* ignore */ }
         }, 300);

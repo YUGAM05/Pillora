@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import dynamic from 'next/dynamic';
 import { Package, Truck, MapPin, ChevronLeft, Phone, Clock, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
+import { toDisplayOrder } from '@/lib/orderDisplay';
 
 const OrderMap = dynamic(() => import('@/components/OrderMap'), {
     ssr: false,
@@ -19,7 +20,7 @@ export default function TrackOrderPage() {
     const fetchOrder = useCallback(async () => {
         try {
             const res = await api.get(`/orders/${id}`);
-            setOrder(res.data);
+            setOrder(toDisplayOrder(res.data));
         } catch (err) {
             console.error("Error fetching order tracking:", err);
         } finally {

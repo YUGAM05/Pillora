@@ -146,7 +146,6 @@ export default function AppointmentCheckoutPage() {
             // 2. Initiate Payment Order on Backend (using create-order route)
             const response = await api.post("/payments/create-order", {
                 appointmentId: appointment.appointmentId || appointmentId,
-                amount: Math.round(advanceFee * 100), // in paise
                 patientName: patientName.trim(),
                 patientPhone: patientPhone.trim(),
                 patientEmail: patientEmail.trim(),
@@ -186,7 +185,11 @@ export default function AppointmentCheckoutPage() {
                             razorpaySignature: response.razorpay_signature
                         });
 
-                        if (verifyRes.data.success) {
+                        if (verifyRes.status === 202) {
+                            // Razorpay hasn't confirmed the capture yet; the webhook will finish it.
+                            setError(verifyRes.data?.message || "Payment received. We're confirming it with the bank. Your booking will appear in your dashboard shortly.");
+                            setTimeout(() => router.push("/dashboard"), 4000);
+                        } else if (verifyRes.data.success) {
                             setSuccess(true);
                             setTimeout(() => {
                                 router.push("/dashboard");
@@ -195,7 +198,8 @@ export default function AppointmentCheckoutPage() {
                             setError("Payment verification failed. Please contact support.");
                         }
                     } catch (err: any) {
-                        setError(err.response?.data?.message || "Failed to verify transaction signature.");
+                        // 409: the slot filled before the payment was confirmed; the advance is refunded automatically.
+                        setError(err.response?.data?.message || err.response?.data?.error || "Failed to verify transaction signature.");
                     } finally {
                         setPaymentLoading(false);
                     }
@@ -215,8 +219,9 @@ export default function AppointmentCheckoutPage() {
                 setError("Please login first");
             } else if (err.response?.status === 404) {
                 setError("Appointment not found");
-            } else if (err.response?.status === 400) {
-                setError(err.response.data.error || err.response.data.message);
+            } else if (err.response?.status === 400 || err.response?.status === 409) {
+                // 409 = SLOT_FULL / SLOT_ON_HOLD: someone else took or is paying for this slot.
+                setError(err.response.data.message || err.response.data.error || "This slot is no longer available. Please pick another time.");
             } else {
                 setError("Payment failed. Try again.");
             }

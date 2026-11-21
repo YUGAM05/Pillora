@@ -4,6 +4,7 @@ import api from "@/lib/api";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Package, Truck, CheckCircle, Clock, ChevronRight, ShoppingBag } from "lucide-react";
+import { toDisplayOrder } from "@/lib/orderDisplay";
 
 interface Order {
     _id: string;
@@ -17,14 +18,17 @@ interface Order {
 export default function MyOrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState("");
 
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const res = await api.get("/orders");
-                setOrders(res.data);
+                // The backend lists the current user's orders at /orders/my (GET /orders does not exist)
+                const res = await api.get("/orders/my");
+                setOrders(Array.isArray(res.data) ? res.data.map(toDisplayOrder) : []);
             } catch (err) {
                 console.error("Error fetching orders:", err);
+                setLoadError("We couldn't load your orders right now. Please try again in a moment.");
             } finally {
                 setLoading(false);
             }
@@ -49,7 +53,14 @@ export default function MyOrdersPage() {
                     <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
                 </div>
 
-                {orders.length === 0 ? (
+                {loadError ? (
+                    <div className="bg-white rounded-2xl p-12 text-center border border-red-100 shadow-sm">
+                        <p className="text-gray-700 mb-6">{loadError}</p>
+                        <button onClick={() => window.location.reload()} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition">
+                            Retry
+                        </button>
+                    </div>
+                ) : orders.length === 0 ? (
                     <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
                         <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Package className="w-12 h-12 text-blue-400" />

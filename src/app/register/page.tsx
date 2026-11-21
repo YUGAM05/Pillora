@@ -5,7 +5,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { setToken, setUser, getToken, getUser } from "@/lib/tokenStorage";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Lock, Loader2, ArrowRight, FileText, KeyRound, ShieldCheck } from "lucide-react";
+import { User, Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 import Image from "next/image";
 
 export default function RegisterPage() {
@@ -26,56 +26,10 @@ export default function RegisterPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    // Admin MFA state
-    const [mfaStep, setMfaStep] = useState(false);
-    const [mfaSetup, setMfaSetup] = useState(false);
-    const [mfaCode, setMfaCode] = useState("");
-    const [mfaUserId, setMfaUserId] = useState("");
-    const [qrCode, setQrCode] = useState("");
-    const [mfaSecret, setMfaSecret] = useState("");
-
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
-
-        // Admin login Easter Egg
-        if (name.trim().toLowerCase() === "admin" && email.trim().toLowerCase() === "admin@life-link.com" && password === "admin") {
-            try {
-                const res = await api.post('/auth/login', { email, password });
-
-                if (res.data.mfaRequired) {
-                    setMfaStep(true);
-                    setMfaUserId(res.data.userId);
-                    setLoading(false);
-                    return;
-                }
-
-                if (res.data.mfaSetupRequired) {
-                    setMfaSetup(true);
-                    setMfaStep(true);
-                    setMfaUserId(res.data.userId);
-                    setQrCode(res.data.qrCode);
-                    setMfaSecret(res.data.secret);
-                    setLoading(false);
-                    return;
-                }
-
-                if (res.data.role !== 'admin') {
-                    setError("Access Denied. Admin privileges required.");
-                    setLoading(false);
-                    return;
-                }
-
-                await completeAdminLogin(res.data.token, res.data);
-            } catch (err: any) {
-                console.error("Admin Login Error:", err);
-                setError(err.response?.data?.message || "Admin Login failed");
-            } finally {
-                setLoading(false);
-            }
-            return;
-        }
 
         try {
             const res = await api.post("/auth/register", {
@@ -95,34 +49,6 @@ export default function RegisterPage() {
         }
     };
 
-    const handleMfaVerify = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
-
-        try {
-            const res = await api.post('/auth/verify-mfa', {
-                userId: mfaUserId,
-                token: mfaCode,
-            });
-
-            await completeAdminLogin(res.data.token, res.data);
-
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Invalid authenticator code");
-            setMfaCode("");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const completeAdminLogin = async (token: string, userData: any) => {
-        setUser(JSON.stringify(userData));
-        setToken(token);
-        window.dispatchEvent(new Event('storage'));
-        router.push("/admin");
-    };
-
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 p-6 relative overflow-hidden">
             {/* Decorative background element matching home page feel */}
@@ -139,10 +65,10 @@ export default function RegisterPage() {
                         <Image src="/pillora-logo-v2.svg" alt="Pillora" width={80} height={80} className="object-contain" />
                     </div>
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                        {mfaStep ? "Admin Verification" : "Create Account"}
+                        Create Account
                     </h2>
                     <p className="text-gray-500 mt-2 text-sm">
-                        {mfaStep ? "Enter code to access Admin Panel" : "Join Pillora Health Network"}
+                        Join Pillora Health Network
                     </p>
                 </div>
 
@@ -157,46 +83,6 @@ export default function RegisterPage() {
                 )}
 
                 <AnimatePresence mode="wait">
-                    {mfaStep ? (
-                        <motion.form key="mfa" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} onSubmit={handleMfaVerify} className="space-y-6">
-                            <div className="flex items-center gap-3 mb-4 justify-center">
-                                <div className="p-3 bg-primary/10 rounded-xl">
-                                    <KeyRound className="w-6 h-6 text-primary" />
-                                </div>
-                            </div>
-                            {mfaSetup && (
-                                <div className="space-y-4 mb-6 text-center">
-                                    <p className="text-slate-500 text-sm">Scan QR code with Authenticator:</p>
-                                    {qrCode && <Image src={qrCode} alt="MFA QR Code" width={160} height={160} className="mx-auto" unoptimized />}
-                                </div>
-                            )}
-                            <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2 text-center">6-Digit Code</label>
-                                <input
-                                    className="block w-full px-4 py-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-center text-2xl tracking-[0.5em] font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                                    maxLength={6}
-                                    value={mfaCode}
-                                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    required
-                                    autoFocus
-                                />
-                            </div>
-                            <button
-                                className="w-full flex items-center justify-center py-4 px-6 rounded-xl bg-primary hover:bg-primary-dark text-white font-bold disabled:opacity-70 transition-all"
-                                type="submit"
-                                disabled={loading || mfaCode.length !== 6}
-                            >
-                                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Verify & Login"}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => { setMfaStep(false); setMfaSetup(false); setError(""); setMfaCode(""); }}
-                                className="mt-4 w-full text-sm text-slate-400 hover:text-primary transition-colors text-center"
-                            >
-                                ← Cancel Admin Login
-                            </button>
-                        </motion.form>
-                    ) : (
                         <motion.form key="register" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} onSubmit={handleRegister} className="space-y-5">
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-gray-700 ml-1">Full Name</label>
@@ -262,19 +148,16 @@ export default function RegisterPage() {
                                 <Link href="/privacy" className="text-primary hover:underline whitespace-nowrap"> Privacy Policy</Link>.
                             </p>
                         </motion.form>
-                    )}
                 </AnimatePresence>
 
-                {!mfaStep && (
-                    <div className="mt-8 text-center border-t border-gray-100 pt-6">
-                        <p className="text-gray-500 text-sm">
-                            Already have an account?{" "}
-                            <Link href="/login" className="text-primary font-bold hover:underline transition-all">
-                                Sign in instead
-                            </Link>
-                        </p>
-                    </div>
-                )}
+                <div className="mt-8 text-center border-t border-gray-100 pt-6">
+                    <p className="text-gray-500 text-sm">
+                        Already have an account?{" "}
+                        <Link href="/login" className="text-primary font-bold hover:underline transition-all">
+                            Sign in instead
+                        </Link>
+                    </p>
+                </div>
             </motion.div>
         </div>
     );

@@ -1,6 +1,7 @@
 "use client";
 import Link from 'next/link';
 import Image from 'next/image';
+import { safeUrl } from '@/lib/sanitizeHtml';
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { 
@@ -458,10 +459,11 @@ export default function HealthHubPage() {
                                     </div>
                                 );
 
-                                if (article.mediaType === 'url' && article.linkUrl) {
+                                const externalUrl = article.mediaType === 'url' ? safeUrl(article.linkUrl) : null;
+                                if (externalUrl) {
                                     return (
                                         <a
-                                            href={article.linkUrl}
+                                            href={externalUrl}
                                             key={article._id}
                                             target="_blank"
                                             rel="noopener noreferrer"

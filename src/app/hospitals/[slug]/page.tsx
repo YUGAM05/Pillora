@@ -8,6 +8,7 @@ import {
     BedDouble, Building2
 } from 'lucide-react';
 import api from '@/lib/api';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 
@@ -875,7 +876,9 @@ export default function HospitalDetailPage() {
     }, [params.slug]);
 
     const parsedDesc = React.useMemo(() => {
-        return parseHospitalDescription(hospital?.description || '');
+        const parsed = parseHospitalDescription(hospital?.description || '');
+        // The description is written by the hospital account: only allow basic formatting (audit P-11)
+        return { ...parsed, description: parsed.description ? sanitizeHtml(parsed.description) : '' };
     }, [hospital?.description]);
 
     // Loading skeleton

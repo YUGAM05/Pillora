@@ -640,6 +640,7 @@ function DonateForm() {
         name: '', age: '', gender: 'Male', bloodGroup: 'A+',
         phone: '', city: 'Ahmedabad', area: '', address: ''
     });
+    const [consentToShare, setConsentToShare] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const certRef = React.useRef<HTMLDivElement>(null);
 
@@ -678,6 +679,7 @@ function DonateForm() {
         }
         if (!formData.area.trim()) newErrors.area = 'Area is required';
         if (!formData.address.trim()) newErrors.address = 'Address is required';
+        if (!consentToShare) newErrors.consentToShare = 'Please give consent so we can connect you with patients who need blood';
         
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -699,7 +701,7 @@ function DonateForm() {
 
         setLoading(true);
         try {
-            await api.post('/blood-bank/donors', { ...formData, location: [0, 0] });
+            await api.post('/blood-bank/donors', { ...formData, consentToShare, location: [0, 0] });
             const now = new Date();
             const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
             const day = now.getDate();
@@ -870,17 +872,37 @@ function DonateForm() {
                 <div className="space-y-2">
                     <p className="text-sm text-red-900 font-bold leading-tight">Security & Transparency Notice</p>
                     <p className="text-xs text-red-700 leading-relaxed font-medium">
-                        Your data will be securely saved in our donor network. When someone in your nearest area needs blood, your <strong>name and phone number</strong> will be shared with them to facilitate immediate assistance.
+                        Your phone number and address are never shown publicly. The public donor list only shows your first name, blood group, area and availability.
                     </p>
                     <p className="text-xs text-red-700 leading-relaxed font-medium">
-                        To protect your privacy and prevent fraud, every requester is <strong>mandated to complete KYC verification</strong> (Aadhar Card or PAN Card) before your contact details are revealed.
+                        When a patient in your area needs your blood group, Pillora verifies the requester&apos;s ID (Aadhaar or PAN) first and only then shares your <strong>name and phone number</strong> with that family (at most 5 donors per request).
                     </p>
                 </div>
             </div>
 
+            <div>
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                        type="checkbox"
+                        name="consentToShare"
+                        checked={consentToShare}
+                        required
+                        onChange={(e) => {
+                            setConsentToShare(e.target.checked);
+                            if (e.target.checked) setErrors(prev => ({ ...prev, consentToShare: '' }));
+                        }}
+                        className="mt-0.5 w-5 h-5 text-red-600 rounded border-gray-300 focus:ring-red-500 shrink-0"
+                    />
+                    <span className="text-sm text-gray-700">
+                        I agree that Pillora may share my name and phone with a verified patient&apos;s family who need my blood group.
+                    </span>
+                </label>
+                {errors.consentToShare && <p className="text-red-500 text-xs mt-1 ml-8">{errors.consentToShare}</p>}
+            </div>
+
             <button
                 type="submit"
-                disabled={loading || (formData.phone.length > 0 && (formData.phone.length !== 10 || !/^[6-9]\d{9}$/.test(formData.phone)))}
+                disabled={loading || !consentToShare || (formData.phone.length > 0 && (formData.phone.length !== 10 || !/^[6-9]\d{9}$/.test(formData.phone)))}
                 className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-gray-400 disabled:to-gray-500 disabled:shadow-none text-white font-bold py-4 rounded-xl shadow-lg shadow-red-200 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
                 {loading ? 'Processing...' : 'Register as Donor'} <Heart className="w-5 h-5 fill-white" />
@@ -897,6 +919,19 @@ function RequestForm() {
     const [kycRemarks, setKycRemarks] = useState<string>('');
     const [isImageProcessing, setIsImageProcessing] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    // null until checked on the client (avoids a hydration mismatch)
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        setIsLoggedIn(!!getUser());
+    }, []);
+
+    // KYC upload and request submission both need a logged-in user (the API returns 401
+    // for guests, and the global 401 handler would otherwise throw away the form).
+    const goToLogin = (message: string) => {
+        alert(message);
+        router.push('/login?redirect=' + encodeURIComponent('/blood-bank?tab=request'));
+    };
 
     const [formData, setFormData] = useState({
         patientName: '', age: '', bloodGroup: 'A+', units: '1',
@@ -929,6 +964,11 @@ function RequestForm() {
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!getUser()) {
+            e.target.value = '';
+            goToLogin('Please log in before uploading your ID document.');
+            return;
+        }
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setIsImageProcessing(true);
@@ -1053,14 +1093,13 @@ function RequestForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!validate()) {
+        const user = getUser();
+        if (!user) {
+            goToLogin('Please log in to request blood. Your ID must be verified before donor details are shared.');
             return;
         }
 
-        const user = getUser();
-        if (!user) {
-            alert('Please login to request blood services');
-            router.push('/login?redirect=/blood-bank');
+        if (!validate()) {
             return;
         }
 
@@ -1206,6 +1245,22 @@ function RequestForm() {
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">Request Blood</h2>
                 <p className="text-gray-500">We will broadcast this request immediately.</p>
+            </div>
+
+            {isLoggedIn === false && (
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center gap-3">
+                    <ShieldCheck className="w-6 h-6 text-amber-600 shrink-0" />
+                    <p className="text-sm text-amber-900 flex-1">
+                        <strong>Please log in first.</strong> Blood requests need a verified ID, and uploading your ID document requires an account.
+                    </p>
+                    <Link href={'/login?redirect=' + encodeURIComponent('/blood-bank?tab=request')} className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold px-4 py-2 rounded-lg text-center">
+                        Log in
+                    </Link>
+                </div>
+            )}
+
+            <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl text-xs text-gray-600 leading-relaxed">
+                Donor contact details are never shown publicly. Once your ID is verified, Pillora shares the contact details of up to 5 matching donors with you.
             </div>
 
             <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-4 hover:shadow-sm transition-shadow">

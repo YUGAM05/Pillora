@@ -14,6 +14,8 @@ export interface CartItem {
     category: string;
     quantity: number;
     stock: number;
+    /** Seller (User id) of the product; the order API needs it. Older carts may not have it. */
+    sellerId?: string;
 }
 
 /**

@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import Link from 'next/link';
 import { CheckCircle, Package, Truck, Download, Home, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+import { toDisplayOrder } from '@/lib/orderDisplay';
 
 // Removed top-level imports that break SSR
 
@@ -58,7 +59,7 @@ export default function OrderSuccessPage() {
 
         api.get(`/orders/${orderId}`)
             .then(res => {
-                setOrder(res.data);
+                setOrder(toDisplayOrder(res.data));
                 setLoading(false);
             })
             .catch(err => {
@@ -105,8 +106,8 @@ export default function OrderSuccessPage() {
                     <div className="flex justify-between items-start border-b border-gray-100 pb-8 mb-8">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <Image src="/logo.png" alt="Pillora" width={48} height={48} className="object-contain" unoptimized />
-                                <Image src="/pillora-text.png" alt="Pillora" width={100} height={40} className="object-contain" unoptimized />
+                                <Image src="/logo.png" alt="Pillora" width={48} height={48} className="object-contain" sizes="48px" />
+                                <Image src="/pillora-text.png" alt="Pillora" width={100} height={40} className="object-contain" sizes="100px" />
                             </div>
                             <p className="text-gray-500 text-sm">Shri Mahavir Jain Vidhvalay, Paldi Cross Road</p>
                             <p className="text-gray-500 text-sm">Paldi, Ahmedabad, Gujarat, India</p>

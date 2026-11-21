@@ -128,7 +128,8 @@ export default function ProductPage() {
                                             originalPrice: product.actualPrice,
                                             image: product.images?.[0] || product.imageUrl || '',
                                             category: product.category,
-                                            stock: product.stock
+                                            stock: product.stock,
+                                            sellerId: product.seller?._id || (typeof product.seller === 'string' ? product.seller : undefined)
                                         });
                                         router.push('/checkout');
                                     }}

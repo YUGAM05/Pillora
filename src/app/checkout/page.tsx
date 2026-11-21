@@ -157,38 +157,59 @@ export default function CheckoutPage() {
 
         setLoading(true);
         try {
-            const orderData = {
-                items: cartItems.map(item => ({
-                    productId: item.productId,
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity,
-                    image: item.image
-                })),
-                shippingAddress: {
-                    fullName: formData.fullName,
-                    phone: formData.phone,
-                    email: formData.email,
-                    addressLine1: formData.addressLine1,
-                    addressLine2: formData.addressLine2,
-                    city: formData.city,
-                    state: formData.state,
-                    pinCode: formData.pinCode,
-                    addressType: formData.addressType
-                },
-                shippingLocation: location,
-                totalAmount: total + 10 - (couponData?.discountAmount || 0),
-                paymentMethod: formData.paymentMethod,
-                notes: formData.notes,
-                couponCode: couponData?.code,
-                discountAmount: couponData?.discountAmount || 0
-            };
+            // The order API (POST /orders) expects { seller_id, medicines[], delivery_address }
+            // and one seller per order. Older cart entries may lack the seller, so look it up.
+            const itemsWithSeller = await Promise.all(cartItems.map(async (item) => {
+                if (item.sellerId) return item;
+                const res = await api.get(`/products/${item.productId}`);
+                const seller = res.data?.seller;
+                return { ...item, sellerId: seller?._id || (typeof seller === 'string' ? seller : undefined) };
+            }));
 
-            const response = await api.post('/orders', orderData);
-            const orderId = response.data._id;
+            const missingSeller = itemsWithSeller.find(item => !item.sellerId);
+            if (missingSeller) {
+                alert(`"${missingSeller.name}" is no longer available. Please remove it from your cart and try again.`);
+                return;
+            }
+
+            const deliveryAddress = [
+                formData.fullName,
+                formData.phone,
+                formData.email,
+                formData.addressLine1,
+                formData.addressLine2,
+                `${formData.city}, ${formData.state} - ${formData.pinCode}`,
+                formData.notes ? `Note: ${formData.notes}` : ''
+            ].map(part => part.trim()).filter(Boolean).join(', ');
+
+            const bySeller = new Map<string, CartItem[]>();
+            for (const item of itemsWithSeller) {
+                const list = bySeller.get(item.sellerId as string) || [];
+                list.push(item);
+                bySeller.set(item.sellerId as string, list);
+            }
+
+            const orderIds: string[] = [];
+            for (const [sellerId, items] of Array.from(bySeller.entries())) {
+                const response = await api.post('/orders', {
+                    seller_id: sellerId,
+                    medicines: items.map(item => ({
+                        medicine_id: item.productId,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity
+                    })),
+                    delivery_address: deliveryAddress,
+                    delivery_location: location || undefined,
+                    // Not read by the current order API; sent so a future backend can apply them
+                    paymentMethod: formData.paymentMethod,
+                    couponCode: couponData?.code
+                });
+                orderIds.push(response.data._id);
+            }
 
             clearCart();
-            router.push(`/order-success/${orderId}`);
+            router.push(orderIds.length > 1 ? '/my-orders' : `/order-success/${orderIds[0]}`);
         } catch (error: any) {
             console.error('Order error:', error);
             alert(error.response?.data?.message || 'Failed to place order. Please try again.');

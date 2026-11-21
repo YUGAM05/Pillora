@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
@@ -227,7 +228,7 @@ export default function BlogPostDetail() {
                     </p>
 
                     <div style={{ padding: 0, margin: 0 }}>
-                        <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+                        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.content, { allowLinks: true, allowImages: true, allowTables: true }) }} />
                     </div>
                 </motion.div>
 

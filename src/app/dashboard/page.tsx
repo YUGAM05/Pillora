@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { User, Phone, LogOut, LayoutDashboard, ShoppingBag, Heart, Calendar, Clock, MapPin, Stethoscope, Loader2 } from "lucide-react";
 import { getUser, clearAuth } from "@/lib/tokenStorage";
 import api from "@/lib/api";
+import Link from "next/link";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -123,9 +124,18 @@ export default function DashboardPage() {
                             ) : (
                                 bookings.map((booking) => {
                                     const bookingDate = new Date(booking.slotTime);
-                                    const isPending = booking.status === "pending";
+                                    // An online booking stays "pending" until its advance is paid. If the patient
+                                    // left checkout, show it as awaiting payment (or not completed once the time
+                                    // has passed) instead of as a pending booking (audit P-20).
+                                    const isUnpaidOnline = booking.status === "pending"
+                                        && booking.paymentSource === "gateway"
+                                        && !["partial", "paid", "waived", "refunded"].includes(booking.paymentStatus);
+                                    const isFutureSlot = bookingDate.getTime() > Date.now();
+                                    const awaitingPayment = isUnpaidOnline && isFutureSlot;
+                                    const notCompleted = isUnpaidOnline && !isFutureSlot;
                                     const isApproved = booking.status === "approved" || booking.status === "confirmed";
                                     const isCancelled = booking.status === "cancelled";
+                                    const statusLabel = awaitingPayment ? "Payment pending" : notCompleted ? "Not completed" : booking.status;
 
                                     return (
                                         <div key={booking._id} className="p-5 bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3">
@@ -139,9 +149,11 @@ export default function DashboardPage() {
                                                         ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
                                                         : isCancelled 
                                                             ? "bg-rose-100 text-rose-800 border border-rose-200"
-                                                            : "bg-amber-100 text-amber-800 border border-amber-200"
+                                                            : notCompleted
+                                                                ? "bg-slate-100 text-slate-600 border border-slate-200"
+                                                                : "bg-amber-100 text-amber-800 border border-amber-200"
                                                 }`}>
-                                                    {booking.status}
+                                                    {statusLabel}
                                                 </span>
                                             </div>
 
@@ -161,6 +173,18 @@ export default function DashboardPage() {
                                                     <span className="leading-snug">{booking.hospital?.name} • <span className="text-[11px] font-medium text-slate-400">{booking.hospital?.address}, {booking.hospital?.city}</span></span>
                                                 </div>
                                             </div>
+
+                                            {awaitingPayment && (
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-xl p-3">
+                                                    <span>The advance has not been paid, so this slot is not booked yet.</span>
+                                                    <Link href={`/checkout/appointment/${booking._id}`} className="shrink-0 text-center bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-lg">
+                                                        Complete payment
+                                                    </Link>
+                                                </div>
+                                            )}
+                                            {notCompleted && (
+                                                <p className="text-xs text-slate-500">Payment was not completed, so this appointment was not booked.</p>
+                                            )}
                                         </div>
                                     );
                                 })

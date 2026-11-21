@@ -72,7 +72,9 @@ export default function Navbar() {
                             width={72}
                             height={72}
                             className="w-14 h-14 xl:w-16 xl:h-16 object-contain object-right"
-                            unoptimized
+                            // Optimised by next/image (logo.png itself is 1.7 MB)
+                            sizes="64px"
+                            priority
                         />
                         <Image
                             src="/pillora-text.png"
@@ -80,7 +82,8 @@ export default function Navbar() {
                             width={240}
                             height={80}
                             className="block h-14 sm:h-16 xl:h-[4.5rem] w-auto object-contain object-left -ml-1 sm:-ml-2 xl:-ml-3"
-                            unoptimized
+                            sizes="(min-width: 1280px) 212px, 190px"
+                            priority
                         />
                     </Link>
 

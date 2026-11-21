@@ -13,6 +13,13 @@ import { Loader2, Lock, Mail, KeyRound, Phone, MessageSquare } from "lucide-reac
 import api from "@/lib/api";
 import Image from "next/image";
 
+/** Where a patient goes after login: the page that sent them here (?redirect=/path), else the dashboard. Same-site paths only. */
+function postLoginPath(): string {
+    if (typeof window === "undefined") return "/dashboard";
+    const target = new URLSearchParams(window.location.search).get("redirect") || "";
+    return target.startsWith("/") && !target.startsWith("//") && !target.startsWith("/\\") ? target : "/dashboard";
+}
+
 export default function LoginPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -24,7 +31,8 @@ export default function LoginPage() {
     const [mfaStep, setMfaStep] = useState(false);
     const [mfaSetup, setMfaSetup] = useState(false);
     const [mfaCode, setMfaCode] = useState("");
-    const [mfaUserId, setMfaUserId] = useState("");
+    // Short-lived token from /auth/login proving the password step passed
+    const [mfaToken, setMfaToken] = useState("");
     const [qrCode, setQrCode] = useState("");
 
     // Phone WhatsApp OTP State
@@ -42,7 +50,7 @@ export default function LoginPage() {
             if (user.role === 'admin' || user.role === 'hospital') {
                 clearAuth();
             } else {
-                router.push("/dashboard");
+                router.push(postLoginPath());
             }
         }
     }, [router]);
@@ -68,13 +76,13 @@ export default function LoginPage() {
             const data = res.data;
 
             if (data.mfaRequired) {
-                setMfaUserId(data.userId);
+                setMfaToken(data.mfaToken);
                 setMfaStep(true);
                 return;
             }
 
             if (data.mfaSetupRequired) {
-                setMfaUserId(data.userId);
+                setMfaToken(data.mfaToken);
                 setQrCode(data.qrCode);
                 setMfaSetup(true);
                 setMfaStep(true);
@@ -108,7 +116,7 @@ export default function LoginPage() {
             } else if (data.role === 'hospital') {
                 router.push("/hospital/dashboard");
             } else {
-                router.push("/dashboard");
+                router.push(postLoginPath());
             }
 
         } catch (err: any) {
@@ -124,7 +132,7 @@ export default function LoginPage() {
         setError("");
         try {
             const res = await api.post('/auth/verify-mfa', {
-                userId: mfaUserId,
+                mfaToken,
                 token: mfaCode,
             });
             const data = res.data;
@@ -181,11 +189,11 @@ export default function LoginPage() {
             } else if (data.role === 'hospital') {
                 router.push("/hospital/dashboard");
             } else {
-                router.push("/dashboard");
+                router.push(postLoginPath());
             }
         } catch (err: any) {
             console.error("Error with Google Login:", err);
-            setError(err.message || "Google Sign-In failed. Please try again.");
+            setError(err.response?.data?.message || err.message || "Google Sign-In failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -260,7 +268,7 @@ export default function LoginPage() {
             } else if (data.role === 'hospital') {
                 router.push("/hospital/dashboard");
             } else {
-                router.push("/dashboard");
+                router.push(postLoginPath());
             }
         } catch (err: any) {
             setError(err.response?.data?.message || "Invalid verification code");

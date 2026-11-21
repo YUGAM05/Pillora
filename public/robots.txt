@@ -1,9 +1,22 @@
 # *
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /hospital/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /my-orders
+Disallow: /my-blood-requests
+Disallow: /my-donor-profile
+Disallow: /order/
+Disallow: /order-success/
+Disallow: /auth/
+Disallow: /api/
 
 # Host
 Host: https://www.pillora.in
 
 # Sitemaps
 Sitemap: https://www.pillora.in/sitemap.xml
+Sitemap: https://www.pillora.in/blog-sitemap.xml
+Sitemap: https://www.pillora.in/health-hub-sitemap.xml
